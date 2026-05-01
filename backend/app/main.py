@@ -1,3 +1,4 @@
+import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.websocket import WebSocket, WebSocketDisconnect
@@ -37,6 +38,6 @@ async def project_progress(websocket: WebSocket, project_id: str):
     try:
         while True:
             data = await websocket.receive_text()
-            await websocket.send_text(f'{{"stage": "echo", "message": "{data}"}}')
+            await websocket.send_text(json.dumps({"stage": "echo", "message": data}))
     except WebSocketDisconnect:
         pass
