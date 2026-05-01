@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from app.config import settings
 from app.db.models import Base
 from app.db.repository import engine
+from app.api.projects import router as projects_router
 
 
 @asynccontextmanager
@@ -25,6 +26,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(projects_router)
 
 
 @app.get("/api/health")
