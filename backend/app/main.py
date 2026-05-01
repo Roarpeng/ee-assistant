@@ -7,6 +7,8 @@ from app.db.models import Base
 from app.db.repository import engine
 from app.api.projects import router as projects_router
 from app.api.analysis import router as analysis_router
+from app.api.selection import router as selection_router
+from app.api.knowledge import router as knowledge_router
 
 
 @asynccontextmanager
@@ -28,6 +30,8 @@ app.add_middleware(
 
 app.include_router(projects_router)
 app.include_router(analysis_router)
+app.include_router(selection_router)
+app.include_router(knowledge_router)
 
 
 @app.get("/api/health")
