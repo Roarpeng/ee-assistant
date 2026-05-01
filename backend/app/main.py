@@ -1,13 +1,12 @@
-import json
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.websocket import WebSocket, WebSocketDisconnect
 from contextlib import asynccontextmanager
 
 from app.config import settings
 from app.db.models import Base
 from app.db.repository import engine
 from app.api.projects import router as projects_router
+from app.api.analysis import router as analysis_router
 
 
 @asynccontextmanager
@@ -28,6 +27,7 @@ app.add_middleware(
 )
 
 app.include_router(projects_router)
+app.include_router(analysis_router)
 
 
 @app.get("/api/health")
@@ -37,10 +37,11 @@ async def health():
 
 @app.websocket("/ws/projects/{project_id}")
 async def project_progress(websocket: WebSocket, project_id: str):
+    from app.core.orchestrator import orchestrator
     await websocket.accept()
+    orchestrator.register_ws(project_id, websocket)
     try:
         while True:
-            data = await websocket.receive_text()
-            await websocket.send_text(json.dumps({"stage": "echo", "message": data}))
+            await websocket.receive_text()
     except WebSocketDisconnect:
-        pass
+        orchestrator.unregister_ws(project_id)

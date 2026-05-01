@@ -13,17 +13,9 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-export interface CreateProjectResponse {
-  id: string;
-  name: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export const api = {
   createProject: (name: string) =>
-    request<CreateProjectResponse>(`/projects?name=${encodeURIComponent(name)}`, { method: 'POST' }),
+    request<import('../models/project').Project>(`/projects?name=${encodeURIComponent(name)}`, { method: 'POST' }),
 
   getProject: (id: string) =>
     request<import('../models/project').Project>(`/projects/${id}`),

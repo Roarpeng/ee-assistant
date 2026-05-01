@@ -1,0 +1,50 @@
+from fastapi import WebSocket
+from app.core.llm_service import llm_service
+from app.core.schemas import ProgressEvent
+from app.db.models import Requirement, IOItem, LogicRule
+
+
+class Orchestrator:
+    def __init__(self):
+        self._ws: dict[str, WebSocket] = {}
+
+    def register_ws(self, project_id: str, ws: WebSocket):
+        self._ws[project_id] = ws
+
+    def unregister_ws(self, project_id: str):
+        self._ws.pop(project_id, None)
+
+    async def push(self, project_id: str, event: ProgressEvent):
+        ws = self._ws.get(project_id)
+        if ws:
+            try:
+                await ws.send_text(event.model_dump_json())
+            except Exception:
+                self.unregister_ws(project_id)
+
+    async def run_analysis(self, project_id: str, user_input: str, session) -> dict:
+        await self.push(project_id, ProgressEvent(stage="analyzing", message="Analyzing requirements..."))
+        req_data = await llm_service.analyze_requirements(user_input)
+
+        req = Requirement(
+            project_id=project_id,
+            machine_type=req_data.get("machine_type"),
+            safety_level=req_data.get("safety_level"),
+            environment=req_data.get("environment"),
+            plc_family=req_data.get("plc_family"),
+            raw_text=user_input,
+        )
+        session.add(req)
+        await session.flush()
+
+        for io in req_data.get("io_list", []):
+            session.add(IOItem(requirement_id=req.id, tag=io["tag"], io_type=io["type"], description=io["description"]))
+        for rule in req_data.get("control_logic", []):
+            session.add(LogicRule(requirement_id=req.id, description=rule))
+        await session.commit()
+
+        await self.push(project_id, ProgressEvent(stage="ready", message="Requirements analysis complete.", data=req_data))
+        return req_data
+
+
+orchestrator = Orchestrator()
