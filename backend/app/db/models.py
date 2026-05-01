@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, Integer, Float, JSON, ForeignKey, DateTime, Text, func
+from sqlalchemy import String, Integer, JSON, ForeignKey, DateTime, Text, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.ext.asyncio import AsyncAttrs
 
@@ -29,7 +29,7 @@ class Requirement(Base):
     __tablename__ = "requirements"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), unique=True)
+    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), unique=True, nullable=False)
     machine_type: Mapped[str | None] = mapped_column(String(128))
     safety_level: Mapped[str | None] = mapped_column(String(16))
     environment: Mapped[str | None] = mapped_column(String(64))
@@ -45,7 +45,7 @@ class IOItem(Base):
     __tablename__ = "io_items"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    requirement_id: Mapped[str] = mapped_column(String(36), ForeignKey("requirements.id"))
+    requirement_id: Mapped[str] = mapped_column(String(36), ForeignKey("requirements.id"), nullable=False)
     tag: Mapped[str] = mapped_column(String(64))
     io_type: Mapped[str] = mapped_column(String(4))  # DI/DO/AI/AO
     description: Mapped[str] = mapped_column(String(255))
@@ -57,7 +57,7 @@ class LogicRule(Base):
     __tablename__ = "logic_rules"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    requirement_id: Mapped[str] = mapped_column(String(36), ForeignKey("requirements.id"))
+    requirement_id: Mapped[str] = mapped_column(String(36), ForeignKey("requirements.id"), nullable=False)
     description: Mapped[str] = mapped_column(Text)
 
     requirement: Mapped["Requirement"] = relationship(back_populates="logic_rules")
@@ -67,7 +67,7 @@ class BOMItem(Base):
     __tablename__ = "bom_items"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"))
+    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), nullable=False)
     category: Mapped[str] = mapped_column(String(64))
     manufacturer: Mapped[str] = mapped_column(String(64))
     model: Mapped[str] = mapped_column(String(128))
@@ -84,7 +84,7 @@ class Schematic(Base):
     __tablename__ = "schematics"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), unique=True)
+    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), unique=True, nullable=False)
     mermaid_code: Mapped[str] = mapped_column(Text)
     svg_data: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -95,7 +95,7 @@ class STModule(Base):
     __tablename__ = "st_modules"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"))
+    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(128))
     module_type: Mapped[str] = mapped_column(String(16))  # OB/FC/FB/DB
     code: Mapped[str] = mapped_column(Text)
