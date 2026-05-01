@@ -2,10 +2,11 @@ import { useRef, useEffect } from 'react';
 import { useStore } from '../../models/store';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
-import { api } from '../../services/api';
+import { ProgressStepper } from './ProgressStepper';
+import { runFullAnalysis } from '../../services/analysis';
 
 export function ChatPanel() {
-  const { project, messages, stage, addMessage, setProject, setStage, updateProgress } = useStore();
+  const { project, messages, stage } = useStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -13,36 +14,13 @@ export function ChatPanel() {
   }, [messages]);
 
   const handleSend = async (text: string) => {
-    addMessage({ id: '', role: 'user', content: text, timestamp: 0 });
-
-    let p = project;
-    if (!p) {
-      p = await api.createProject('New Project');
-      setProject(p);
-    }
-
-    setStage('analyzing');
-    updateProgress({ stage: 'analyzing', message: 'Analyzing requirements...' });
-
     try {
-      const updated = await api.analyze(p!.id, text);
-      setProject(updated);
-      setStage('ready');
-
-      const req = updated.requirement;
-      if (req) {
-        const summary = [
-          `**Requirement Analysis**`,
-          `- Machine: ${req.machineType || 'N/A'}`,
-          `- Safety: ${req.safetyLevel || 'N/A'}`,
-          `- IO Points: ${req.ioItems.length}`,
-          `- Control Rules: ${req.logicRules.length}`,
-        ].join('\n');
-        addMessage({ id: '', role: 'assistant', content: summary, timestamp: 0 });
-        updateProgress({ stage: 'ready', message: 'Analysis complete. Ready for component selection.' });
-      }
+      await runFullAnalysis(text);
     } catch (err: any) {
-      updateProgress({ stage: 'idle', message: `Error: ${err.message}` });
+      useStore.getState().addMessage({
+        id: '', role: 'system',
+        content: `Error: ${err.message}`, timestamp: 0,
+      });
     }
   };
 
@@ -54,6 +32,8 @@ export function ChatPanel() {
           {project ? `Project: ${project.id.slice(0, 8)}...` : 'New session'}
         </p>
       </div>
+
+      <ProgressStepper />
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 && (
