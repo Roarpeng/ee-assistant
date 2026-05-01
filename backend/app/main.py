@@ -9,6 +9,8 @@ from app.api.projects import router as projects_router
 from app.api.analysis import router as analysis_router
 from app.api.selection import router as selection_router
 from app.api.knowledge import router as knowledge_router
+from app.api.schematic import router as schematic_router
+from app.api.codegen import router as codegen_router
 
 
 @asynccontextmanager
@@ -32,6 +34,8 @@ app.include_router(projects_router)
 app.include_router(analysis_router)
 app.include_router(selection_router)
 app.include_router(knowledge_router)
+app.include_router(schematic_router)
+app.include_router(codegen_router)
 
 
 @app.get("/api/health")
