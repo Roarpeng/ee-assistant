@@ -13,7 +13,7 @@ export function ChatInput({ onSend, disabled }: { onSend: (text: string) => void
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border-t border-gray-200 p-3">
+    <form onSubmit={handleSubmit} className="border-t border-[var(--color-border)] p-3">
       <div className="flex gap-2">
         <input
           type="text"
@@ -21,12 +21,12 @@ export function ChatInput({ onSend, disabled }: { onSend: (text: string) => void
           onChange={(e) => setValue(e.target.value)}
           placeholder="Describe your control requirements..."
           disabled={disabled}
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+          className="flex-1 rounded-app-lg border border-[var(--color-border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:bg-[var(--color-bg-tertiary)]"
         />
         <button
           type="submit"
           disabled={disabled || !value.trim()}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-app-lg bg-[var(--color-accent)] px-4 py-2 text-sm text-white hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
         >
           Send
         </button>

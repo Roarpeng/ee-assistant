@@ -51,21 +51,21 @@ export function KnowledgePanel() {
       <h2 className="font-semibold">Knowledge Base</h2>
 
       <div className="space-y-2">
-        <input className="w-full border rounded px-2 py-1 text-sm" placeholder="Manufacturer (e.g. Siemens)"
+        <input className="w-full border border-[var(--color-border)] rounded-app-md px-2 py-1 text-sm" placeholder="Manufacturer (e.g. Siemens)"
           value={manufacturer} onChange={(e) => setManufacturer(e.target.value)} />
-        <input className="w-full border rounded px-2 py-1 text-sm" placeholder="Tags: Circuit_Breaker, Contactor"
+        <input className="w-full border border-[var(--color-border)] rounded-app-md px-2 py-1 text-sm" placeholder="Tags: Circuit_Breaker, Contactor"
           value={tags} onChange={(e) => setTags(e.target.value)} />
         <FileDropZone onFiles={handleUpload} />
       </div>
 
       <div className="space-y-2">
         {docs.map((d) => (
-          <div key={d.id} className="flex items-center justify-between border rounded p-2 text-sm">
+          <div key={d.id} className="rounded-app-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 shadow-app-sm hover:shadow-app-md transition-shadow">
             <div>
               <div className="font-medium">{d.filename}</div>
-              <div className="text-xs text-gray-400">{d.manufacturer} &middot; {d.chunkCount} chunks</div>
+              <div className="text-xs text-[var(--color-text-tertiary)]">{d.manufacturer} &middot; {d.chunkCount} chunks</div>
             </div>
-            <button onClick={() => handleDelete(d.id)} className="text-red-500 text-xs hover:underline">Del</button>
+            <button onClick={() => handleDelete(d.id)} className="text-[var(--color-error)] text-xs hover:underline">Del</button>
           </div>
         ))}
       </div>

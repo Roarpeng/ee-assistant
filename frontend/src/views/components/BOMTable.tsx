@@ -1,20 +1,20 @@
 import type { BOMItem } from '../../models/selection';
 
 const confidenceBadge = (level: string) => {
-  if (level === 'rag') return <span className="px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded">Verified</span>;
-  if (level === 'llm') return <span className="px-1.5 py-0.5 text-xs bg-yellow-100 text-yellow-700 rounded">Inferred</span>;
-  return <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">Mixed</span>;
+  if (level === 'rag') return <span className="inline-flex items-center px-2 py-0.5 rounded-app-sm text-xs font-medium bg-[var(--color-success-light)] text-[var(--color-success)]">Verified</span>;
+  if (level === 'llm') return <span className="inline-flex items-center px-2 py-0.5 rounded-app-sm text-xs font-medium bg-[var(--color-warning-light)] text-[var(--color-warning)]">Inferred</span>;
+  return <span className="inline-flex items-center px-2 py-0.5 rounded-app-sm text-xs font-medium bg-[var(--color-accent-light)] text-[var(--color-accent)]">Mixed</span>;
 };
 
 export function BOMTable({ items }: { items: BOMItem[] }) {
   if (!items.length) {
-    return <div className="flex items-center justify-center h-full text-gray-400">No BOM items. Run selection first.</div>;
+    return <div className="flex items-center justify-center h-full text-[var(--color-text-tertiary)]">No BOM items. Run selection first.</div>;
   }
 
   return (
     <div className="w-full h-full overflow-auto">
       <table className="w-full text-sm">
-        <thead className="bg-gray-100 sticky top-0">
+        <thead className="bg-[var(--color-bg-tertiary)] sticky top-0">
           <tr>
             <th className="text-left p-2">Category</th>
             <th className="text-left p-2">Manufacturer</th>
@@ -25,7 +25,7 @@ export function BOMTable({ items }: { items: BOMItem[] }) {
         </thead>
         <tbody>
           {items.map((item) => (
-            <tr key={item.id} className="border-t border-gray-100 hover:bg-gray-50">
+            <tr key={item.id} className="border-b border-[var(--color-border-light)] hover:bg-[var(--color-bg-tertiary)] transition-colors">
               <td className="p-2">{item.category}</td>
               <td className="p-2">{item.manufacturer}</td>
               <td className="p-2 font-mono text-xs">{item.model}</td>

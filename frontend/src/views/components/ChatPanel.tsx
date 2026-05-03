@@ -26,9 +26,9 @@ export function ChatPanel() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-[var(--color-border)]">
         <h1 className="font-semibold text-lg">EE Assistant</h1>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-[var(--color-text-tertiary)]">
           {project ? `Project: ${project.id.slice(0, 8)}...` : 'New session'}
         </p>
       </div>
@@ -37,7 +37,7 @@ export function ChatPanel() {
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 && (
-          <div className="text-center text-gray-400 text-sm mt-8">
+          <div className="text-center text-[var(--color-text-tertiary)] text-sm mt-8">
             Describe your electrical control requirements to get started.
             <br /><br />
             Example: "Design a conveyor system with 3 motors, E-Stop, and interlock logic"

@@ -18,12 +18,12 @@ export function ProgressStepper() {
       {steps.map((s, i) => (
         <div key={s.stage} className="flex items-center gap-1">
           <div className={`w-2.5 h-2.5 rounded-full ${
-            i < currentIdx ? 'bg-green-500' : i === currentIdx && stage !== 'done' ? 'bg-blue-500 animate-pulse' : i === currentIdx ? 'bg-green-500' : 'bg-gray-300'
+            i < currentIdx ? 'bg-[var(--color-success)]' : i === currentIdx && stage !== 'done' ? 'bg-[var(--color-accent)] animate-pulse' : i === currentIdx ? 'bg-[var(--color-success)]' : 'bg-[var(--color-border)]'
           }`} />
-          <span className={`text-[10px] ${i <= currentIdx ? 'text-gray-700' : 'text-gray-300'}`}>
+          <span className={`text-[10px] ${i <= currentIdx ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-tertiary)]'}`}>
             {s.label}
           </span>
-          {i < steps.length - 1 && <div className={`w-4 h-px ${i < currentIdx ? 'bg-green-500' : 'bg-gray-300'}`} />}
+          {i < steps.length - 1 && <div className={`h-0.5 flex-1 rounded ${i < currentIdx ? 'bg-[var(--color-success)]' : 'bg-[var(--color-border)]'}`} />}
         </div>
       ))}
     </div>

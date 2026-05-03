@@ -11,15 +11,15 @@ export function CanvasPanel() {
     <div className="flex flex-col h-full">
       <ExportToolbar />
 
-      <div className="flex gap-2 px-4 py-2 bg-white border-b border-gray-200">
+      <div className="flex gap-0 px-4 py-0 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
         {(['diagram', 'bom', 'code'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveCanvasTab(tab)}
-            className={`px-3 py-1 text-sm rounded ${
+            className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${
               activeCanvasTab === tab
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'border-[var(--color-accent)] text-[var(--color-text-primary)]'
+                : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
             {tab === 'diagram' ? 'Schematic' : tab === 'bom' ? 'BOM' : 'ST Code'}
