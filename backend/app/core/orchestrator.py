@@ -46,5 +46,28 @@ class Orchestrator:
         await self.push(project_id, ProgressEvent(stage="ready", message="Requirements analysis complete.", data=req_data))
         return req_data
 
+    async def run_graph_analysis(self, project_id: str, user_input: str) -> dict:
+        from app.core.graph.builder import build_graph
+        graph = build_graph()
+        config = {"configurable": {"thread_id": project_id}}
+        initial_state = {
+            "project_id": project_id,
+            "user_input": user_input,
+            "requirement": None,
+            "categories": None,
+            "safety_level": None,
+            "constraints": None,
+            "bom_items": None,
+            "violations": None,
+            "mermaid_code": None,
+            "st_modules": None,
+            "review_notes": None,
+            "graph_traces": [],
+            "errors": [],
+            "stage": "started",
+        }
+        final_state = await graph.ainvoke(initial_state, config)
+        return final_state
+
 
 orchestrator = Orchestrator()
