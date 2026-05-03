@@ -9,3 +9,4 @@ dist/
 .qdrant/
 postgres_data/
 minio_data/
+*.db
