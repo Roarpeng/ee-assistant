@@ -1,13 +1,11 @@
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.memory import MemorySaver
 from app.core.graph.state import AnalysisState
 
 
-def build_graph(checkpoint_db: str = "checkpoints.db"):
+def build_graph():
     workflow = StateGraph(AnalysisState)
 
-    # Nodes will be added in Task 9 — for now, just build the skeleton
-    # Each node function is imported from app.core.graph.agents
     from app.core.graph.agents import (
         requirements_agent,
         category_mapper,
@@ -45,5 +43,4 @@ def build_graph(checkpoint_db: str = "checkpoints.db"):
     workflow.add_edge("code_generator", END)
     workflow.add_edge("final_review_agent", END)
 
-    checkpointer = SqliteSaver.from_conn_string(checkpoint_db)
-    return workflow.compile(checkpointer=checkpointer)
+    return workflow.compile(checkpointer=MemorySaver())
