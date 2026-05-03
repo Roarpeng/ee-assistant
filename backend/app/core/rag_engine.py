@@ -71,5 +71,27 @@ class RAGEngine:
             points_selector=Filter(must=[FieldCondition(key="doc_id", match=MatchValue(value=doc_id))]),
         )
 
+    async def search_with_graph(self, query: str, component_type: str, top_k: int, session) -> list[dict]:
+        """Dual-path search: Qdrant semantic + graph neighbor lookup."""
+        from app.core.knowledge_graph import ComponentGraph
+        results = await self.search(query, top_k=top_k)
+        for r in results:
+            r["source"] = "qdrant"
+
+        graph = ComponentGraph(session)
+        graph_nodes = await graph.search_by_type(component_type, limit=top_k)
+        seen_names = {r.get("content", "")[:60] for r in results}
+        for node in graph_nodes:
+            name_snippet = f"{node.name}: {node.component_type}"
+            if name_snippet not in seen_names:
+                results.append({
+                    "id": node.id,
+                    "content": f"{node.name} ({node.component_type}) — {node.properties}",
+                    "score": 1.0,
+                    "metadata": {"name": node.name, "component_type": node.component_type, **node.properties},
+                    "source": "graph",
+                })
+        return results[:top_k + 3]
+
 
 rag_engine = RAGEngine()
