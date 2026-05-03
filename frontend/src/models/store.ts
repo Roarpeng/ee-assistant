@@ -16,6 +16,8 @@ interface AppState {
   stage: AnalysisStage;
   messages: ChatMessage[];
   activeCanvasTab: 'diagram' | 'bom' | 'code';
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
 
   setProject: (p: Project) => void;
   setStage: (s: AnalysisStage) => void;
@@ -39,6 +41,13 @@ export const useStore = create<AppState>((set) => ({
   stage: 'idle',
   messages: [],
   activeCanvasTab: 'diagram',
+  theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'light',
+  toggleTheme: () => set((s) => {
+    const next = s.theme === 'light' ? 'dark' : 'light';
+    localStorage.setItem('theme', next);
+    document.documentElement.setAttribute('data-theme', next);
+    return { theme: next };
+  }),
 
   setProject: (p) => set({ project: p }),
   setStage: (s) => set({ stage: s }),
