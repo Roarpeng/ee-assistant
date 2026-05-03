@@ -113,3 +113,38 @@ class KnowledgeDoc(Base):
     category_tags: Mapped[list] = mapped_column(JSON, default=list)
     chunk_count: Mapped[int] = mapped_column(Integer, default=0)
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class ComponentNode(Base):
+    __tablename__ = "component_nodes"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    component_type: Mapped[str] = mapped_column(String(64))
+    properties: Mapped[dict] = mapped_column(JSON, default=dict)
+    community: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    source_doc_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("knowledge_docs.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    source_doc: Mapped["KnowledgeDoc | None"] = relationship()
+    outgoing_edges: Mapped[list["ComponentEdge"]] = relationship(
+        back_populates="source_node", foreign_keys="ComponentEdge.source_id"
+    )
+
+
+class ComponentEdge(Base):
+    __tablename__ = "component_edges"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    source_id: Mapped[str] = mapped_column(String(36), ForeignKey("component_nodes.id"), nullable=False)
+    target_id: Mapped[str] = mapped_column(String(36), ForeignKey("component_nodes.id"), nullable=False)
+    relation: Mapped[str] = mapped_column(String(32))
+    properties: Mapped[dict] = mapped_column(JSON, default=dict)
+    confidence: Mapped[str] = mapped_column(String(16), default="extracted")
+    source_doc_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("knowledge_docs.id"), nullable=True)
+
+    source_node: Mapped["ComponentNode"] = relationship(
+        back_populates="outgoing_edges", foreign_keys=[source_id]
+    )
+    target_node: Mapped["ComponentNode"] = relationship(foreign_keys=[target_id])
+    source_doc: Mapped["KnowledgeDoc | None"] = relationship()
