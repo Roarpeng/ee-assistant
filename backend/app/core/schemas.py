@@ -33,11 +33,13 @@ class ProjectStatus(str, Enum):
 
 
 class RequirementInput(BaseModel):
-    text: str = ""
+    text: str = Field("", validation_alias="message")
     machine_type: str | None = None
     safety_level: str | None = None
     environment: str | None = None
     plc_family: str = "S7-1200"
+    llm_config: dict | None = None
+    embedding_config: dict | None = None
 
 
 class SelectionInput(BaseModel):
@@ -125,8 +127,13 @@ class KnowledgeDocOut(BaseModel):
     manufacturer: str
     category_tags: list[str]
     chunk_count: int
+    status: str
     uploaded_at: datetime
     model_config = {"from_attributes": True}
+
+
+class BatchDeleteInput(BaseModel):
+    ids: list[str]
 
 
 class KnowledgeChunkOut(BaseModel):
@@ -146,6 +153,11 @@ class ProjectOut(BaseModel):
     schematic: SchematicOut | None = None
     code_modules: list[STModuleOut] = Field(default_factory=list)
     model_config = {"from_attributes": True}
+
+
+class ConnectivityTestInput(BaseModel):
+    chat: dict  # {api_key, base_url, model}
+    embedding: dict  # {api_key, base_url, model, dimension}
 
 
 class ProgressEvent(BaseModel):

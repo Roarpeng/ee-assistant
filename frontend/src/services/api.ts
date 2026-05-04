@@ -48,11 +48,14 @@ export const api = {
           api_key: settings.chat.apiKey,
           base_url: settings.chat.baseUrl,
           model: settings.chat.model,
+          max_tokens: settings.chat.maxTokens ?? 4096,
+          temperature: settings.chat.temperature ?? 0.1,
         },
         embedding_config: {
           api_key: settings.embedding.apiKey,
           base_url: settings.embedding.baseUrl,
           model: settings.embedding.model,
+          dimension: settings.embedding.dimension ?? 4096,
         },
       }),
     });
@@ -65,16 +68,19 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        message,
+        text: message,
         llm_config: {
           api_key: settings.chat.apiKey,
           base_url: settings.chat.baseUrl,
           model: settings.chat.model,
+          max_tokens: settings.chat.maxTokens ?? 4096,
+          temperature: settings.chat.temperature ?? 0.1,
         },
         embedding_config: {
           api_key: settings.embedding.apiKey,
           base_url: settings.embedding.baseUrl,
           model: settings.embedding.model,
+          dimension: settings.embedding.dimension ?? 4096,
         },
       }),
     });
@@ -91,6 +97,8 @@ export const api = {
           api_key: settings.chat.apiKey,
           base_url: settings.chat.baseUrl,
           model: settings.chat.model,
+          max_tokens: settings.chat.maxTokens ?? 4096,
+          temperature: settings.chat.temperature ?? 0.1,
         },
       }),
     });
@@ -113,12 +121,29 @@ export const api = {
           api_key: settings.embedding.apiKey,
           base_url: settings.embedding.baseUrl,
           model: settings.embedding.model,
+          dimension: settings.embedding.dimension ?? 4096,
         },
       }),
     });
   },
 
-  listKnowledgeDocs: () => request<any[]>(`/knowledge/docs`),
+  listKnowledgeDocs: () =>
+    request<any[]>(`/knowledge/docs`),
 
   deleteKnowledgeDoc: (id: string) => request<void>(`/knowledge/docs/${id}`, { method: 'DELETE' }),
+
+  retryKnowledgeDoc: (id: string) =>
+    request<any>(`/knowledge/docs/${id}/retry`, { method: 'POST' }),
+
+  deleteKnowledgeDocs: (ids: string[]) =>
+    request<{ deleted: number }>(`/knowledge/docs`, {
+      method: 'DELETE',
+      body: JSON.stringify({ ids }),
+    }),
+
+  testConnectivity: (chat: any, embedding: any) =>
+    request<{ chat: { ok: boolean; error?: string; model?: string }; embedding: { ok: boolean; error?: string; dimension?: number } }>(
+      `/test-connectivity`,
+      { method: 'POST', body: JSON.stringify({ chat, embedding }) }
+    ),
 };

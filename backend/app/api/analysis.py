@@ -52,7 +52,16 @@ async def analyze_project_v2(project_id: str, body: RequirementInput, session: A
     project.status = "analyzing"
     await session.commit()
 
-    final_state = await orchestrator.run_graph_analysis(project_id, body.text)
+    try:
+        final_state = await orchestrator.run_graph_analysis(
+            project_id, body.text,
+            llm_config=body.llm_config,
+            embedding_config=body.embedding_config,
+        )
+    except Exception as e:
+        project.status = "draft"
+        await session.commit()
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)[:500]}")
 
     req_data = final_state.get("requirement", {})
     req = Requirement(
@@ -97,6 +106,19 @@ async def analyze_project_v2(project_id: str, body: RequirementInput, session: A
             sort_order=mod.get("sort_order", i),
         ))
 
+    project.status = "ready"
     await session.commit()
-    await session.refresh(project)
-    return project
+
+    # Re-fetch with eager-loaded relationships to avoid MissingGreenlet during serialization
+    result = await session.execute(
+        select(Project)
+        .where(Project.id == project_id)
+        .options(
+            selectinload(Project.requirement).selectinload(Requirement.io_items),
+            selectinload(Project.requirement).selectinload(Requirement.logic_rules),
+            selectinload(Project.bom_items),
+            selectinload(Project.schematic),
+            selectinload(Project.code_modules),
+        )
+    )
+    return result.scalar()

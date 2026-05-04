@@ -9,8 +9,26 @@ from app.config import settings
 class RAGEngine:
     def __init__(self):
         self.qdrant = AsyncQdrantClient(url=settings.qdrant_url)
-        self.openai = AsyncOpenAI(api_key=settings.openai_api_key)
+        self._embed_client: AsyncOpenAI | None = None
+        self._embed_model: str = settings.embed_model
+        self._embed_dim: int = settings.embedding_dim
         self.collection = settings.qdrant_collection
+
+    def _get_embed_client(self) -> AsyncOpenAI:
+        if self._embed_client:
+            return self._embed_client
+        return AsyncOpenAI(
+            api_key=settings.embed_api_key,
+            base_url=settings.embed_base_url if settings.embed_api_key else None,
+        )
+
+    def configure(self, api_key: str = "", base_url: str = "", model: str = "", dimensions: int = 0):
+        if api_key and base_url:
+            self._embed_client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+        if model:
+            self._embed_model = model
+        if dimensions:
+            self._embed_dim = dimensions
 
     async def init_collection(self):
         cols = await self.qdrant.get_collections()
@@ -18,11 +36,15 @@ class RAGEngine:
         if self.collection not in names:
             await self.qdrant.create_collection(
                 collection_name=self.collection,
-                vectors_config=VectorParams(size=settings.embedding_dim, distance=Distance.COSINE),
+                vectors_config=VectorParams(size=self._embed_dim, distance=Distance.COSINE),
             )
 
     async def embed(self, texts: list[str]) -> list[list[float]]:
-        response = await self.openai.embeddings.create(model=settings.embedding_model, input=texts)
+        client = self._get_embed_client()
+        kwargs: dict = dict(model=self._embed_model, input=texts)
+        if self._embed_dim:
+            kwargs["dimensions"] = self._embed_dim
+        response = await client.embeddings.create(**kwargs)
         return [d.embedding for d in response.data]
 
     async def index_chunks(self, chunks: list[dict], doc_id: str, metadata: dict):

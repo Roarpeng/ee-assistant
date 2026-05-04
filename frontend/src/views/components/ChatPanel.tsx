@@ -47,56 +47,98 @@ export function ChatPanel() {
 
     try {
       const response = await api.analyzeV2SSE(p.id, userMessage);
-      if (!response.body) throw new Error('No body in response');
+      const contentType = response.headers.get('content-type') || '';
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let fullText = '';
+      if (contentType.includes('text/event-stream')) {
+        // SSE streaming path (when backend supports it)
+        if (!response.body) throw new Error('No body in response');
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let fullText = '';
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n').filter((line) => line.startsWith('data: '));
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n').filter((line) => line.startsWith('data: '));
 
-        for (const line of lines) {
-          try {
-            const data = JSON.parse(line.replace('data: ', ''));
-            if (data.done) {
-              setIsProcessing(false);
-              fullText += '\n\n' + tr.chat.completed;
-              const msgs = useStore.getState().messages;
-              const lastIdx = msgs.length - 1;
-              if (lastIdx >= 0) {
-                msgs[lastIdx] = { ...msgs[lastIdx], content: fullText };
-                useStore.setState({ messages: [...msgs] });
-              }
-
-              if (data.payload) {
-                if (data.payload.topology) {
-                  useStore.getState().setTopology(
-                    data.payload.topology.nodes,
-                    data.payload.topology.edges,
-                    'ai'
-                  );
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line.replace('data: ', ''));
+              if (data.done) {
+                setIsProcessing(false);
+                fullText += '\n\n' + tr.chat.completed;
+                const msgs = useStore.getState().messages;
+                const lastIdx = msgs.length - 1;
+                if (lastIdx >= 0) {
+                  msgs[lastIdx] = { ...msgs[lastIdx], content: fullText };
+                  useStore.setState({ messages: [...msgs] });
                 }
-                if (data.payload.bom) useStore.getState().setBOM(data.payload.bom);
-                if (data.payload.sclCode) useStore.getState().setSCLCode(data.payload.sclCode);
+                if (data.payload) {
+                  if (data.payload.topology) {
+                    useStore.getState().setTopology(data.payload.topology.nodes, data.payload.topology.edges, 'ai');
+                  }
+                  if (data.payload.bom) useStore.getState().setBOM(data.payload.bom);
+                  if (data.payload.sclCode) useStore.getState().setSCLCode(data.payload.sclCode);
+                }
+                break;
+              } else if (data.step) {
+                fullText += (fullText ? '\n' : '') + data.step;
+                const msgs = useStore.getState().messages;
+                const lastIdx = msgs.length - 1;
+                if (lastIdx >= 0) {
+                  msgs[lastIdx] = { ...msgs[lastIdx], content: fullText };
+                  useStore.setState({ messages: [...msgs] });
+                }
               }
-              break;
-            } else if (data.step) {
-              fullText += (fullText ? '\n' : '') + data.step;
-              const msgs = useStore.getState().messages;
-              const lastIdx = msgs.length - 1;
-              if (lastIdx >= 0) {
-                msgs[lastIdx] = { ...msgs[lastIdx], content: fullText };
-                useStore.setState({ messages: [...msgs] });
-              }
+            } catch {
+              // skip unparseable lines
             }
-          } catch {
-            // skip unparseable lines
           }
+        }
+      } else {
+        // JSON fallback — backend returns full ProjectOut when processing completes
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`[${response.status}] ${errorText}`);
+        }
+        const projectData = await response.json();
+        setIsProcessing(false);
+
+        const msgs = useStore.getState().messages;
+        const lastIdx = msgs.length - 1;
+        if (lastIdx >= 0) {
+          msgs[lastIdx] = { ...msgs[lastIdx], content: tr.chat.completed };
+          useStore.setState({ messages: [...msgs] });
+        }
+
+        // Extract BOM
+        if (projectData.bom_items?.length) {
+          useStore.getState().setBOM(
+            projectData.bom_items.map((item: any) => ({
+              id: item.id,
+              name: `${item.category || ''} ${item.model || ''}`.trim(),
+              mfg: item.manufacturer,
+              pn: item.model,
+              qty: item.quantity,
+              specs: Object.entries(item.specifications || {}).map(([k, v]) => `${k}: ${v}`).join(', '),
+            }))
+          );
+        }
+
+        // Extract schematic
+        if (projectData.schematic?.mermaid_code) {
+          // Store mermaid in topology — FrameworkDiagram will render it
+          useStore.getState().setTopology([], [], 'ai');
+        }
+
+        // Extract ST code
+        if (projectData.code_modules?.length) {
+          const codeText = projectData.code_modules
+            .map((m: any) => `// ${m.name} (${m.module_type})\n${m.code}`)
+            .join('\n\n');
+          useStore.getState().setSCLCode(codeText);
         }
       }
     } catch (error: any) {

@@ -15,8 +15,18 @@ async def create_project(name: str = "Untitled", session: AsyncSession = Depends
     project = Project(name=name)
     session.add(project)
     await session.commit()
-    await session.refresh(project)
-    return project
+    result = await session.execute(
+        select(Project)
+        .where(Project.id == project.id)
+        .options(
+            selectinload(Project.requirement).selectinload(Requirement.io_items),
+            selectinload(Project.requirement).selectinload(Requirement.logic_rules),
+            selectinload(Project.bom_items),
+            selectinload(Project.schematic),
+            selectinload(Project.code_modules),
+        )
+    )
+    return result.scalar()
 
 
 @router.get("", response_model=list[ProjectOut])

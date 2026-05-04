@@ -112,6 +112,7 @@ class KnowledgeDoc(Base):
     manufacturer: Mapped[str] = mapped_column(String(64))
     category_tags: Mapped[list] = mapped_column(JSON, default=list)
     chunk_count: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(32), default="uploading")
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
@@ -123,7 +124,7 @@ class ComponentNode(Base):
     component_type: Mapped[str] = mapped_column(String(64))
     properties: Mapped[dict] = mapped_column(JSON, default=dict)
     community: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    source_doc_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("knowledge_docs.id"), nullable=True)
+    source_doc_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("knowledge_docs.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     source_doc: Mapped["KnowledgeDoc | None"] = relationship()
@@ -141,7 +142,7 @@ class ComponentEdge(Base):
     relation: Mapped[str] = mapped_column(String(32))
     properties: Mapped[dict] = mapped_column(JSON, default=dict)
     confidence: Mapped[str] = mapped_column(String(16), default="extracted")
-    source_doc_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("knowledge_docs.id"), nullable=True)
+    source_doc_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("knowledge_docs.id", ondelete="SET NULL"), nullable=True)
 
     source_node: Mapped["ComponentNode"] = relationship(
         back_populates="outgoing_edges", foreign_keys=[source_id]

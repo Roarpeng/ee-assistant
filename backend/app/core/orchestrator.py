@@ -46,8 +46,23 @@ class Orchestrator:
         await self.push(project_id, ProgressEvent(stage="ready", message="Requirements analysis complete.", data=req_data))
         return req_data
 
-    async def run_graph_analysis(self, project_id: str, user_input: str) -> dict:
+    async def run_graph_analysis(self, project_id: str, user_input: str,
+                                  llm_config: dict | None = None,
+                                  embedding_config: dict | None = None) -> dict:
         from app.core.graph.builder import build_graph
+        from app.core.rag_engine import rag_engine
+
+        # Configure LLM with frontend-provided settings (falls back to env vars)
+        if llm_config or embedding_config:
+            llm_service.configure(chat_config=llm_config, embed_config=embedding_config)
+        if embedding_config:
+            rag_engine.configure(
+                api_key=embedding_config.get("api_key", ""),
+                base_url=embedding_config.get("base_url", ""),
+                model=embedding_config.get("model", ""),
+                dimensions=embedding_config.get("dimension", 0),
+            )
+
         graph = build_graph()
         config = {"configurable": {"thread_id": project_id}}
         initial_state = {
@@ -65,6 +80,8 @@ class Orchestrator:
             "graph_traces": [],
             "errors": [],
             "stage": "started",
+            "llm_config": llm_config,
+            "embedding_config": embedding_config,
         }
         final_state = await graph.ainvoke(initial_state, config)
         return final_state

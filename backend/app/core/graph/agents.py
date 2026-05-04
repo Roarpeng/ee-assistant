@@ -10,7 +10,6 @@ async def requirements_agent(state: AnalysisState) -> dict:
         "requirement": req,
         "safety_level": req.get("safety_level"),
         "stage": "requirements_done",
-        "graph_traces": state.get("graph_traces", []),
     }
 
 
@@ -19,13 +18,13 @@ async def category_mapper(state: AnalysisState) -> dict:
     io_list = req.get("io_list", [])
     logic_list = req.get("control_logic", [])
     categories = await llm_service.map_categories(io_list, logic_list)
-    return {"categories": categories, "graph_traces": state.get("graph_traces", [])}
+    return {"categories": categories}
 
 
 async def safety_assessor(state: AnalysisState) -> dict:
     req = state.get("requirement", {})
     sil = req.get("safety_level", "SIL1")
-    return {"safety_level": sil, "graph_traces": state.get("graph_traces", [])}
+    return {"safety_level": sil}
 
 
 async def constraint_extractor(state: AnalysisState) -> dict:
@@ -35,7 +34,7 @@ async def constraint_extractor(state: AnalysisState) -> dict:
         "budget": req.get("budget"),
         "cabinet_size": req.get("cabinet_size"),
     }
-    return {"constraints": constraints, "graph_traces": state.get("graph_traces", [])}
+    return {"constraints": constraints}
 
 
 async def fanout_selection_supervisor(state: AnalysisState) -> dict:
@@ -45,16 +44,19 @@ async def fanout_selection_supervisor(state: AnalysisState) -> dict:
 
     categories = state.get("categories", [])
     all_bom = []
-    all_traces = list(state.get("graph_traces", []))
+    new_traces = []
 
     async with async_session() as session:
         for cat in categories:
-            results = await rag_engine.search_with_graph(
-                f"select {cat} for industrial automation",
-                component_type=cat,
-                top_k=3,
-                session=session,
-            )
+            try:
+                results = await rag_engine.search_with_graph(
+                    f"select {cat} for industrial automation",
+                    component_type=cat,
+                    top_k=3,
+                    session=session,
+                )
+            except Exception:
+                results = []
             if results:
                 best = results[0]
                 item = {
@@ -72,7 +74,7 @@ async def fanout_selection_supervisor(state: AnalysisState) -> dict:
                 }
                 all_bom.append(item)
                 if best.get("source") == "graph":
-                    all_traces.append({
+                    new_traces.append({
                         "category": cat,
                         "node_id": best.get("id"),
                         "component": best.get("content", "")[:60],
@@ -80,7 +82,7 @@ async def fanout_selection_supervisor(state: AnalysisState) -> dict:
 
     return {
         "bom_items": all_bom,
-        "graph_traces": all_traces,
+        "graph_traces": new_traces,
         "stage": "selection_done",
     }
 
@@ -93,7 +95,7 @@ async def rule_validator(state: AnalysisState) -> dict:
         "total_load_current_a": 0,
     }
     violations = validate_all(bom, req_data)
-    return {"violations": violations, "graph_traces": state.get("graph_traces", [])}
+    return {"violations": violations}
 
 
 async def schematic_generator(state: AnalysisState) -> dict:
@@ -105,7 +107,7 @@ async def schematic_generator(state: AnalysisState) -> dict:
         "safety_level": req.get("safety_level"),
     }
     mermaid = await llm_service.generate_schematic_mermaid(bom_list, req_data)
-    return {"mermaid_code": mermaid, "graph_traces": state.get("graph_traces", [])}
+    return {"mermaid_code": mermaid}
 
 
 async def code_generator(state: AnalysisState) -> dict:
@@ -120,7 +122,7 @@ async def code_generator(state: AnalysisState) -> dict:
     }
     bom_list = [{"category": i["category"], "manufacturer": i["manufacturer"], "model": i["model"]} for i in bom]
     modules = await llm_service.generate_st_code(req_data, bom_list)
-    return {"st_modules": modules, "graph_traces": state.get("graph_traces", [])}
+    return {"st_modules": modules}
 
 
 async def final_review_agent(state: AnalysisState) -> dict:
@@ -136,4 +138,4 @@ async def final_review_agent(state: AnalysisState) -> dict:
         errors = [v for v in violations if v.get("severity") == "error"]
         if errors:
             notes.append(f"{len(errors)} hard constraint violations. Review required before proceeding.")
-    return {"review_notes": notes, "graph_traces": state.get("graph_traces", [])}
+    return {"review_notes": notes}

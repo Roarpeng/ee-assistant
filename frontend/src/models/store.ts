@@ -30,6 +30,25 @@ export type BOMItem = {
   active?: boolean;
 };
 
+// ===== Knowledge Types =====
+export type KnowledgeDocStatus =
+  | 'uploading'
+  | 'chunking'
+  | 'embedding'
+  | 'graph_extracting'
+  | 'ready'
+  | 'error';
+
+export interface KnowledgeDoc {
+  id: string;
+  filename: string;
+  manufacturer: string;
+  category_tags: string[];
+  chunk_count: number;
+  status: KnowledgeDocStatus;
+  uploaded_at: string;
+}
+
 // ===== App State =====
 export type AnalysisStage =
   | 'idle'
@@ -51,6 +70,9 @@ export interface LLMSettings {
   apiKey: string;
   baseUrl: string;
   model: string;
+  maxTokens?: number;
+  temperature?: number;
+  dimension?: number;
 }
 
 export interface AppSettings {
@@ -64,8 +86,8 @@ function loadSettings(): AppSettings {
     if (raw) return JSON.parse(raw);
   } catch {}
   return {
-    chat: { apiKey: '', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o' },
-    embedding: { apiKey: '', baseUrl: 'https://api.openai.com/v1', model: 'text-embedding-3-small' },
+    chat: { apiKey: '', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o', maxTokens: 4096, temperature: 0.1 },
+    embedding: { apiKey: '', baseUrl: 'https://api.openai.com/v1', model: 'text-embedding-3-small', dimension: 4096 },
   };
 }
 
@@ -84,6 +106,10 @@ interface AppState {
   theme: 'light' | 'dark';
   language: Lang;
   settings: AppSettings;
+  knowledgeDocs: KnowledgeDoc[];
+  knowledgeSelectionMode: boolean;
+  selectedDocIds: Set<string>;
+  knowledgeLoading: boolean;
 
   setTopology: (nodes: NodeData[], edges: EdgeData[], source?: 'ai' | 'user') => void;
   setBOM: (bom: BOMItem[]) => void;
@@ -95,6 +121,12 @@ interface AppState {
   toggleTheme: () => void;
   toggleLanguage: () => void;
   updateSettings: (s: AppSettings) => void;
+  setKnowledgeDocs: (docs: KnowledgeDoc[]) => void;
+  toggleKnowledgeSelectionMode: () => void;
+  toggleDocSelection: (id: string) => void;
+  selectAllDocs: () => void;
+  clearDocSelection: () => void;
+  setKnowledgeLoading: (loading: boolean) => void;
 }
 
 let msgCounter = 0;
@@ -114,6 +146,10 @@ export const useStore = create<AppState>((set) => ({
   theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'dark',
   language: getInitialLang(),
   settings: loadSettings(),
+  knowledgeDocs: [],
+  knowledgeSelectionMode: false,
+  selectedDocIds: new Set<string>(),
+  knowledgeLoading: false,
 
   setTopology: (nodes, edges, source = 'user') =>
     set({ topology: { nodes, edges, source } }),
@@ -143,4 +179,23 @@ export const useStore = create<AppState>((set) => ({
     saveSettings(s);
     set({ settings: s });
   },
+  setKnowledgeDocs: (knowledgeDocs) => set({ knowledgeDocs }),
+  toggleKnowledgeSelectionMode: () =>
+    set((s) => ({
+      knowledgeSelectionMode: !s.knowledgeSelectionMode,
+      selectedDocIds: new Set<string>(),
+    })),
+  toggleDocSelection: (id) =>
+    set((s) => {
+      const next = new Set(s.selectedDocIds);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return { selectedDocIds: next };
+    }),
+  selectAllDocs: () =>
+    set((s) => ({
+      selectedDocIds: new Set(s.knowledgeDocs.map((d) => d.id)),
+    })),
+  clearDocSelection: () => set({ selectedDocIds: new Set<string>() }),
+  setKnowledgeLoading: (knowledgeLoading) => set({ knowledgeLoading }),
 }));

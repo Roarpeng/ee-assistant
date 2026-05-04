@@ -1,4 +1,5 @@
-from typing import TypedDict
+import operator
+from typing import Annotated, TypedDict
 
 
 class AnalysisState(TypedDict):
@@ -13,6 +14,8 @@ class AnalysisState(TypedDict):
     mermaid_code: str | None
     st_modules: list[dict] | None
     review_notes: list[str] | None
-    graph_traces: list[dict]
-    errors: list[str]
+    graph_traces: Annotated[list[dict], operator.add]
+    errors: Annotated[list[str], operator.add]
     stage: str
+    llm_config: dict | None
+    embedding_config: dict | None

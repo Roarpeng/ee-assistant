@@ -19,3 +19,4 @@ langgraph>=0.2.0
 langgraph-checkpoint-sqlite>=1.0.0
 networkx>=3.0
 python-louvain>=0.16
+minio>=7.2.0
