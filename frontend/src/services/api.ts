@@ -1,5 +1,16 @@
 const BASE = '/api';
 
+function getSettings() {
+  try {
+    const raw = localStorage.getItem('ee-settings');
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {
+    chat: { apiKey: '', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o' },
+    embedding: { apiKey: '', baseUrl: 'https://api.openai.com/v1', model: 'text-embedding-3-small' },
+  };
+}
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${url}`, {
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -14,54 +25,100 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  getSettings,
+
+  // Projects
   createProject: (name: string) =>
-    request<import('../models/project').Project>(`/projects?name=${encodeURIComponent(name)}`, { method: 'POST' }),
+    request<{ id: string; name: string }>(`/projects?name=${encodeURIComponent(name)}`, { method: 'POST' }),
 
-  getProject: (id: string) =>
-    request<import('../models/project').Project>(`/projects/${id}`),
+  getProject: (id: string) => request<any>(`/projects/${id}`),
 
-  listProjects: () =>
-    request<import('../models/project').Project[]>(`/projects`),
+  listProjects: () => request<any[]>(`/projects`),
 
-  deleteProject: (id: string) =>
-    request<void>(`/projects/${id}`, { method: 'DELETE' }),
+  deleteProject: (id: string) => request<void>(`/projects/${id}`, { method: 'DELETE' }),
 
-  analyze: (projectId: string, text: string) =>
-    request<any>(`/projects/${projectId}/analyze`, {
+  // Analysis v1 (fallback)
+  analyze: (projectId: string, text: string) => {
+    const settings = getSettings();
+    return request<any>(`/projects/${projectId}/analyze`, {
       method: 'POST',
-      body: JSON.stringify({ text }),
-    }),
+      body: JSON.stringify({
+        text,
+        llm_config: {
+          api_key: settings.chat.apiKey,
+          base_url: settings.chat.baseUrl,
+          model: settings.chat.model,
+        },
+        embedding_config: {
+          api_key: settings.embedding.apiKey,
+          base_url: settings.embedding.baseUrl,
+          model: settings.embedding.model,
+        },
+      }),
+    });
+  },
 
-  runSelection: (projectId: string) =>
-    request<any>(`/projects/${projectId}/select`, {
+  // Analysis v2 (LangGraph via SSE)
+  analyzeV2SSE: (projectId: string, message: string) => {
+    const settings = getSettings();
+    return fetch(`${BASE}/projects/${projectId}/analyze-v2`, {
       method: 'POST',
-      body: JSON.stringify({ project_id: projectId }),
-    }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        llm_config: {
+          api_key: settings.chat.apiKey,
+          base_url: settings.chat.baseUrl,
+          model: settings.chat.model,
+        },
+        embedding_config: {
+          api_key: settings.embedding.apiKey,
+          base_url: settings.embedding.baseUrl,
+          model: settings.embedding.model,
+        },
+      }),
+    });
+  },
 
-  generateSchematic: (projectId: string) =>
-    request<any>(`/projects/${projectId}/schematic`, {
+  // Topology to Code sync
+  updateCodeFromTopology: (projectId: string, topology: { nodes: any[]; edges: any[] }) => {
+    const settings = getSettings();
+    return request<{ sclCode: string }>(`/projects/${projectId}/codegen`, {
       method: 'POST',
-      body: JSON.stringify({ project_id: projectId }),
-    }),
+      body: JSON.stringify({
+        topology,
+        llm_config: {
+          api_key: settings.chat.apiKey,
+          base_url: settings.chat.baseUrl,
+          model: settings.chat.model,
+        },
+      }),
+    });
+  },
 
-  generateCode: (projectId: string) =>
-    request<any>(`/projects/${projectId}/codegen`, {
-      method: 'POST',
-      body: JSON.stringify({ project_id: projectId }),
-    }),
-
+  // Knowledge
   uploadKnowledgeDoc: (formData: FormData) =>
     fetch(`${BASE}/knowledge/docs`, { method: 'POST', body: formData }),
 
-  searchKnowledge: (query: string, filters?: { category?: string[]; manufacturer?: string }) =>
-    request<any>(`/knowledge/search`, {
+  searchKnowledge: (query: string, filters?: { category?: string[]; manufacturer?: string }) => {
+    const settings = getSettings();
+    return request<any>(`/knowledge/search`, {
       method: 'POST',
-      body: JSON.stringify({ query, category_filter: filters?.category, manufacturer_filter: filters?.manufacturer, top_k: 5 }),
-    }),
+      body: JSON.stringify({
+        query,
+        category_filter: filters?.category,
+        manufacturer_filter: filters?.manufacturer,
+        top_k: 5,
+        embedding_config: {
+          api_key: settings.embedding.apiKey,
+          base_url: settings.embedding.baseUrl,
+          model: settings.embedding.model,
+        },
+      }),
+    });
+  },
 
-  listKnowledgeDocs: () =>
-    request<any[]>(`/knowledge/docs`),
+  listKnowledgeDocs: () => request<any[]>(`/knowledge/docs`),
 
-  deleteKnowledgeDoc: (id: string) =>
-    request<void>(`/knowledge/docs/${id}`, { method: 'DELETE' }),
+  deleteKnowledgeDoc: (id: string) => request<void>(`/knowledge/docs/${id}`, { method: 'DELETE' }),
 };

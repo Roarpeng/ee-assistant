@@ -1,68 +1,109 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useStore } from '../../models/store';
+import { t } from '../../services/i18n';
+import { Header } from './Header';
 import { ChatPanel } from './ChatPanel';
-import { CanvasPanel } from './CanvasPanel';
+import { TopologyPanel } from './TopologyPanel';
+import { BOMPanel } from './BOMPanel';
+import { SCLPanel } from './SCLPanel';
+import { SettingsModal } from './SettingsModal';
 import { KnowledgePanel } from './KnowledgePanel';
-import { ThemeToggle } from './ThemeToggle';
 
 export function AppLayout() {
-  const [leftTab, setLeftTab] = useState<'chat' | 'knowledge'>('chat');
-  const [leftWidth, setLeftWidth] = useState(30);
-  const [isDragging, setIsDragging] = useState(false);
+  const activeCanvasTab = useStore((s) => s.activeCanvasTab);
+  const setActiveCanvasTab = useStore((s) => s.setActiveCanvasTab);
+  const language = useStore((s) => s.language);
+  const tr = t(language);
 
-  const handleMouseDown = () => setIsDragging(true);
-  const handleMouseUp = () => setIsDragging(false);
+  const [rightTab, setRightTab] = useState<'chat' | 'knowledge'>('chat');
+  const [sidebarWidth, setSidebarWidth] = useState(380);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const isDragging = useRef(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      const newWidth = window.innerWidth - e.clientX - 16;
+      if (newWidth > 250 && newWidth < 800) {
+        setSidebarWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (isDragging.current) {
+        isDragging.current = false;
+        document.body.style.cursor = 'default';
+        document.body.classList.remove('select-none');
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
 
   return (
-    <div
-      className="flex h-screen w-screen overflow-hidden bg-[var(--color-bg-primary)]"
-      onMouseMove={(e) => {
-        if (!isDragging) return;
-        const pct = (e.clientX / window.innerWidth) * 100;
-        setLeftWidth(Math.max(20, Math.min(50, pct)));
-      }}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-    >
+    <div className="flex h-screen bg-neutral-950 text-neutral-50 font-sans p-4 gap-4 overflow-hidden relative">
+      {/* Left: Main Workspace (Canvas) */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <Header
+          activeTab={activeCanvasTab}
+          setActiveTab={(t) => setActiveCanvasTab(t as 'topology' | 'bom' | 'code')}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+        />
+        <main className="flex-1 mt-4 overflow-hidden relative border border-neutral-800 rounded-[2.5rem] bg-neutral-900 shadow-xl">
+          {activeCanvasTab === 'topology' && <TopologyPanel />}
+          {activeCanvasTab === 'bom' && <BOMPanel />}
+          {activeCanvasTab === 'code' && <SCLPanel />}
+        </main>
+      </div>
+
+      {/* Resizer */}
       <div
-        className="flex flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
-        style={{ width: `${leftWidth}%`, minWidth: 280 }}
+        className="w-3 relative mx-[-8px] z-10 flex items-center justify-center cursor-col-resize group"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          isDragging.current = true;
+          document.body.style.cursor = 'col-resize';
+          document.body.classList.add('select-none');
+        }}
       >
-        <div className="flex items-center border-b border-[var(--color-border)]">
-          <button
-            onClick={() => setLeftTab('chat')}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-              leftTab === 'chat'
-                ? 'bg-[var(--color-bg-primary)] border-b-2 border-[var(--color-accent)] text-[var(--color-text-primary)]'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-            }`}
-          >
-            Chat
-          </button>
-          <button
-            onClick={() => setLeftTab('knowledge')}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-              leftTab === 'knowledge'
-                ? 'bg-[var(--color-bg-primary)] border-b-2 border-[var(--color-accent)] text-[var(--color-text-primary)]'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-            }`}
-          >
-            Knowledge
-          </button>
-          <ThemeToggle />
-        </div>
-        <div className="flex-1 overflow-hidden">
-          {leftTab === 'chat' ? <ChatPanel /> : <KnowledgePanel />}
+        <div className="w-1 h-12 bg-neutral-700/50 rounded-full group-hover:bg-indigo-500 group-active:bg-indigo-400 transition-colors shadow-sm" />
+      </div>
+
+      {/* Right Panel: Chat / Knowledge */}
+      <div style={{ width: sidebarWidth }} className="flex-shrink-0 flex flex-col">
+        <div className="w-full flex flex-col bg-neutral-900 border border-neutral-800 rounded-[2.5rem] shrink-0 h-full overflow-hidden shadow-xl">
+          <div className="flex border-b border-neutral-800 px-6 pt-6 gap-2 shrink-0">
+            <button
+              className={`pb-4 px-2 text-sm font-bold uppercase tracking-wide flex-1 border-b-[3px] transition-colors ${
+                rightTab === 'chat'
+                  ? 'border-indigo-500 text-indigo-400'
+                  : 'border-transparent text-neutral-500 hover:text-neutral-300'
+              }`}
+              onClick={() => setRightTab('chat')}
+            >
+              {tr.chat.tab}
+            </button>
+            <button
+              className={`pb-4 px-2 text-sm font-bold uppercase tracking-wide flex-1 border-b-[3px] transition-colors ${
+                rightTab === 'knowledge'
+                  ? 'border-indigo-500 text-indigo-400'
+                  : 'border-transparent text-neutral-500 hover:text-neutral-300'
+              }`}
+              onClick={() => setRightTab('knowledge')}
+            >
+              {tr.chat.knowledge}
+            </button>
+          </div>
+          {rightTab === 'chat' ? <ChatPanel /> : <KnowledgePanel />}
         </div>
       </div>
 
-      <div
-        className="w-1 cursor-col-resize hover:bg-[var(--color-accent)] transition-colors shrink-0"
-        onMouseDown={handleMouseDown}
-      />
-
-      <div className="flex-1 flex flex-col bg-[var(--color-bg-primary)]">
-        <CanvasPanel />
-      </div>
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 }

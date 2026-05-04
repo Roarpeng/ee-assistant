@@ -153,7 +153,7 @@
       "file_type": "code",
       "source_file": "backend\\alembic\\env.py",
       "source_location": "L1",
-      "community": 10,
+      "community": 11,
       "norm_label": "env.py",
       "id": "backend_alembic_env_py"
     },
@@ -162,7 +162,7 @@
       "file_type": "code",
       "source_file": "backend\\alembic\\env.py",
       "source_location": "L18",
-      "community": 10,
+      "community": 11,
       "norm_label": "run_migrations_offline()",
       "id": "alembic_env_run_migrations_offline"
     },
@@ -171,7 +171,7 @@
       "file_type": "code",
       "source_file": "backend\\alembic\\env.py",
       "source_location": "L25",
-      "community": 10,
+      "community": 11,
       "norm_label": "do_run_migrations()",
       "id": "alembic_env_do_run_migrations"
     },
@@ -180,7 +180,7 @@
       "file_type": "code",
       "source_file": "backend\\alembic\\env.py",
       "source_location": "L31",
-      "community": 10,
+      "community": 11,
       "norm_label": "run_async_migrations()",
       "id": "alembic_env_run_async_migrations"
     },
@@ -189,7 +189,7 @@
       "file_type": "code",
       "source_file": "backend\\alembic\\env.py",
       "source_location": "L42",
-      "community": 10,
+      "community": 11,
       "norm_label": "run_migrations_online()",
       "id": "alembic_env_run_migrations_online"
     },
@@ -198,7 +198,7 @@
       "file_type": "code",
       "source_file": "backend\\alembic\\versions\\001_initial_tables.py",
       "source_location": "L1",
-      "community": 13,
+      "community": 14,
       "norm_label": "001_initial_tables.py",
       "id": "backend_alembic_versions_001_initial_tables_py"
     },
@@ -207,7 +207,7 @@
       "file_type": "code",
       "source_file": "backend\\alembic\\versions\\001_initial_tables.py",
       "source_location": "L17",
-      "community": 13,
+      "community": 14,
       "norm_label": "upgrade()",
       "id": "versions_001_initial_tables_upgrade"
     },
@@ -216,7 +216,7 @@
       "file_type": "code",
       "source_file": "backend\\alembic\\versions\\001_initial_tables.py",
       "source_location": "L97",
-      "community": 13,
+      "community": 14,
       "norm_label": "downgrade()",
       "id": "versions_001_initial_tables_downgrade"
     },
@@ -225,7 +225,7 @@
       "file_type": "rationale",
       "source_file": "backend\\alembic\\versions\\001_initial_tables.py",
       "source_location": "L1",
-      "community": 13,
+      "community": 14,
       "norm_label": "initial: all 8 tables  revision id: 001 revises: none create date: 2026-05-01",
       "id": "versions_001_initial_tables_rationale_1"
     },
@@ -234,7 +234,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\config.py",
       "source_location": "L1",
-      "community": 17,
+      "community": 18,
       "norm_label": "config.py",
       "id": "backend_app_config_py"
     },
@@ -243,7 +243,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\config.py",
       "source_location": "L3",
-      "community": 17,
+      "community": 18,
       "norm_label": "settings",
       "id": "app_config_settings"
     },
@@ -252,7 +252,7 @@
       "file_type": "code",
       "source_file": "",
       "source_location": "",
-      "community": 17,
+      "community": 18,
       "norm_label": "basesettings",
       "id": "basesettings"
     },
@@ -261,7 +261,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\main.py",
       "source_location": "L1",
-      "community": 14,
+      "community": 15,
       "norm_label": "main.py",
       "id": "backend_app_main_py"
     },
@@ -270,7 +270,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\main.py",
       "source_location": "L17",
-      "community": 14,
+      "community": 15,
       "norm_label": "lifespan()",
       "id": "app_main_lifespan"
     },
@@ -279,7 +279,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\main.py",
       "source_location": "L42",
-      "community": 14,
+      "community": 15,
       "norm_label": "health()",
       "id": "app_main_health"
     },
@@ -288,7 +288,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\main.py",
       "source_location": "L47",
-      "community": 14,
+      "community": 15,
       "norm_label": "project_progress()",
       "id": "app_main_project_progress"
     },
@@ -297,7 +297,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\__init__.py",
       "source_location": "L1",
-      "community": 38,
+      "community": 42,
       "norm_label": "__init__.py",
       "id": "backend_app_init_py"
     },
@@ -405,7 +405,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\api\\projects.py",
       "source_location": "L1",
-      "community": 11,
+      "community": 12,
       "norm_label": "projects.py",
       "id": "backend_app_api_projects_py"
     },
@@ -414,7 +414,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\api\\projects.py",
       "source_location": "L14",
-      "community": 11,
+      "community": 12,
       "norm_label": "create_project()",
       "id": "api_projects_create_project"
     },
@@ -423,7 +423,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\api\\projects.py",
       "source_location": "L23",
-      "community": 11,
+      "community": 12,
       "norm_label": "list_projects()",
       "id": "api_projects_list_projects"
     },
@@ -432,7 +432,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\api\\projects.py",
       "source_location": "L31",
-      "community": 11,
+      "community": 12,
       "norm_label": "get_project()",
       "id": "api_projects_get_project"
     },
@@ -441,7 +441,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\api\\projects.py",
       "source_location": "L50",
-      "community": 11,
+      "community": 12,
       "norm_label": "delete_project()",
       "id": "api_projects_delete_project"
     },
@@ -486,7 +486,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\api\\__init__.py",
       "source_location": "L1",
-      "community": 39,
+      "community": 43,
       "norm_label": "__init__.py",
       "id": "backend_app_api_init_py"
     },
@@ -990,7 +990,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\core\\__init__.py",
       "source_location": "L1",
-      "community": 40,
+      "community": 44,
       "norm_label": "__init__.py",
       "id": "backend_app_core_init_py"
     },
@@ -1107,7 +1107,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\db\\repository.py",
       "source_location": "L1",
-      "community": 20,
+      "community": 24,
       "norm_label": "repository.py",
       "id": "backend_app_db_repository_py"
     },
@@ -1116,7 +1116,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\db\\repository.py",
       "source_location": "L8",
-      "community": 20,
+      "community": 24,
       "norm_label": "get_session()",
       "id": "db_repository_get_session"
     },
@@ -1125,7 +1125,7 @@
       "file_type": "code",
       "source_file": "backend\\app\\db\\__init__.py",
       "source_location": "L1",
-      "community": 41,
+      "community": 45,
       "norm_label": "__init__.py",
       "id": "backend_app_db_init_py"
     },
@@ -1134,7 +1134,7 @@
       "file_type": "code",
       "source_file": "backend\\tests\\conftest.py",
       "source_location": "L1",
-      "community": 21,
+      "community": 25,
       "norm_label": "conftest.py",
       "id": "backend_tests_conftest_py"
     },
@@ -1143,7 +1143,7 @@
       "file_type": "code",
       "source_file": "backend\\tests\\conftest.py",
       "source_location": "L13",
-      "community": 21,
+      "community": 25,
       "norm_label": "setup_database()",
       "id": "tests_conftest_setup_database"
     },
@@ -1152,7 +1152,7 @@
       "file_type": "code",
       "source_file": "backend\\tests\\test_api_analysis.py",
       "source_location": "L1",
-      "community": 22,
+      "community": 26,
       "norm_label": "test_api_analysis.py",
       "id": "backend_tests_test_api_analysis_py"
     },
@@ -1161,7 +1161,7 @@
       "file_type": "code",
       "source_file": "backend\\tests\\test_api_analysis.py",
       "source_location": "L7",
-      "community": 22,
+      "community": 26,
       "norm_label": "test_analyze_endpoint_requires_project()",
       "id": "tests_test_api_analysis_test_analyze_endpoint_requires_project"
     },
@@ -1287,7 +1287,7 @@
       "file_type": "code",
       "source_file": "backend\\tests\\__init__.py",
       "source_location": "L1",
-      "community": 42,
+      "community": 46,
       "norm_label": "__init__.py",
       "id": "backend_tests_init_py"
     },
@@ -1296,7 +1296,7 @@
       "file_type": "code",
       "source_file": "frontend\\postcss.config.js",
       "source_location": "L1",
-      "community": 43,
+      "community": 47,
       "norm_label": "postcss.config.js",
       "id": "frontend_postcss_config_js"
     },
@@ -1305,7 +1305,7 @@
       "file_type": "code",
       "source_file": "frontend\\tailwind.config.js",
       "source_location": "L1",
-      "community": 44,
+      "community": 48,
       "norm_label": "tailwind.config.js",
       "id": "frontend_tailwind_config_js"
     },
@@ -1314,7 +1314,7 @@
       "file_type": "code",
       "source_file": "frontend\\vite.config.ts",
       "source_location": "L1",
-      "community": 45,
+      "community": 49,
       "norm_label": "vite.config.ts",
       "id": "frontend_vite_config_ts"
     },
@@ -1323,7 +1323,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\App.tsx",
       "source_location": "L1",
-      "community": 23,
+      "community": 27,
       "norm_label": "app.tsx",
       "id": "frontend_src_app_tsx"
     },
@@ -1332,7 +1332,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\App.tsx",
       "source_location": "L3",
-      "community": 23,
+      "community": 27,
       "norm_label": "app()",
       "id": "src_app_app"
     },
@@ -1341,7 +1341,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\main.tsx",
       "source_location": "L1",
-      "community": 46,
+      "community": 50,
       "norm_label": "main.tsx",
       "id": "frontend_src_main_tsx"
     },
@@ -1350,7 +1350,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\models\\codegen.ts",
       "source_location": "L1",
-      "community": 47,
+      "community": 51,
       "norm_label": "codegen.ts",
       "id": "frontend_src_models_codegen_ts"
     },
@@ -1359,7 +1359,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\models\\project.ts",
       "source_location": "L1",
-      "community": 48,
+      "community": 52,
       "norm_label": "project.ts",
       "id": "frontend_src_models_project_ts"
     },
@@ -1368,7 +1368,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\models\\schematic.ts",
       "source_location": "L1",
-      "community": 49,
+      "community": 53,
       "norm_label": "schematic.ts",
       "id": "frontend_src_models_schematic_ts"
     },
@@ -1377,7 +1377,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\models\\selection.ts",
       "source_location": "L1",
-      "community": 50,
+      "community": 54,
       "norm_label": "selection.ts",
       "id": "frontend_src_models_selection_ts"
     },
@@ -1386,7 +1386,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\models\\store.ts",
       "source_location": "L1",
-      "community": 51,
+      "community": 35,
       "norm_label": "store.ts",
       "id": "frontend_src_models_store_ts"
     },
@@ -1395,7 +1395,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\services\\analysis.ts",
       "source_location": "L1",
-      "community": 24,
+      "community": 28,
       "norm_label": "analysis.ts",
       "id": "frontend_src_services_analysis_ts"
     },
@@ -1404,7 +1404,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\services\\analysis.ts",
       "source_location": "L5",
-      "community": 24,
+      "community": 28,
       "norm_label": "runfullanalysis()",
       "id": "services_analysis_runfullanalysis"
     },
@@ -1413,7 +1413,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\services\\api.ts",
       "source_location": "L1",
-      "community": 25,
+      "community": 23,
       "norm_label": "api.ts",
       "id": "frontend_src_services_api_ts"
     },
@@ -1421,8 +1421,8 @@
       "label": "request()",
       "file_type": "code",
       "source_file": "frontend\\src\\services\\api.ts",
-      "source_location": "L3",
-      "community": 25,
+      "source_location": "L14",
+      "community": 23,
       "norm_label": "request()",
       "id": "services_api_request"
     },
@@ -1431,7 +1431,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\services\\export.ts",
       "source_location": "L1",
-      "community": 52,
+      "community": 55,
       "norm_label": "export.ts",
       "id": "frontend_src_services_export_ts"
     },
@@ -1440,7 +1440,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\services\\websocket.ts",
       "source_location": "L1",
-      "community": 15,
+      "community": 16,
       "norm_label": "websocket.ts",
       "id": "frontend_src_services_websocket_ts"
     },
@@ -1449,7 +1449,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\services\\websocket.ts",
       "source_location": "L4",
-      "community": 15,
+      "community": 16,
       "norm_label": "websocketclient",
       "id": "services_websocket_websocketclient"
     },
@@ -1458,7 +1458,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\services\\websocket.ts",
       "source_location": "L8",
-      "community": 15,
+      "community": 16,
       "norm_label": ".connect()",
       "id": "services_websocket_websocketclient_connect"
     },
@@ -1467,7 +1467,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\services\\websocket.ts",
       "source_location": "L26",
-      "community": 15,
+      "community": 16,
       "norm_label": ".disconnect()",
       "id": "services_websocket_websocketclient_disconnect"
     },
@@ -1476,7 +1476,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\AppLayout.tsx",
       "source_location": "L1",
-      "community": 32,
+      "community": 22,
       "norm_label": "applayout.tsx",
       "id": "frontend_src_views_components_applayout_tsx"
     },
@@ -1485,7 +1485,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\BOMTable.tsx",
       "source_location": "L1",
-      "community": 26,
+      "community": 29,
       "norm_label": "bomtable.tsx",
       "id": "frontend_src_views_components_bomtable_tsx"
     },
@@ -1494,7 +1494,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\BOMTable.tsx",
       "source_location": "L3",
-      "community": 26,
+      "community": 29,
       "norm_label": "confidencebadge()",
       "id": "components_bomtable_confidencebadge"
     },
@@ -1503,7 +1503,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\BOMTable.tsx",
       "source_location": "L9",
-      "community": 26,
+      "community": 29,
       "norm_label": "bomtable()",
       "id": "components_bomtable_bomtable"
     },
@@ -1512,7 +1512,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\CanvasPanel.tsx",
       "source_location": "L1",
-      "community": 53,
+      "community": 56,
       "norm_label": "canvaspanel.tsx",
       "id": "frontend_src_views_components_canvaspanel_tsx"
     },
@@ -1521,7 +1521,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\ChatInput.tsx",
       "source_location": "L1",
-      "community": 33,
+      "community": 36,
       "norm_label": "chatinput.tsx",
       "id": "frontend_src_views_components_chatinput_tsx"
     },
@@ -1530,7 +1530,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\ChatInput.tsx",
       "source_location": "L3",
-      "community": 33,
+      "community": 36,
       "norm_label": "chatinput()",
       "id": "components_chatinput_chatinput"
     },
@@ -1539,7 +1539,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\ChatMessage.tsx",
       "source_location": "L1",
-      "community": 34,
+      "community": 37,
       "norm_label": "chatmessage.tsx",
       "id": "frontend_src_views_components_chatmessage_tsx"
     },
@@ -1548,7 +1548,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\ChatMessage.tsx",
       "source_location": "L3",
-      "community": 34,
+      "community": 37,
       "norm_label": "chatmessage()",
       "id": "components_chatmessage_chatmessage"
     },
@@ -1557,7 +1557,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\ChatPanel.tsx",
       "source_location": "L1",
-      "community": 35,
+      "community": 19,
       "norm_label": "chatpanel.tsx",
       "id": "frontend_src_views_components_chatpanel_tsx"
     },
@@ -1566,7 +1566,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\ChatPanel.tsx",
       "source_location": "L8",
-      "community": 35,
+      "community": 19,
       "norm_label": "chatpanel()",
       "id": "components_chatpanel_chatpanel"
     },
@@ -1575,7 +1575,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\ExportToolbar.tsx",
       "source_location": "L1",
-      "community": 27,
+      "community": 30,
       "norm_label": "exporttoolbar.tsx",
       "id": "frontend_src_views_components_exporttoolbar_tsx"
     },
@@ -1584,7 +1584,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\ExportToolbar.tsx",
       "source_location": "L4",
-      "community": 27,
+      "community": 30,
       "norm_label": "exporttoolbar()",
       "id": "components_exporttoolbar_exporttoolbar"
     },
@@ -1593,7 +1593,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\FileDropZone.tsx",
       "source_location": "L1",
-      "community": 28,
+      "community": 31,
       "norm_label": "filedropzone.tsx",
       "id": "frontend_src_views_components_filedropzone_tsx"
     },
@@ -1602,7 +1602,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\FileDropZone.tsx",
       "source_location": "L3",
-      "community": 28,
+      "community": 31,
       "norm_label": "filedropzone()",
       "id": "components_filedropzone_filedropzone"
     },
@@ -1611,7 +1611,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\FrameworkDiagram.tsx",
       "source_location": "L1",
-      "community": 29,
+      "community": 32,
       "norm_label": "frameworkdiagram.tsx",
       "id": "frontend_src_views_components_frameworkdiagram_tsx"
     },
@@ -1620,7 +1620,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\FrameworkDiagram.tsx",
       "source_location": "L6",
-      "community": 29,
+      "community": 32,
       "norm_label": "frameworkdiagram()",
       "id": "components_frameworkdiagram_frameworkdiagram"
     },
@@ -1629,7 +1629,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\KnowledgePanel.tsx",
       "source_location": "L1",
-      "community": 36,
+      "community": 38,
       "norm_label": "knowledgepanel.tsx",
       "id": "frontend_src_views_components_knowledgepanel_tsx"
     },
@@ -1638,7 +1638,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\KnowledgePanel.tsx",
       "source_location": "L13",
-      "community": 36,
+      "community": 38,
       "norm_label": "knowledgepanel()",
       "id": "components_knowledgepanel_knowledgepanel"
     },
@@ -1647,7 +1647,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\ProgressStepper.tsx",
       "source_location": "L1",
-      "community": 54,
+      "community": 57,
       "norm_label": "progressstepper.tsx",
       "id": "frontend_src_views_components_progressstepper_tsx"
     },
@@ -1656,7 +1656,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\STCodeView.tsx",
       "source_location": "L1",
-      "community": 30,
+      "community": 33,
       "norm_label": "stcodeview.tsx",
       "id": "frontend_src_views_components_stcodeview_tsx"
     },
@@ -1665,7 +1665,7 @@
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\STCodeView.tsx",
       "source_location": "L4",
-      "community": 30,
+      "community": 33,
       "norm_label": "stcodeview()",
       "id": "components_stcodeview_stcodeview"
     },
@@ -1925,7 +1925,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 13,
       "norm_label": "validate_all - master validation entry",
       "id": "rule_engine_validate_all"
     },
@@ -1938,7 +1938,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 13,
       "norm_label": "check_breaker_rating rule",
       "id": "rule_engine_breaker"
     },
@@ -1951,7 +1951,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 13,
       "norm_label": "check_sil_redundancy rule",
       "id": "rule_engine_sil"
     },
@@ -1964,7 +1964,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 13,
       "norm_label": "check_protocol_compatibility rule",
       "id": "rule_engine_protocol"
     },
@@ -1977,7 +1977,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 13,
       "norm_label": "check_voltage_matching rule",
       "id": "rule_engine_voltage"
     },
@@ -1990,7 +1990,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 13,
       "norm_label": "check_motor_starter_match rule",
       "id": "rule_engine_motor"
     },
@@ -2172,7 +2172,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 37,
+      "community": 39,
       "norm_label": "test database fixture",
       "id": "conftest_setup_database"
     },
@@ -2185,7 +2185,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 55,
+      "community": 58,
       "norm_label": "api analysis endpoint tests",
       "id": "test_api_analysis"
     },
@@ -2198,7 +2198,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 37,
+      "community": 39,
       "norm_label": "rag engine tests",
       "id": "test_rag_engine"
     },
@@ -2211,7 +2211,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 56,
+      "community": 59,
       "norm_label": "rule engine validation tests",
       "id": "test_rule_engine"
     },
@@ -2224,7 +2224,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 57,
+      "community": 60,
       "norm_label": "schema validation tests",
       "id": "test_schemas"
     },
@@ -2250,7 +2250,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 31,
+      "community": 34,
       "norm_label": "react app root component",
       "id": "App"
     },
@@ -2263,7 +2263,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 31,
+      "community": 34,
       "norm_label": "react dom entry point",
       "id": "main_entry"
     },
@@ -2302,7 +2302,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 58,
+      "community": 61,
       "norm_label": "frontend requirement model",
       "id": "Requirement"
     },
@@ -2406,7 +2406,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 31,
+      "community": 34,
       "norm_label": "main application layout component",
       "id": "AppLayout"
     },
@@ -2628,7 +2628,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Targets professional electrical engineers in industrial automation. Siemens S7-1200/S7-1500 first, architecture reserves multi-brand extension. Chat-driven requirements analysis with RAG-based component selection, block-diagram schematics, and PLC ST code generation deployed via Docker Compose.",
-      "community": 18,
+      "community": 20,
       "norm_label": "ee assistant application",
       "id": "design_EE_Assistant"
     },
@@ -2763,7 +2763,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 20,
       "norm_label": "docker compose deployment (5 services)",
       "id": "dockercompose_Docker_Services"
     },
@@ -2776,7 +2776,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 20,
       "norm_label": "ee assistant project overview",
       "id": "readme_EE_Assistant_Overview"
     },
@@ -2789,7 +2789,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 20,
       "norm_label": "ee assistant implementation plan",
       "id": "plan_Implementation_Plan"
     },
@@ -2798,801 +2798,990 @@
       "file_type": "code",
       "source_file": "backend\\alembic\\env.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py",
-      "community": 10,
-      "norm_label": "env.py"
+      "community": 11,
+      "norm_label": "env.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py"
     },
     {
       "label": "config.py",
       "file_type": "code",
       "source_file": "backend\\app\\config.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_config_py",
-      "community": 17,
-      "norm_label": "config.py"
+      "community": 18,
+      "norm_label": "config.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_config_py"
     },
     {
       "label": "main.py",
       "file_type": "code",
       "source_file": "backend\\app\\main.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_main_py",
-      "community": 14,
-      "norm_label": "main.py"
+      "community": 15,
+      "norm_label": "main.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_main_py"
     },
     {
       "label": "__init__.py",
       "file_type": "code",
       "source_file": "backend\\app\\__init__.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_init_py",
-      "community": 59,
-      "norm_label": "__init__.py"
+      "community": 62,
+      "norm_label": "__init__.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_init_py"
     },
     {
       "label": "conftest.py",
       "file_type": "code",
       "source_file": "backend\\tests\\conftest.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_conftest_py",
-      "community": 21,
-      "norm_label": "conftest.py"
+      "community": 25,
+      "norm_label": "conftest.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_conftest_py"
     },
     {
       "label": "test_api_analysis.py",
       "file_type": "code",
       "source_file": "backend\\tests\\test_api_analysis.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_api_analysis_py",
-      "community": 22,
-      "norm_label": "test_api_analysis.py"
+      "community": 26,
+      "norm_label": "test_api_analysis.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_api_analysis_py"
     },
     {
       "label": "test_rag_engine.py",
       "file_type": "code",
       "source_file": "backend\\tests\\test_rag_engine.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rag_engine_py",
       "community": 4,
-      "norm_label": "test_rag_engine.py"
+      "norm_label": "test_rag_engine.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rag_engine_py"
     },
     {
       "label": "test_rule_engine.py",
       "file_type": "code",
       "source_file": "backend\\tests\\test_rule_engine.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py",
       "community": 5,
-      "norm_label": "test_rule_engine.py"
+      "norm_label": "test_rule_engine.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py"
     },
     {
       "label": "test_schemas.py",
       "file_type": "code",
       "source_file": "backend\\tests\\test_schemas.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_schemas_py",
       "community": 2,
-      "norm_label": "test_schemas.py"
+      "norm_label": "test_schemas.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_schemas_py"
     },
     {
       "label": "__init__.py",
       "file_type": "code",
       "source_file": "backend\\tests\\__init__.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_init_py",
-      "community": 60,
-      "norm_label": "__init__.py"
+      "community": 63,
+      "norm_label": "__init__.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_init_py"
     },
     {
       "label": "analyze_project_v2()",
       "file_type": "code",
       "source_file": "backend\\app\\api\\analysis.py",
       "source_location": "L40",
-      "id": "api_analysis_analyze_project_v2",
       "community": 0,
-      "norm_label": "analyze_project_v2()"
+      "norm_label": "analyze_project_v2()",
+      "id": "api_analysis_analyze_project_v2"
     },
     {
       "label": "codegen.py",
       "file_type": "code",
       "source_file": "backend\\app\\api\\codegen.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_codegen_py",
       "community": 0,
-      "norm_label": "codegen.py"
+      "norm_label": "codegen.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_codegen_py"
     },
     {
       "label": "_extract_graph_knowledge()",
       "file_type": "code",
       "source_file": "backend\\app\\api\\knowledge.py",
       "source_location": "L78",
-      "id": "api_knowledge_extract_graph_knowledge",
       "community": 7,
-      "norm_label": "_extract_graph_knowledge()"
+      "norm_label": "_extract_graph_knowledge()",
+      "id": "api_knowledge_extract_graph_knowledge"
     },
     {
       "label": "Extract component entities and relationships from PDF text into the knowledge gr",
       "file_type": "rationale",
       "source_file": "backend\\app\\api\\knowledge.py",
       "source_location": "L79",
-      "id": "api_knowledge_rationale_79",
       "community": 7,
-      "norm_label": "extract component entities and relationships from pdf text into the knowledge gr"
+      "norm_label": "extract component entities and relationships from pdf text into the knowledge gr",
+      "id": "api_knowledge_rationale_79"
     },
     {
       "label": "projects.py",
       "file_type": "code",
       "source_file": "backend\\app\\api\\projects.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py",
-      "community": 11,
-      "norm_label": "projects.py"
+      "community": 12,
+      "norm_label": "projects.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py"
     },
     {
       "label": "schematic.py",
       "file_type": "code",
       "source_file": "backend\\app\\api\\schematic.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_schematic_py",
       "community": 0,
-      "norm_label": "schematic.py"
+      "norm_label": "schematic.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_schematic_py"
     },
     {
       "label": "selection.py",
       "file_type": "code",
       "source_file": "backend\\app\\api\\selection.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_selection_py",
       "community": 5,
-      "norm_label": "selection.py"
+      "norm_label": "selection.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_selection_py"
     },
     {
       "label": "__init__.py",
       "file_type": "code",
       "source_file": "backend\\app\\api\\__init__.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_init_py",
-      "community": 61,
-      "norm_label": "__init__.py"
+      "community": 64,
+      "norm_label": "__init__.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_init_py"
     },
     {
       "label": "community_detector.py",
       "file_type": "code",
       "source_file": "backend\\app\\core\\community_detector.py",
       "source_location": "L1",
-      "id": "backend_app_core_community_detector_py",
       "community": 7,
-      "norm_label": "community_detector.py"
+      "norm_label": "community_detector.py",
+      "id": "backend_app_core_community_detector_py"
     },
     {
       "label": "CommunityDetector",
       "file_type": "code",
       "source_file": "backend\\app\\core\\community_detector.py",
       "source_location": "L6",
-      "id": "core_community_detector_communitydetector",
       "community": 7,
-      "norm_label": "communitydetector"
+      "norm_label": "communitydetector",
+      "id": "core_community_detector_communitydetector"
     },
     {
       "label": ".detect()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\community_detector.py",
       "source_location": "L7",
-      "id": "core_community_detector_communitydetector_detect",
       "community": 7,
-      "norm_label": ".detect()"
+      "norm_label": ".detect()",
+      "id": "core_community_detector_communitydetector_detect"
     },
     {
       "label": "Community detection on component knowledge graph using NetworkX Louvain.",
       "file_type": "rationale",
       "source_file": "backend\\app\\core\\community_detector.py",
       "source_location": "L1",
-      "id": "core_community_detector_rationale_1",
       "community": 7,
-      "norm_label": "community detection on component knowledge graph using networkx louvain."
+      "norm_label": "community detection on component knowledge graph using networkx louvain.",
+      "id": "core_community_detector_rationale_1"
     },
     {
       "label": "Run Louvain community detection.          nodes: [{id, name, component_type}, ..",
       "file_type": "rationale",
       "source_file": "backend\\app\\core\\community_detector.py",
       "source_location": "L8",
-      "id": "core_community_detector_rationale_8",
       "community": 7,
-      "norm_label": "run louvain community detection.          nodes: [{id, name, component_type}, .."
+      "norm_label": "run louvain community detection.          nodes: [{id, name, component_type}, ..",
+      "id": "core_community_detector_rationale_8"
     },
     {
       "label": "entity_extractor.py",
       "file_type": "code",
       "source_file": "backend\\app\\core\\entity_extractor.py",
       "source_location": "L1",
-      "id": "backend_app_core_entity_extractor_py",
-      "community": 16,
-      "norm_label": "entity_extractor.py"
+      "community": 17,
+      "norm_label": "entity_extractor.py",
+      "id": "backend_app_core_entity_extractor_py"
     },
     {
       "label": "EntityExtractor",
       "file_type": "code",
       "source_file": "backend\\app\\core\\entity_extractor.py",
       "source_location": "L43",
-      "id": "core_entity_extractor_entityextractor",
-      "community": 16,
-      "norm_label": "entityextractor"
+      "community": 17,
+      "norm_label": "entityextractor",
+      "id": "core_entity_extractor_entityextractor"
     },
     {
       "label": ".extract_entities()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\entity_extractor.py",
       "source_location": "L44",
-      "id": "core_entity_extractor_entityextractor_extract_entities",
-      "community": 16,
-      "norm_label": ".extract_entities()"
+      "community": 17,
+      "norm_label": ".extract_entities()",
+      "id": "core_entity_extractor_entityextractor_extract_entities"
     },
     {
       "label": ".extract_relations()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\entity_extractor.py",
       "source_location": "L66",
-      "id": "core_entity_extractor_entityextractor_extract_relations",
-      "community": 16,
-      "norm_label": ".extract_relations()"
+      "community": 17,
+      "norm_label": ".extract_relations()",
+      "id": "core_entity_extractor_entityextractor_extract_relations"
     },
     {
       "label": "LLM-powered entity and relation extraction from PDF text for component knowledge",
       "file_type": "rationale",
       "source_file": "backend\\app\\core\\entity_extractor.py",
       "source_location": "L1",
-      "id": "core_entity_extractor_rationale_1",
-      "community": 16,
-      "norm_label": "llm-powered entity and relation extraction from pdf text for component knowledge"
+      "community": 17,
+      "norm_label": "llm-powered entity and relation extraction from pdf text for component knowledge",
+      "id": "core_entity_extractor_rationale_1"
     },
     {
       "label": "knowledge_graph.py",
       "file_type": "code",
       "source_file": "backend\\app\\core\\knowledge_graph.py",
       "source_location": "L1",
-      "id": "backend_app_core_knowledge_graph_py",
       "community": 4,
-      "norm_label": "knowledge_graph.py"
+      "norm_label": "knowledge_graph.py",
+      "id": "backend_app_core_knowledge_graph_py"
     },
     {
       "label": "ComponentGraph",
       "file_type": "code",
       "source_file": "backend\\app\\core\\knowledge_graph.py",
       "source_location": "L20",
-      "id": "core_knowledge_graph_componentgraph",
       "community": 4,
-      "norm_label": "componentgraph"
+      "norm_label": "componentgraph",
+      "id": "core_knowledge_graph_componentgraph"
     },
     {
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\knowledge_graph.py",
       "source_location": "L21",
-      "id": "core_knowledge_graph_componentgraph_init",
       "community": 4,
-      "norm_label": ".__init__()"
+      "norm_label": ".__init__()",
+      "id": "core_knowledge_graph_componentgraph_init"
     },
     {
       "label": ".upsert_node()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\knowledge_graph.py",
       "source_location": "L24",
-      "id": "core_knowledge_graph_componentgraph_upsert_node",
       "community": 4,
-      "norm_label": ".upsert_node()"
+      "norm_label": ".upsert_node()",
+      "id": "core_knowledge_graph_componentgraph_upsert_node"
     },
     {
       "label": ".add_edge()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\knowledge_graph.py",
       "source_location": "L46",
-      "id": "core_knowledge_graph_componentgraph_add_edge",
       "community": 4,
-      "norm_label": ".add_edge()"
+      "norm_label": ".add_edge()",
+      "id": "core_knowledge_graph_componentgraph_add_edge"
     },
     {
       "label": ".get_neighbors()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\knowledge_graph.py",
       "source_location": "L73",
-      "id": "core_knowledge_graph_componentgraph_get_neighbors",
       "community": 4,
-      "norm_label": ".get_neighbors()"
+      "norm_label": ".get_neighbors()",
+      "id": "core_knowledge_graph_componentgraph_get_neighbors"
     },
     {
       "label": ".bfs_traverse()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\knowledge_graph.py",
       "source_location": "L87",
-      "id": "core_knowledge_graph_componentgraph_bfs_traverse",
       "community": 4,
-      "norm_label": ".bfs_traverse()"
+      "norm_label": ".bfs_traverse()",
+      "id": "core_knowledge_graph_componentgraph_bfs_traverse"
     },
     {
       "label": ".search_by_type()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\knowledge_graph.py",
       "source_location": "L115",
-      "id": "core_knowledge_graph_componentgraph_search_by_type",
       "community": 4,
-      "norm_label": ".search_by_type()"
+      "norm_label": ".search_by_type()",
+      "id": "core_knowledge_graph_componentgraph_search_by_type"
     },
     {
       "label": ".update_communities()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\knowledge_graph.py",
       "source_location": "L132",
-      "id": "core_knowledge_graph_componentgraph_update_communities",
       "community": 4,
-      "norm_label": ".update_communities()"
+      "norm_label": ".update_communities()",
+      "id": "core_knowledge_graph_componentgraph_update_communities"
     },
     {
       "label": "Component knowledge graph \u2014 CRUD + BFS traversal over PostgreSQL tables.",
       "file_type": "rationale",
       "source_file": "backend\\app\\core\\knowledge_graph.py",
       "source_location": "L1",
-      "id": "core_knowledge_graph_rationale_1",
       "community": 0,
-      "norm_label": "component knowledge graph \u2014 crud + bfs traversal over postgresql tables."
+      "norm_label": "component knowledge graph \u2014 crud + bfs traversal over postgresql tables.",
+      "id": "core_knowledge_graph_rationale_1"
     },
     {
       "label": "llm_service.py",
       "file_type": "code",
       "source_file": "backend\\app\\core\\llm_service.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_llm_service_py",
       "community": 9,
-      "norm_label": "llm_service.py"
+      "norm_label": "llm_service.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_llm_service_py"
     },
     {
       "label": ".run_graph_analysis()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\orchestrator.py",
       "source_location": "L49",
-      "id": "core_orchestrator_orchestrator_run_graph_analysis",
       "community": 0,
-      "norm_label": ".run_graph_analysis()"
+      "norm_label": ".run_graph_analysis()",
+      "id": "core_orchestrator_orchestrator_run_graph_analysis"
     },
     {
       "label": ".search_with_graph()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\rag_engine.py",
       "source_location": "L74",
-      "id": "core_rag_engine_ragengine_search_with_graph",
       "community": 4,
-      "norm_label": ".search_with_graph()"
+      "norm_label": ".search_with_graph()",
+      "id": "core_rag_engine_ragengine_search_with_graph"
     },
     {
       "label": "Dual-path search: Qdrant semantic + graph neighbor lookup.",
       "file_type": "rationale",
       "source_file": "backend\\app\\core\\rag_engine.py",
       "source_location": "L75",
-      "id": "core_rag_engine_rationale_75",
       "community": 4,
-      "norm_label": "dual-path search: qdrant semantic + graph neighbor lookup."
+      "norm_label": "dual-path search: qdrant semantic + graph neighbor lookup.",
+      "id": "core_rag_engine_rationale_75"
     },
     {
       "label": "rule_engine.py",
       "file_type": "code",
       "source_file": "backend\\app\\core\\rule_engine.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
       "community": 5,
-      "norm_label": "rule_engine.py"
+      "norm_label": "rule_engine.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py"
     },
     {
       "label": "schemas.py",
       "file_type": "code",
       "source_file": "backend\\app\\core\\schemas.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "community": 2,
-      "norm_label": "schemas.py"
+      "norm_label": "schemas.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "label": "__init__.py",
       "file_type": "code",
       "source_file": "backend\\app\\core\\__init__.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_init_py",
-      "community": 62,
-      "norm_label": "__init__.py"
+      "community": 65,
+      "norm_label": "__init__.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_init_py"
     },
     {
       "label": "ComponentNode",
       "file_type": "code",
       "source_file": "backend\\app\\db\\models.py",
       "source_location": "L118",
-      "id": "db_models_componentnode",
       "community": 0,
-      "norm_label": "componentnode"
+      "norm_label": "componentnode",
+      "id": "db_models_componentnode"
     },
     {
       "label": "ComponentEdge",
       "file_type": "code",
       "source_file": "backend\\app\\db\\models.py",
       "source_location": "L135",
-      "id": "db_models_componentedge",
       "community": 0,
-      "norm_label": "componentedge"
+      "norm_label": "componentedge",
+      "id": "db_models_componentedge"
     },
     {
       "label": "repository.py",
       "file_type": "code",
       "source_file": "backend\\app\\db\\repository.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_db_repository_py",
-      "community": 20,
-      "norm_label": "repository.py"
+      "community": 24,
+      "norm_label": "repository.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_db_repository_py"
     },
     {
       "label": "__init__.py",
       "file_type": "code",
       "source_file": "backend\\app\\db\\__init__.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_db_init_py",
-      "community": 63,
-      "norm_label": "__init__.py"
+      "community": 66,
+      "norm_label": "__init__.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_db_init_py"
     },
     {
       "label": "agents.py",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\agents.py",
       "source_location": "L1",
-      "id": "backend_app_core_graph_agents_py",
       "community": 6,
-      "norm_label": "agents.py"
+      "norm_label": "agents.py",
+      "id": "backend_app_core_graph_agents_py"
     },
     {
       "label": "requirements_agent()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\agents.py",
       "source_location": "L7",
-      "id": "graph_agents_requirements_agent",
       "community": 6,
-      "norm_label": "requirements_agent()"
+      "norm_label": "requirements_agent()",
+      "id": "graph_agents_requirements_agent"
     },
     {
       "label": "category_mapper()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\agents.py",
       "source_location": "L17",
-      "id": "graph_agents_category_mapper",
       "community": 6,
-      "norm_label": "category_mapper()"
+      "norm_label": "category_mapper()",
+      "id": "graph_agents_category_mapper"
     },
     {
       "label": "safety_assessor()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\agents.py",
       "source_location": "L25",
-      "id": "graph_agents_safety_assessor",
       "community": 6,
-      "norm_label": "safety_assessor()"
+      "norm_label": "safety_assessor()",
+      "id": "graph_agents_safety_assessor"
     },
     {
       "label": "constraint_extractor()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\agents.py",
       "source_location": "L31",
-      "id": "graph_agents_constraint_extractor",
       "community": 6,
-      "norm_label": "constraint_extractor()"
+      "norm_label": "constraint_extractor()",
+      "id": "graph_agents_constraint_extractor"
     },
     {
       "label": "fanout_selection_supervisor()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\agents.py",
       "source_location": "L41",
-      "id": "graph_agents_fanout_selection_supervisor",
       "community": 6,
-      "norm_label": "fanout_selection_supervisor()"
+      "norm_label": "fanout_selection_supervisor()",
+      "id": "graph_agents_fanout_selection_supervisor"
     },
     {
       "label": "rule_validator()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\agents.py",
       "source_location": "L88",
-      "id": "graph_agents_rule_validator",
       "community": 6,
-      "norm_label": "rule_validator()"
+      "norm_label": "rule_validator()",
+      "id": "graph_agents_rule_validator"
     },
     {
       "label": "schematic_generator()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\agents.py",
       "source_location": "L99",
-      "id": "graph_agents_schematic_generator",
       "community": 6,
-      "norm_label": "schematic_generator()"
+      "norm_label": "schematic_generator()",
+      "id": "graph_agents_schematic_generator"
     },
     {
       "label": "code_generator()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\agents.py",
       "source_location": "L111",
-      "id": "graph_agents_code_generator",
       "community": 6,
-      "norm_label": "code_generator()"
+      "norm_label": "code_generator()",
+      "id": "graph_agents_code_generator"
     },
     {
       "label": "final_review_agent()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\agents.py",
       "source_location": "L126",
-      "id": "graph_agents_final_review_agent",
       "community": 6,
-      "norm_label": "final_review_agent()"
+      "norm_label": "final_review_agent()",
+      "id": "graph_agents_final_review_agent"
     },
     {
       "label": "LangGraph agent node functions \u2014 each node receives state, returns partial state",
       "file_type": "rationale",
       "source_file": "backend\\app\\core\\graph\\agents.py",
       "source_location": "L1",
-      "id": "graph_agents_rationale_1",
       "community": 6,
-      "norm_label": "langgraph agent node functions \u2014 each node receives state, returns partial state"
+      "norm_label": "langgraph agent node functions \u2014 each node receives state, returns partial state",
+      "id": "graph_agents_rationale_1"
     },
     {
       "label": "Fan-out: for each category, search RAG + graph neighbors. One async session per",
       "file_type": "rationale",
       "source_file": "backend\\app\\core\\graph\\agents.py",
       "source_location": "L42",
-      "id": "graph_agents_rationale_42",
       "community": 6,
-      "norm_label": "fan-out: for each category, search rag + graph neighbors. one async session per"
+      "norm_label": "fan-out: for each category, search rag + graph neighbors. one async session per",
+      "id": "graph_agents_rationale_42"
     },
     {
       "label": "builder.py",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\builder.py",
       "source_location": "L1",
-      "id": "backend_app_core_graph_builder_py",
       "community": 0,
-      "norm_label": "builder.py"
+      "norm_label": "builder.py",
+      "id": "backend_app_core_graph_builder_py"
     },
     {
       "label": "build_graph()",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\builder.py",
       "source_location": "L6",
-      "id": "graph_builder_build_graph",
       "community": 0,
-      "norm_label": "build_graph()"
+      "norm_label": "build_graph()",
+      "id": "graph_builder_build_graph"
     },
     {
       "label": "state.py",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\state.py",
       "source_location": "L1",
-      "id": "backend_app_core_graph_state_py",
       "community": 6,
-      "norm_label": "state.py"
+      "norm_label": "state.py",
+      "id": "backend_app_core_graph_state_py"
     },
     {
       "label": "AnalysisState",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\state.py",
       "source_location": "L4",
-      "id": "graph_state_analysisstate",
       "community": 6,
-      "norm_label": "analysisstate"
+      "norm_label": "analysisstate",
+      "id": "graph_state_analysisstate"
     },
     {
       "label": "TypedDict",
       "file_type": "code",
       "source_file": "",
       "source_location": "",
-      "id": "typeddict",
       "community": 6,
-      "norm_label": "typeddict"
+      "norm_label": "typeddict",
+      "id": "typeddict"
     },
     {
       "label": "__init__.py",
       "file_type": "code",
       "source_file": "backend\\app\\core\\graph\\__init__.py",
       "source_location": "L1",
-      "id": "backend_app_core_graph_init_py",
-      "community": 64,
-      "norm_label": "__init__.py"
+      "community": 67,
+      "norm_label": "__init__.py",
+      "id": "backend_app_core_graph_init_py"
     },
     {
       "label": "001_initial_tables.py",
       "file_type": "code",
       "source_file": "backend\\alembic\\versions\\001_initial_tables.py",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_versions_001_initial_tables_py",
-      "community": 13,
-      "norm_label": "001_initial_tables.py"
+      "community": 14,
+      "norm_label": "001_initial_tables.py",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_versions_001_initial_tables_py"
     },
     {
       "label": "a4d5b3e39d74_add_component_graph_tables.py",
       "file_type": "code",
       "source_file": "backend\\alembic\\versions\\a4d5b3e39d74_add_component_graph_tables.py",
       "source_location": "L1",
-      "id": "backend_alembic_versions_a4d5b3e39d74_add_component_graph_tables_py",
-      "community": 19,
-      "norm_label": "a4d5b3e39d74_add_component_graph_tables.py"
+      "community": 21,
+      "norm_label": "a4d5b3e39d74_add_component_graph_tables.py",
+      "id": "backend_alembic_versions_a4d5b3e39d74_add_component_graph_tables_py"
     },
     {
       "label": "upgrade()",
       "file_type": "code",
       "source_file": "backend\\alembic\\versions\\a4d5b3e39d74_add_component_graph_tables.py",
       "source_location": "L21",
-      "id": "versions_a4d5b3e39d74_add_component_graph_tables_upgrade",
-      "community": 19,
-      "norm_label": "upgrade()"
+      "community": 21,
+      "norm_label": "upgrade()",
+      "id": "versions_a4d5b3e39d74_add_component_graph_tables_upgrade"
     },
     {
       "label": "downgrade()",
       "file_type": "code",
       "source_file": "backend\\alembic\\versions\\a4d5b3e39d74_add_component_graph_tables.py",
       "source_location": "L49",
-      "id": "versions_a4d5b3e39d74_add_component_graph_tables_downgrade",
-      "community": 19,
-      "norm_label": "downgrade()"
+      "community": 21,
+      "norm_label": "downgrade()",
+      "id": "versions_a4d5b3e39d74_add_component_graph_tables_downgrade"
     },
     {
       "label": "add component graph tables  Revision ID: a4d5b3e39d74 Revises: 001 Create Date:",
       "file_type": "rationale",
       "source_file": "backend\\alembic\\versions\\a4d5b3e39d74_add_component_graph_tables.py",
       "source_location": "L1",
-      "id": "versions_a4d5b3e39d74_add_component_graph_tables_rationale_1",
-      "community": 19,
-      "norm_label": "add component graph tables  revision id: a4d5b3e39d74 revises: 001 create date:"
+      "community": 21,
+      "norm_label": "add component graph tables  revision id: a4d5b3e39d74 revises: 001 create date:",
+      "id": "versions_a4d5b3e39d74_add_component_graph_tables_rationale_1"
     },
     {
       "label": "vite.config.ts",
       "file_type": "code",
       "source_file": "frontend\\vite.config.ts",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_vite_config_ts",
-      "community": 65,
-      "norm_label": "vite.config.ts"
+      "community": 68,
+      "norm_label": "vite.config.ts",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_vite_config_ts"
     },
     {
       "label": "codegen.ts",
       "file_type": "code",
       "source_file": "frontend\\src\\models\\codegen.ts",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_models_codegen_ts",
-      "community": 66,
-      "norm_label": "codegen.ts"
+      "community": 69,
+      "norm_label": "codegen.ts",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_models_codegen_ts"
     },
     {
       "label": "project.ts",
       "file_type": "code",
       "source_file": "frontend\\src\\models\\project.ts",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_models_project_ts",
-      "community": 67,
-      "norm_label": "project.ts"
+      "community": 70,
+      "norm_label": "project.ts",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_models_project_ts"
     },
     {
       "label": "schematic.ts",
       "file_type": "code",
       "source_file": "frontend\\src\\models\\schematic.ts",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_models_schematic_ts",
-      "community": 68,
-      "norm_label": "schematic.ts"
+      "community": 71,
+      "norm_label": "schematic.ts",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_models_schematic_ts"
     },
     {
       "label": "selection.ts",
       "file_type": "code",
       "source_file": "frontend\\src\\models\\selection.ts",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_models_selection_ts",
-      "community": 69,
-      "norm_label": "selection.ts"
+      "community": 72,
+      "norm_label": "selection.ts",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_models_selection_ts"
     },
     {
       "label": "analysis.ts",
       "file_type": "code",
       "source_file": "frontend\\src\\services\\analysis.ts",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_analysis_ts",
-      "community": 24,
-      "norm_label": "analysis.ts"
+      "community": 28,
+      "norm_label": "analysis.ts",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_analysis_ts"
     },
     {
       "label": "api.ts",
       "file_type": "code",
       "source_file": "frontend\\src\\services\\api.ts",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_api_ts",
-      "community": 25,
-      "norm_label": "api.ts"
+      "community": 23,
+      "norm_label": "api.ts",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_api_ts"
     },
     {
       "label": "export.ts",
       "file_type": "code",
       "source_file": "frontend\\src\\services\\export.ts",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_export_ts",
-      "community": 70,
-      "norm_label": "export.ts"
+      "community": 73,
+      "norm_label": "export.ts",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_export_ts"
     },
     {
       "label": "websocket.ts",
       "file_type": "code",
       "source_file": "frontend\\src\\services\\websocket.ts",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_websocket_ts",
-      "community": 15,
-      "norm_label": "websocket.ts"
+      "community": 16,
+      "norm_label": "websocket.ts",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_websocket_ts"
     },
     {
       "label": "App.tsx",
       "file_type": "code",
       "source_file": "frontend\\src\\App.tsx",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_app_tsx",
-      "community": 23,
-      "norm_label": "app.tsx"
+      "community": 27,
+      "norm_label": "app.tsx",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_app_tsx"
     },
     {
       "label": "handleMouseDown()",
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\AppLayout.tsx",
       "source_location": "L12",
-      "id": "components_applayout_handlemousedown",
-      "community": 32,
-      "norm_label": "handlemousedown()"
+      "community": 22,
+      "norm_label": "handlemousedown()",
+      "id": "components_applayout_handlemousedown"
     },
     {
       "label": "handleMouseUp()",
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\AppLayout.tsx",
-      "source_location": "L13",
-      "id": "components_applayout_handlemouseup",
-      "community": 32,
-      "norm_label": "handlemouseup()"
+      "source_location": "L32",
+      "community": 22,
+      "norm_label": "handlemouseup()",
+      "id": "components_applayout_handlemouseup"
     },
     {
       "label": "ExportToolbar.tsx",
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\ExportToolbar.tsx",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_exporttoolbar_tsx",
-      "community": 27,
-      "norm_label": "exporttoolbar.tsx"
+      "community": 30,
+      "norm_label": "exporttoolbar.tsx",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_exporttoolbar_tsx"
     },
     {
       "label": "FileDropZone.tsx",
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\FileDropZone.tsx",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_filedropzone_tsx",
-      "community": 28,
-      "norm_label": "filedropzone.tsx"
+      "community": 31,
+      "norm_label": "filedropzone.tsx",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_filedropzone_tsx"
     },
     {
       "label": "FrameworkDiagram.tsx",
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\FrameworkDiagram.tsx",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_frameworkdiagram_tsx",
-      "community": 29,
-      "norm_label": "frameworkdiagram.tsx"
+      "community": 32,
+      "norm_label": "frameworkdiagram.tsx",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_frameworkdiagram_tsx"
     },
     {
       "label": "STCodeView.tsx",
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\STCodeView.tsx",
       "source_location": "L1",
-      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_stcodeview_tsx",
-      "community": 30,
-      "norm_label": "stcodeview.tsx"
+      "community": 33,
+      "norm_label": "stcodeview.tsx",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_stcodeview_tsx"
     },
     {
       "label": "ThemeToggle.tsx",
       "file_type": "code",
       "source_file": "frontend\\src\\views\\components\\ThemeToggle.tsx",
       "source_location": "L1",
-      "id": "frontend_src_views_components_themetoggle_tsx",
-      "community": 71,
-      "norm_label": "themetoggle.tsx"
+      "community": 74,
+      "norm_label": "themetoggle.tsx",
+      "id": "frontend_src_views_components_themetoggle_tsx"
+    },
+    {
+      "label": "postcss.config.js",
+      "file_type": "code",
+      "source_file": "frontend\\postcss.config.js",
+      "source_location": "L1",
+      "community": 75,
+      "norm_label": "postcss.config.js",
+      "id": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_postcss_config_js"
+    },
+    {
+      "label": "loadSettings()",
+      "file_type": "code",
+      "source_file": "frontend\\src\\models\\store.ts",
+      "source_location": "L61",
+      "community": 35,
+      "norm_label": "loadsettings()",
+      "id": "models_store_loadsettings"
+    },
+    {
+      "label": "saveSettings()",
+      "file_type": "code",
+      "source_file": "frontend\\src\\models\\store.ts",
+      "source_location": "L72",
+      "community": 35,
+      "norm_label": "savesettings()",
+      "id": "models_store_savesettings"
+    },
+    {
+      "label": "getSettings()",
+      "file_type": "code",
+      "source_file": "frontend\\src\\services\\api.ts",
+      "source_location": "L3",
+      "community": 23,
+      "norm_label": "getsettings()",
+      "id": "services_api_getsettings"
+    },
+    {
+      "label": "i18n.ts",
+      "file_type": "code",
+      "source_file": "frontend\\src\\services\\i18n.ts",
+      "source_location": "L1",
+      "community": 10,
+      "norm_label": "i18n.ts",
+      "id": "frontend_src_services_i18n_ts"
+    },
+    {
+      "label": "t()",
+      "file_type": "code",
+      "source_file": "frontend\\src\\services\\i18n.ts",
+      "source_location": "L150",
+      "community": 10,
+      "norm_label": "t()",
+      "id": "services_i18n_t"
+    },
+    {
+      "label": "getInitialLang()",
+      "file_type": "code",
+      "source_file": "frontend\\src\\services\\i18n.ts",
+      "source_location": "L154",
+      "community": 10,
+      "norm_label": "getinitiallang()",
+      "id": "services_i18n_getinitiallang"
+    },
+    {
+      "label": "handleMouseMove()",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\AppLayout.tsx",
+      "source_location": "L24",
+      "community": 22,
+      "norm_label": "handlemousemove()",
+      "id": "components_applayout_handlemousemove"
+    },
+    {
+      "label": "BOMPanel.tsx",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\BOMPanel.tsx",
+      "source_location": "L1",
+      "community": 10,
+      "norm_label": "bompanel.tsx",
+      "id": "frontend_src_views_components_bompanel_tsx"
+    },
+    {
+      "label": "BOMPanel()",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\BOMPanel.tsx",
+      "source_location": "L5",
+      "community": 10,
+      "norm_label": "bompanel()",
+      "id": "components_bompanel_bompanel"
+    },
+    {
+      "label": "scrollToBottom()",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\ChatPanel.tsx",
+      "source_location": "L14",
+      "community": 19,
+      "norm_label": "scrolltobottom()",
+      "id": "components_chatpanel_scrolltobottom"
+    },
+    {
+      "label": "handleSend()",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\ChatPanel.tsx",
+      "source_location": "L22",
+      "community": 19,
+      "norm_label": "handlesend()",
+      "id": "components_chatpanel_handlesend"
+    },
+    {
+      "label": "CustomNodes.tsx",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\CustomNodes.tsx",
+      "source_location": "L1",
+      "community": 40,
+      "norm_label": "customnodes.tsx",
+      "id": "frontend_src_views_components_customnodes_tsx"
+    },
+    {
+      "label": "handleClass()",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\CustomNodes.tsx",
+      "source_location": "L3",
+      "community": 40,
+      "norm_label": "handleclass()",
+      "id": "components_customnodes_handleclass"
+    },
+    {
+      "label": "Header.tsx",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\Header.tsx",
+      "source_location": "L1",
+      "community": 10,
+      "norm_label": "header.tsx",
+      "id": "frontend_src_views_components_header_tsx"
+    },
+    {
+      "label": "Header()",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\Header.tsx",
+      "source_location": "L5",
+      "community": 10,
+      "norm_label": "header()",
+      "id": "components_header_header"
+    },
+    {
+      "label": "SCLPanel.tsx",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\SCLPanel.tsx",
+      "source_location": "L1",
+      "community": 76,
+      "norm_label": "sclpanel.tsx",
+      "id": "frontend_src_views_components_sclpanel_tsx"
+    },
+    {
+      "label": "SettingsModal.tsx",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\SettingsModal.tsx",
+      "source_location": "L1",
+      "community": 10,
+      "norm_label": "settingsmodal.tsx",
+      "id": "frontend_src_views_components_settingsmodal_tsx"
+    },
+    {
+      "label": "SettingsModal()",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\SettingsModal.tsx",
+      "source_location": "L8",
+      "community": 10,
+      "norm_label": "settingsmodal()",
+      "id": "components_settingsmodal_settingsmodal"
+    },
+    {
+      "label": "TopologyPanel.tsx",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\TopologyPanel.tsx",
+      "source_location": "L1",
+      "community": 41,
+      "norm_label": "topologypanel.tsx",
+      "id": "frontend_src_views_components_topologypanel_tsx"
+    },
+    {
+      "label": "addNode()",
+      "file_type": "code",
+      "source_file": "frontend\\src\\views\\components\\TopologyPanel.tsx",
+      "source_location": "L141",
+      "community": 41,
+      "norm_label": "addnode()",
+      "id": "components_topologypanel_addnode"
     }
   ],
   "links": [
@@ -3652,9 +3841,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py",
       "_tgt": "alembic_env_run_migrations_offline",
+      "confidence_score": 1.0,
       "source": "alembic_env_run_migrations_offline",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py"
     },
     {
       "relation": "contains",
@@ -3664,9 +3853,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py",
       "_tgt": "alembic_env_do_run_migrations",
+      "confidence_score": 1.0,
       "source": "alembic_env_do_run_migrations",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py"
     },
     {
       "relation": "calls",
@@ -3688,9 +3877,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py",
       "_tgt": "alembic_env_run_async_migrations",
+      "confidence_score": 1.0,
       "source": "alembic_env_run_async_migrations",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py"
     },
     {
       "relation": "contains",
@@ -3700,9 +3889,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py",
       "_tgt": "alembic_env_run_migrations_online",
+      "confidence_score": 1.0,
       "source": "alembic_env_run_migrations_online",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_env_py"
     },
     {
       "relation": "contains",
@@ -3748,9 +3937,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_versions_001_initial_tables_py",
       "_tgt": "versions_001_initial_tables_upgrade",
+      "confidence_score": 1.0,
       "source": "versions_001_initial_tables_upgrade",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_versions_001_initial_tables_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_versions_001_initial_tables_py"
     },
     {
       "relation": "contains",
@@ -3760,9 +3949,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_versions_001_initial_tables_py",
       "_tgt": "versions_001_initial_tables_downgrade",
+      "confidence_score": 1.0,
       "source": "versions_001_initial_tables_downgrade",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_versions_001_initial_tables_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_versions_001_initial_tables_py"
     },
     {
       "relation": "rationale_for",
@@ -3772,9 +3961,9 @@
       "weight": 1.0,
       "_src": "versions_001_initial_tables_rationale_1",
       "_tgt": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_versions_001_initial_tables_py",
+      "confidence_score": 1.0,
       "source": "versions_001_initial_tables_rationale_1",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_versions_001_initial_tables_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_alembic_versions_001_initial_tables_py"
     },
     {
       "relation": "contains",
@@ -3808,9 +3997,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_config_py",
       "_tgt": "app_config_settings",
+      "confidence_score": 1.0,
       "source": "app_config_settings",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_config_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_config_py"
     },
     {
       "relation": "contains",
@@ -3856,9 +4045,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_main_py",
       "_tgt": "app_main_lifespan",
+      "confidence_score": 1.0,
       "source": "app_main_lifespan",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_main_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_main_py"
     },
     {
       "relation": "contains",
@@ -3868,9 +4057,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_main_py",
       "_tgt": "app_main_health",
+      "confidence_score": 1.0,
       "source": "app_main_health",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_main_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_main_py"
     },
     {
       "relation": "contains",
@@ -3880,9 +4069,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_main_py",
       "_tgt": "app_main_project_progress",
+      "confidence_score": 1.0,
       "source": "app_main_project_progress",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_main_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_main_py"
     },
     {
       "relation": "contains",
@@ -3904,9 +4093,9 @@
       "weight": 1.0,
       "_src": "backend_app_api_analysis_py",
       "_tgt": "api_analysis_analyze_project_v2",
+      "confidence_score": 1.0,
       "source": "backend_app_api_analysis_py",
-      "target": "api_analysis_analyze_project_v2",
-      "confidence_score": 1.0
+      "target": "api_analysis_analyze_project_v2"
     },
     {
       "relation": "contains",
@@ -3952,9 +4141,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_codegen_py",
       "_tgt": "api_codegen_generate_code",
+      "confidence_score": 1.0,
       "source": "api_codegen_generate_code",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_codegen_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_codegen_py"
     },
     {
       "relation": "contains",
@@ -4036,9 +4225,9 @@
       "weight": 1.0,
       "_src": "backend_app_api_knowledge_py",
       "_tgt": "api_knowledge_extract_graph_knowledge",
+      "confidence_score": 1.0,
       "source": "backend_app_api_knowledge_py",
-      "target": "api_knowledge_extract_graph_knowledge",
-      "confidence_score": 1.0
+      "target": "api_knowledge_extract_graph_knowledge"
     },
     {
       "relation": "calls",
@@ -4084,9 +4273,9 @@
       "weight": 1.0,
       "_src": "api_knowledge_upload_doc",
       "_tgt": "api_knowledge_extract_graph_knowledge",
+      "confidence_score": 1.0,
       "source": "api_knowledge_upload_doc",
-      "target": "api_knowledge_extract_graph_knowledge",
-      "confidence_score": 1.0
+      "target": "api_knowledge_extract_graph_knowledge"
     },
     {
       "relation": "calls",
@@ -4192,9 +4381,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py",
       "_tgt": "api_projects_create_project",
+      "confidence_score": 1.0,
       "source": "api_projects_create_project",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py"
     },
     {
       "relation": "contains",
@@ -4204,9 +4393,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py",
       "_tgt": "api_projects_list_projects",
+      "confidence_score": 1.0,
       "source": "api_projects_list_projects",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py"
     },
     {
       "relation": "contains",
@@ -4216,9 +4405,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py",
       "_tgt": "api_projects_get_project",
+      "confidence_score": 1.0,
       "source": "api_projects_get_project",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py"
     },
     {
       "relation": "contains",
@@ -4228,9 +4417,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py",
       "_tgt": "api_projects_delete_project",
+      "confidence_score": 1.0,
       "source": "api_projects_delete_project",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_projects_py"
     },
     {
       "relation": "contains",
@@ -4276,9 +4465,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_schematic_py",
       "_tgt": "api_schematic_generate_schematic",
+      "confidence_score": 1.0,
       "source": "api_schematic_generate_schematic",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_schematic_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_schematic_py"
     },
     {
       "relation": "contains",
@@ -4336,9 +4525,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_selection_py",
       "_tgt": "api_selection_run_selection",
+      "confidence_score": 1.0,
       "source": "api_selection_run_selection",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_selection_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_api_selection_py"
     },
     {
       "relation": "contains",
@@ -4432,9 +4621,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_llm_service_py",
       "_tgt": "core_llm_service_llmservice",
+      "confidence_score": 1.0,
       "source": "core_llm_service_llmservice",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_llm_service_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_llm_service_py"
     },
     {
       "relation": "calls",
@@ -4612,9 +4801,9 @@
       "weight": 1.0,
       "_src": "core_orchestrator_orchestrator",
       "_tgt": "core_orchestrator_orchestrator_run_graph_analysis",
+      "confidence_score": 1.0,
       "source": "core_orchestrator_orchestrator",
-      "target": "core_orchestrator_orchestrator_run_graph_analysis",
-      "confidence_score": 1.0
+      "target": "core_orchestrator_orchestrator_run_graph_analysis"
     },
     {
       "relation": "calls",
@@ -4792,9 +4981,9 @@
       "weight": 0.8,
       "_src": "core_rag_engine_ragengine",
       "_tgt": "core_knowledge_graph_componentgraph",
+      "confidence_score": 0.5,
       "source": "core_rag_engine_ragengine",
-      "target": "core_knowledge_graph_componentgraph",
-      "confidence_score": 0.5
+      "target": "core_knowledge_graph_componentgraph"
     },
     {
       "relation": "method",
@@ -4804,9 +4993,9 @@
       "weight": 1.0,
       "_src": "core_rag_engine_ragengine",
       "_tgt": "core_rag_engine_ragengine_search_with_graph",
+      "confidence_score": 1.0,
       "source": "core_rag_engine_ragengine",
-      "target": "core_rag_engine_ragengine_search_with_graph",
-      "confidence_score": 1.0
+      "target": "core_rag_engine_ragengine_search_with_graph"
     },
     {
       "relation": "calls",
@@ -4852,9 +5041,9 @@
       "weight": 1.0,
       "_src": "core_rag_engine_ragengine_search_with_graph",
       "_tgt": "core_rag_engine_ragengine_search",
+      "confidence_score": 1.0,
       "source": "core_rag_engine_ragengine_search",
-      "target": "core_rag_engine_ragengine_search_with_graph",
-      "confidence_score": 1.0
+      "target": "core_rag_engine_ragengine_search_with_graph"
     },
     {
       "relation": "contains",
@@ -5020,9 +5209,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
       "_tgt": "core_rule_engine_validate_all",
+      "confidence_score": 1.0,
       "source": "core_rule_engine_validate_all",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py"
     },
     {
       "relation": "calls",
@@ -5068,9 +5257,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
       "_tgt": "core_rule_engine_check_breaker_rating",
+      "confidence_score": 1.0,
       "source": "core_rule_engine_check_breaker_rating",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py"
     },
     {
       "relation": "calls",
@@ -5104,9 +5293,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
       "_tgt": "core_rule_engine_check_sil_redundancy",
+      "confidence_score": 1.0,
       "source": "core_rule_engine_check_sil_redundancy",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py"
     },
     {
       "relation": "calls",
@@ -5128,9 +5317,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
       "_tgt": "core_rule_engine_check_protocol_compatibility",
+      "confidence_score": 1.0,
       "source": "core_rule_engine_check_protocol_compatibility",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py"
     },
     {
       "relation": "contains",
@@ -5140,9 +5329,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
       "_tgt": "core_rule_engine_check_voltage_matching",
+      "confidence_score": 1.0,
       "source": "core_rule_engine_check_voltage_matching",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py"
     },
     {
       "relation": "contains",
@@ -5152,9 +5341,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
       "_tgt": "core_rule_engine_check_motor_starter_match",
+      "confidence_score": 1.0,
       "source": "core_rule_engine_check_motor_starter_match",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py"
     },
     {
       "relation": "rationale_for",
@@ -5164,9 +5353,9 @@
       "weight": 1.0,
       "_src": "core_rule_engine_rationale_1",
       "_tgt": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
+      "confidence_score": 1.0,
       "source": "core_rule_engine_rationale_1",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_rule_engine_py"
     },
     {
       "relation": "imports_from",
@@ -5452,9 +5641,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_iotype",
+      "confidence_score": 1.0,
       "source": "core_schemas_iotype",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "inherits",
@@ -5572,9 +5761,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "enum",
+      "confidence_score": 1.0,
       "source": "enum",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -5584,9 +5773,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_confidencelevel",
+      "confidence_score": 1.0,
       "source": "core_schemas_confidencelevel",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -5596,9 +5785,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_moduletype",
+      "confidence_score": 1.0,
       "source": "core_schemas_moduletype",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -5608,9 +5797,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_projectstatus",
+      "confidence_score": 1.0,
       "source": "core_schemas_projectstatus",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "inherits",
@@ -5644,9 +5833,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_requirementinput",
+      "confidence_score": 1.0,
       "source": "core_schemas_requirementinput",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "inherits",
@@ -5836,9 +6025,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_selectioninput",
+      "confidence_score": 1.0,
       "source": "core_schemas_selectioninput",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -5848,9 +6037,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_schematicinput",
+      "confidence_score": 1.0,
       "source": "core_schemas_schematicinput",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -5860,9 +6049,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_codegeninput",
+      "confidence_score": 1.0,
       "source": "core_schemas_codegeninput",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -5872,9 +6061,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_knowledgedocupload",
+      "confidence_score": 1.0,
       "source": "core_schemas_knowledgedocupload",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "uses",
@@ -5884,9 +6073,9 @@
       "weight": 0.8,
       "_src": "api_knowledge_rationale_79",
       "_tgt": "core_schemas_knowledgesearch",
+      "confidence_score": 0.5,
       "source": "core_schemas_knowledgesearch",
-      "target": "api_knowledge_rationale_79",
-      "confidence_score": 0.5
+      "target": "api_knowledge_rationale_79"
     },
     {
       "relation": "contains",
@@ -5896,9 +6085,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_knowledgesearch",
+      "confidence_score": 1.0,
       "source": "core_schemas_knowledgesearch",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "calls",
@@ -5920,9 +6109,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_ioitemout",
+      "confidence_score": 1.0,
       "source": "core_schemas_ioitemout",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -5932,9 +6121,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_logicruleout",
+      "confidence_score": 1.0,
       "source": "core_schemas_logicruleout",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -5944,9 +6133,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_requirementout",
+      "confidence_score": 1.0,
       "source": "core_schemas_requirementout",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "calls",
@@ -5968,9 +6157,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_bomitemout",
+      "confidence_score": 1.0,
       "source": "core_schemas_bomitemout",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -5980,9 +6169,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_schematicout",
+      "confidence_score": 1.0,
       "source": "core_schemas_schematicout",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -5992,9 +6181,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_stmoduleout",
+      "confidence_score": 1.0,
       "source": "core_schemas_stmoduleout",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "uses",
@@ -6004,9 +6193,9 @@
       "weight": 0.8,
       "_src": "api_knowledge_rationale_79",
       "_tgt": "core_schemas_knowledgedocout",
+      "confidence_score": 0.5,
       "source": "core_schemas_knowledgedocout",
-      "target": "api_knowledge_rationale_79",
-      "confidence_score": 0.5
+      "target": "api_knowledge_rationale_79"
     },
     {
       "relation": "contains",
@@ -6016,9 +6205,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_knowledgedocout",
+      "confidence_score": 1.0,
       "source": "core_schemas_knowledgedocout",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -6028,9 +6217,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_knowledgechunkout",
+      "confidence_score": 1.0,
       "source": "core_schemas_knowledgechunkout",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -6040,9 +6229,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_projectout",
+      "confidence_score": 1.0,
       "source": "core_schemas_projectout",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -6052,9 +6241,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
       "_tgt": "core_schemas_progressevent",
+      "confidence_score": 1.0,
       "source": "core_schemas_progressevent",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_core_schemas_py"
     },
     {
       "relation": "contains",
@@ -6172,9 +6361,9 @@
       "weight": 1.0,
       "_src": "backend_app_db_models_py",
       "_tgt": "db_models_componentnode",
+      "confidence_score": 1.0,
       "source": "backend_app_db_models_py",
-      "target": "db_models_componentnode",
-      "confidence_score": 1.0
+      "target": "db_models_componentnode"
     },
     {
       "relation": "contains",
@@ -6184,9 +6373,9 @@
       "weight": 1.0,
       "_src": "backend_app_db_models_py",
       "_tgt": "db_models_componentedge",
+      "confidence_score": 1.0,
       "source": "backend_app_db_models_py",
-      "target": "db_models_componentedge",
-      "confidence_score": 1.0
+      "target": "db_models_componentedge"
     },
     {
       "relation": "inherits",
@@ -6316,9 +6505,9 @@
       "weight": 1.0,
       "_src": "db_models_componentnode",
       "_tgt": "db_models_base",
+      "confidence_score": 1.0,
       "source": "db_models_base",
-      "target": "db_models_componentnode",
-      "confidence_score": 1.0
+      "target": "db_models_componentnode"
     },
     {
       "relation": "inherits",
@@ -6328,9 +6517,9 @@
       "weight": 1.0,
       "_src": "db_models_componentedge",
       "_tgt": "db_models_base",
+      "confidence_score": 1.0,
       "source": "db_models_base",
-      "target": "db_models_componentedge",
-      "confidence_score": 1.0
+      "target": "db_models_componentedge"
     },
     {
       "relation": "calls",
@@ -6412,9 +6601,9 @@
       "weight": 0.8,
       "_src": "api_knowledge_rationale_79",
       "_tgt": "db_models_knowledgedoc",
+      "confidence_score": 0.5,
       "source": "db_models_knowledgedoc",
-      "target": "api_knowledge_rationale_79",
-      "confidence_score": 0.5
+      "target": "api_knowledge_rationale_79"
     },
     {
       "relation": "contains",
@@ -6436,9 +6625,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_db_repository_py",
       "_tgt": "db_repository_get_session",
+      "confidence_score": 1.0,
       "source": "db_repository_get_session",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_db_repository_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_app_db_repository_py"
     },
     {
       "relation": "contains",
@@ -6460,9 +6649,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_conftest_py",
       "_tgt": "tests_conftest_setup_database",
+      "confidence_score": 1.0,
       "source": "tests_conftest_setup_database",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_conftest_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_conftest_py"
     },
     {
       "relation": "contains",
@@ -6484,9 +6673,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_api_analysis_py",
       "_tgt": "tests_test_api_analysis_test_analyze_endpoint_requires_project",
+      "confidence_score": 1.0,
       "source": "tests_test_api_analysis_test_analyze_endpoint_requires_project",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_api_analysis_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_api_analysis_py"
     },
     {
       "relation": "contains",
@@ -6508,9 +6697,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rag_engine_py",
       "_tgt": "tests_test_rag_engine_test_search_constructs_correct_filter",
+      "confidence_score": 1.0,
       "source": "tests_test_rag_engine_test_search_constructs_correct_filter",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rag_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rag_engine_py"
     },
     {
       "relation": "contains",
@@ -6592,9 +6781,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py",
       "_tgt": "tests_test_rule_engine_test_breaker_rating_pass",
+      "confidence_score": 1.0,
       "source": "tests_test_rule_engine_test_breaker_rating_pass",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py"
     },
     {
       "relation": "contains",
@@ -6604,9 +6793,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py",
       "_tgt": "tests_test_rule_engine_test_breaker_rating_fail",
+      "confidence_score": 1.0,
       "source": "tests_test_rule_engine_test_breaker_rating_fail",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py"
     },
     {
       "relation": "contains",
@@ -6616,9 +6805,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py",
       "_tgt": "tests_test_rule_engine_test_sil2_requires_redundancy",
+      "confidence_score": 1.0,
       "source": "tests_test_rule_engine_test_sil2_requires_redundancy",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py"
     },
     {
       "relation": "contains",
@@ -6628,9 +6817,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py",
       "_tgt": "tests_test_rule_engine_test_sil1_no_redundancy_required",
+      "confidence_score": 1.0,
       "source": "tests_test_rule_engine_test_sil1_no_redundancy_required",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py"
     },
     {
       "relation": "contains",
@@ -6640,9 +6829,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py",
       "_tgt": "tests_test_rule_engine_test_protocol_mismatch",
+      "confidence_score": 1.0,
       "source": "tests_test_rule_engine_test_protocol_mismatch",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py"
     },
     {
       "relation": "contains",
@@ -6652,9 +6841,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py",
       "_tgt": "tests_test_rule_engine_test_validate_all_aggregates",
+      "confidence_score": 1.0,
       "source": "tests_test_rule_engine_test_validate_all_aggregates",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_rule_engine_py"
     },
     {
       "relation": "contains",
@@ -6700,9 +6889,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_schemas_py",
       "_tgt": "tests_test_schemas_test_requirement_input_defaults",
+      "confidence_score": 1.0,
       "source": "tests_test_schemas_test_requirement_input_defaults",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_schemas_py"
     },
     {
       "relation": "contains",
@@ -6712,9 +6901,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_schemas_py",
       "_tgt": "tests_test_schemas_test_io_item_serialization",
+      "confidence_score": 1.0,
       "source": "tests_test_schemas_test_io_item_serialization",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_schemas_py"
     },
     {
       "relation": "contains",
@@ -6724,9 +6913,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_schemas_py",
       "_tgt": "tests_test_schemas_test_bom_item_confidence_enum",
+      "confidence_score": 1.0,
       "source": "tests_test_schemas_test_bom_item_confidence_enum",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_schemas_py",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_backend_tests_test_schemas_py"
     },
     {
       "relation": "contains",
@@ -6748,9 +6937,33 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_app_tsx",
       "_tgt": "src_app_app",
+      "confidence_score": 1.0,
       "source": "src_app_app",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_app_tsx",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_app_tsx"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend\\src\\models\\store.ts",
+      "source_location": "L61",
+      "weight": 1.0,
+      "_src": "frontend_src_models_store_ts",
+      "_tgt": "models_store_loadsettings",
+      "confidence_score": 1.0,
+      "source": "frontend_src_models_store_ts",
+      "target": "models_store_loadsettings"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend\\src\\models\\store.ts",
+      "source_location": "L72",
+      "weight": 1.0,
+      "_src": "frontend_src_models_store_ts",
+      "_tgt": "models_store_savesettings",
+      "confidence_score": 1.0,
+      "source": "frontend_src_models_store_ts",
+      "target": "models_store_savesettings"
     },
     {
       "relation": "contains",
@@ -6772,15 +6985,15 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_analysis_ts",
       "_tgt": "services_analysis_runfullanalysis",
+      "confidence_score": 1.0,
       "source": "services_analysis_runfullanalysis",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_analysis_ts",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_analysis_ts"
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend\\src\\services\\api.ts",
-      "source_location": "L3",
+      "source_location": "L14",
       "weight": 1.0,
       "_src": "frontend_src_services_api_ts",
       "_tgt": "services_api_request",
@@ -6794,11 +7007,23 @@
       "source_file": "frontend\\src\\services\\api.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "_src": "frontend_src_services_api_ts",
+      "_tgt": "services_api_getsettings",
+      "confidence_score": 1.0,
+      "source": "frontend_src_services_api_ts",
+      "target": "services_api_getsettings"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend\\src\\services\\api.ts",
+      "source_location": "L3",
+      "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_api_ts",
       "_tgt": "services_api_request",
+      "confidence_score": 1.0,
       "source": "services_api_request",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_api_ts",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_api_ts"
     },
     {
       "relation": "contains",
@@ -6844,9 +7069,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_websocket_ts",
       "_tgt": "services_websocket_websocketclient",
+      "confidence_score": 1.0,
       "source": "services_websocket_websocketclient",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_websocket_ts",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_services_websocket_ts"
     },
     {
       "relation": "contains",
@@ -6856,21 +7081,33 @@
       "weight": 1.0,
       "_src": "frontend_src_views_components_applayout_tsx",
       "_tgt": "components_applayout_handlemousedown",
+      "confidence_score": 1.0,
       "source": "frontend_src_views_components_applayout_tsx",
-      "target": "components_applayout_handlemousedown",
-      "confidence_score": 1.0
+      "target": "components_applayout_handlemousedown"
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend\\src\\views\\components\\AppLayout.tsx",
-      "source_location": "L13",
+      "source_location": "L32",
       "weight": 1.0,
       "_src": "frontend_src_views_components_applayout_tsx",
       "_tgt": "components_applayout_handlemouseup",
+      "confidence_score": 1.0,
       "source": "frontend_src_views_components_applayout_tsx",
-      "target": "components_applayout_handlemouseup",
-      "confidence_score": 1.0
+      "target": "components_applayout_handlemouseup"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend\\src\\views\\components\\AppLayout.tsx",
+      "source_location": "L24",
+      "weight": 1.0,
+      "_src": "frontend_src_views_components_applayout_tsx",
+      "_tgt": "components_applayout_handlemousemove",
+      "confidence_score": 1.0,
+      "source": "frontend_src_views_components_applayout_tsx",
+      "target": "components_applayout_handlemousemove"
     },
     {
       "relation": "contains",
@@ -6935,6 +7172,30 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "frontend\\src\\views\\components\\ChatPanel.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_src": "frontend_src_views_components_chatpanel_tsx",
+      "_tgt": "components_chatpanel_scrolltobottom",
+      "confidence_score": 1.0,
+      "source": "frontend_src_views_components_chatpanel_tsx",
+      "target": "components_chatpanel_scrolltobottom"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend\\src\\views\\components\\ChatPanel.tsx",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_src": "frontend_src_views_components_chatpanel_tsx",
+      "_tgt": "components_chatpanel_handlesend",
+      "confidence_score": 1.0,
+      "source": "frontend_src_views_components_chatpanel_tsx",
+      "target": "components_chatpanel_handlesend"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "frontend\\src\\views\\components\\ExportToolbar.tsx",
       "source_location": "L4",
       "weight": 1.0,
@@ -6952,9 +7213,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_exporttoolbar_tsx",
       "_tgt": "components_exporttoolbar_exporttoolbar",
+      "confidence_score": 1.0,
       "source": "components_exporttoolbar_exporttoolbar",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_exporttoolbar_tsx",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_exporttoolbar_tsx"
     },
     {
       "relation": "contains",
@@ -6976,9 +7237,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_filedropzone_tsx",
       "_tgt": "components_filedropzone_filedropzone",
+      "confidence_score": 1.0,
       "source": "components_filedropzone_filedropzone",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_filedropzone_tsx",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_filedropzone_tsx"
     },
     {
       "relation": "contains",
@@ -7000,9 +7261,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_frameworkdiagram_tsx",
       "_tgt": "components_frameworkdiagram_frameworkdiagram",
+      "confidence_score": 1.0,
       "source": "components_frameworkdiagram_frameworkdiagram",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_frameworkdiagram_tsx",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_frameworkdiagram_tsx"
     },
     {
       "relation": "contains",
@@ -7036,9 +7297,9 @@
       "weight": 1.0,
       "_src": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_stcodeview_tsx",
       "_tgt": "components_stcodeview_stcodeview",
+      "confidence_score": 1.0,
       "source": "components_stcodeview_stcodeview",
-      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_stcodeview_tsx",
-      "confidence_score": 1.0
+      "target": "c_users_roarp_desktop_tmp_code_aicode_ele_frontend_src_views_components_stcodeview_tsx"
     },
     {
       "relation": "calls",
@@ -8584,9 +8845,9 @@
       "weight": 1.0,
       "_src": "api_knowledge_rationale_79",
       "_tgt": "api_knowledge_extract_graph_knowledge",
+      "confidence_score": 1.0,
       "source": "api_knowledge_extract_graph_knowledge",
-      "target": "api_knowledge_rationale_79",
-      "confidence_score": 1.0
+      "target": "api_knowledge_rationale_79"
     },
     {
       "relation": "calls",
@@ -8620,9 +8881,9 @@
       "weight": 0.8,
       "_src": "api_knowledge_rationale_79",
       "_tgt": "core_knowledge_graph_componentgraph",
+      "confidence_score": 0.5,
       "source": "api_knowledge_rationale_79",
-      "target": "core_knowledge_graph_componentgraph",
-      "confidence_score": 0.5
+      "target": "core_knowledge_graph_componentgraph"
     },
     {
       "relation": "uses",
@@ -8632,9 +8893,9 @@
       "weight": 0.8,
       "_src": "api_knowledge_rationale_79",
       "_tgt": "core_community_detector_communitydetector",
+      "confidence_score": 0.5,
       "source": "api_knowledge_rationale_79",
-      "target": "core_community_detector_communitydetector",
-      "confidence_score": 0.5
+      "target": "core_community_detector_communitydetector"
     },
     {
       "relation": "contains",
@@ -8644,9 +8905,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_community_detector_py",
       "_tgt": "core_community_detector_communitydetector",
+      "confidence_score": 1.0,
       "source": "backend_app_core_community_detector_py",
-      "target": "core_community_detector_communitydetector",
-      "confidence_score": 1.0
+      "target": "core_community_detector_communitydetector"
     },
     {
       "relation": "rationale_for",
@@ -8656,9 +8917,9 @@
       "weight": 1.0,
       "_src": "core_community_detector_rationale_1",
       "_tgt": "backend_app_core_community_detector_py",
+      "confidence_score": 1.0,
       "source": "backend_app_core_community_detector_py",
-      "target": "core_community_detector_rationale_1",
-      "confidence_score": 1.0
+      "target": "core_community_detector_rationale_1"
     },
     {
       "relation": "method",
@@ -8668,9 +8929,9 @@
       "weight": 1.0,
       "_src": "core_community_detector_communitydetector",
       "_tgt": "core_community_detector_communitydetector_detect",
+      "confidence_score": 1.0,
       "source": "core_community_detector_communitydetector",
-      "target": "core_community_detector_communitydetector_detect",
-      "confidence_score": 1.0
+      "target": "core_community_detector_communitydetector_detect"
     },
     {
       "relation": "rationale_for",
@@ -8680,9 +8941,9 @@
       "weight": 1.0,
       "_src": "core_community_detector_rationale_8",
       "_tgt": "core_community_detector_communitydetector_detect",
+      "confidence_score": 1.0,
       "source": "core_community_detector_communitydetector_detect",
-      "target": "core_community_detector_rationale_8",
-      "confidence_score": 1.0
+      "target": "core_community_detector_rationale_8"
     },
     {
       "relation": "contains",
@@ -8692,9 +8953,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_entity_extractor_py",
       "_tgt": "core_entity_extractor_entityextractor",
+      "confidence_score": 1.0,
       "source": "backend_app_core_entity_extractor_py",
-      "target": "core_entity_extractor_entityextractor",
-      "confidence_score": 1.0
+      "target": "core_entity_extractor_entityextractor"
     },
     {
       "relation": "rationale_for",
@@ -8704,9 +8965,9 @@
       "weight": 1.0,
       "_src": "core_entity_extractor_rationale_1",
       "_tgt": "backend_app_core_entity_extractor_py",
+      "confidence_score": 1.0,
       "source": "backend_app_core_entity_extractor_py",
-      "target": "core_entity_extractor_rationale_1",
-      "confidence_score": 1.0
+      "target": "core_entity_extractor_rationale_1"
     },
     {
       "relation": "method",
@@ -8716,9 +8977,9 @@
       "weight": 1.0,
       "_src": "core_entity_extractor_entityextractor",
       "_tgt": "core_entity_extractor_entityextractor_extract_entities",
+      "confidence_score": 1.0,
       "source": "core_entity_extractor_entityextractor",
-      "target": "core_entity_extractor_entityextractor_extract_entities",
-      "confidence_score": 1.0
+      "target": "core_entity_extractor_entityextractor_extract_entities"
     },
     {
       "relation": "method",
@@ -8728,9 +8989,9 @@
       "weight": 1.0,
       "_src": "core_entity_extractor_entityextractor",
       "_tgt": "core_entity_extractor_entityextractor_extract_relations",
+      "confidence_score": 1.0,
       "source": "core_entity_extractor_entityextractor",
-      "target": "core_entity_extractor_entityextractor_extract_relations",
-      "confidence_score": 1.0
+      "target": "core_entity_extractor_entityextractor_extract_relations"
     },
     {
       "relation": "contains",
@@ -8740,9 +9001,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_knowledge_graph_py",
       "_tgt": "core_knowledge_graph_componentgraph",
+      "confidence_score": 1.0,
       "source": "backend_app_core_knowledge_graph_py",
-      "target": "core_knowledge_graph_componentgraph",
-      "confidence_score": 1.0
+      "target": "core_knowledge_graph_componentgraph"
     },
     {
       "relation": "rationale_for",
@@ -8752,9 +9013,9 @@
       "weight": 1.0,
       "_src": "core_knowledge_graph_rationale_1",
       "_tgt": "backend_app_core_knowledge_graph_py",
+      "confidence_score": 1.0,
       "source": "backend_app_core_knowledge_graph_py",
-      "target": "core_knowledge_graph_rationale_1",
-      "confidence_score": 1.0
+      "target": "core_knowledge_graph_rationale_1"
     },
     {
       "relation": "method",
@@ -8764,9 +9025,9 @@
       "weight": 1.0,
       "_src": "core_knowledge_graph_componentgraph",
       "_tgt": "core_knowledge_graph_componentgraph_init",
+      "confidence_score": 1.0,
       "source": "core_knowledge_graph_componentgraph",
-      "target": "core_knowledge_graph_componentgraph_init",
-      "confidence_score": 1.0
+      "target": "core_knowledge_graph_componentgraph_init"
     },
     {
       "relation": "method",
@@ -8776,9 +9037,9 @@
       "weight": 1.0,
       "_src": "core_knowledge_graph_componentgraph",
       "_tgt": "core_knowledge_graph_componentgraph_upsert_node",
+      "confidence_score": 1.0,
       "source": "core_knowledge_graph_componentgraph",
-      "target": "core_knowledge_graph_componentgraph_upsert_node",
-      "confidence_score": 1.0
+      "target": "core_knowledge_graph_componentgraph_upsert_node"
     },
     {
       "relation": "method",
@@ -8788,9 +9049,9 @@
       "weight": 1.0,
       "_src": "core_knowledge_graph_componentgraph",
       "_tgt": "core_knowledge_graph_componentgraph_add_edge",
+      "confidence_score": 1.0,
       "source": "core_knowledge_graph_componentgraph",
-      "target": "core_knowledge_graph_componentgraph_add_edge",
-      "confidence_score": 1.0
+      "target": "core_knowledge_graph_componentgraph_add_edge"
     },
     {
       "relation": "method",
@@ -8800,9 +9061,9 @@
       "weight": 1.0,
       "_src": "core_knowledge_graph_componentgraph",
       "_tgt": "core_knowledge_graph_componentgraph_get_neighbors",
+      "confidence_score": 1.0,
       "source": "core_knowledge_graph_componentgraph",
-      "target": "core_knowledge_graph_componentgraph_get_neighbors",
-      "confidence_score": 1.0
+      "target": "core_knowledge_graph_componentgraph_get_neighbors"
     },
     {
       "relation": "method",
@@ -8812,9 +9073,9 @@
       "weight": 1.0,
       "_src": "core_knowledge_graph_componentgraph",
       "_tgt": "core_knowledge_graph_componentgraph_bfs_traverse",
+      "confidence_score": 1.0,
       "source": "core_knowledge_graph_componentgraph",
-      "target": "core_knowledge_graph_componentgraph_bfs_traverse",
-      "confidence_score": 1.0
+      "target": "core_knowledge_graph_componentgraph_bfs_traverse"
     },
     {
       "relation": "method",
@@ -8824,9 +9085,9 @@
       "weight": 1.0,
       "_src": "core_knowledge_graph_componentgraph",
       "_tgt": "core_knowledge_graph_componentgraph_search_by_type",
+      "confidence_score": 1.0,
       "source": "core_knowledge_graph_componentgraph",
-      "target": "core_knowledge_graph_componentgraph_search_by_type",
-      "confidence_score": 1.0
+      "target": "core_knowledge_graph_componentgraph_search_by_type"
     },
     {
       "relation": "method",
@@ -8836,9 +9097,9 @@
       "weight": 1.0,
       "_src": "core_knowledge_graph_componentgraph",
       "_tgt": "core_knowledge_graph_componentgraph_update_communities",
+      "confidence_score": 1.0,
       "source": "core_knowledge_graph_componentgraph",
-      "target": "core_knowledge_graph_componentgraph_update_communities",
-      "confidence_score": 1.0
+      "target": "core_knowledge_graph_componentgraph_update_communities"
     },
     {
       "relation": "uses",
@@ -8848,9 +9109,9 @@
       "weight": 0.8,
       "_src": "core_knowledge_graph_componentgraph",
       "_tgt": "db_models_componentnode",
+      "confidence_score": 0.5,
       "source": "core_knowledge_graph_componentgraph",
-      "target": "db_models_componentnode",
-      "confidence_score": 0.5
+      "target": "db_models_componentnode"
     },
     {
       "relation": "uses",
@@ -8860,9 +9121,9 @@
       "weight": 0.8,
       "_src": "core_knowledge_graph_componentgraph",
       "_tgt": "db_models_componentedge",
+      "confidence_score": 0.5,
       "source": "core_knowledge_graph_componentgraph",
-      "target": "db_models_componentedge",
-      "confidence_score": 0.5
+      "target": "db_models_componentedge"
     },
     {
       "relation": "uses",
@@ -8872,9 +9133,9 @@
       "weight": 0.8,
       "_src": "core_rag_engine_rationale_75",
       "_tgt": "core_knowledge_graph_componentgraph",
+      "confidence_score": 0.5,
       "source": "core_knowledge_graph_componentgraph",
-      "target": "core_rag_engine_rationale_75",
-      "confidence_score": 0.5
+      "target": "core_rag_engine_rationale_75"
     },
     {
       "relation": "calls",
@@ -8920,9 +9181,9 @@
       "weight": 0.8,
       "_src": "core_knowledge_graph_rationale_1",
       "_tgt": "db_models_componentnode",
+      "confidence_score": 0.5,
       "source": "core_knowledge_graph_rationale_1",
-      "target": "db_models_componentnode",
-      "confidence_score": 0.5
+      "target": "db_models_componentnode"
     },
     {
       "relation": "uses",
@@ -8932,9 +9193,9 @@
       "weight": 0.8,
       "_src": "core_knowledge_graph_rationale_1",
       "_tgt": "db_models_componentedge",
+      "confidence_score": 0.5,
       "source": "core_knowledge_graph_rationale_1",
-      "target": "db_models_componentedge",
-      "confidence_score": 0.5
+      "target": "db_models_componentedge"
     },
     {
       "relation": "calls",
@@ -8956,9 +9217,9 @@
       "weight": 1.0,
       "_src": "core_rag_engine_rationale_75",
       "_tgt": "core_rag_engine_ragengine_search_with_graph",
+      "confidence_score": 1.0,
       "source": "core_rag_engine_ragengine_search_with_graph",
-      "target": "core_rag_engine_rationale_75",
-      "confidence_score": 1.0
+      "target": "core_rag_engine_rationale_75"
     },
     {
       "relation": "contains",
@@ -8968,9 +9229,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_graph_agents_py",
       "_tgt": "graph_agents_requirements_agent",
+      "confidence_score": 1.0,
       "source": "backend_app_core_graph_agents_py",
-      "target": "graph_agents_requirements_agent",
-      "confidence_score": 1.0
+      "target": "graph_agents_requirements_agent"
     },
     {
       "relation": "contains",
@@ -8980,9 +9241,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_graph_agents_py",
       "_tgt": "graph_agents_category_mapper",
+      "confidence_score": 1.0,
       "source": "backend_app_core_graph_agents_py",
-      "target": "graph_agents_category_mapper",
-      "confidence_score": 1.0
+      "target": "graph_agents_category_mapper"
     },
     {
       "relation": "contains",
@@ -8992,9 +9253,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_graph_agents_py",
       "_tgt": "graph_agents_safety_assessor",
+      "confidence_score": 1.0,
       "source": "backend_app_core_graph_agents_py",
-      "target": "graph_agents_safety_assessor",
-      "confidence_score": 1.0
+      "target": "graph_agents_safety_assessor"
     },
     {
       "relation": "contains",
@@ -9004,9 +9265,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_graph_agents_py",
       "_tgt": "graph_agents_constraint_extractor",
+      "confidence_score": 1.0,
       "source": "backend_app_core_graph_agents_py",
-      "target": "graph_agents_constraint_extractor",
-      "confidence_score": 1.0
+      "target": "graph_agents_constraint_extractor"
     },
     {
       "relation": "contains",
@@ -9016,9 +9277,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_graph_agents_py",
       "_tgt": "graph_agents_fanout_selection_supervisor",
+      "confidence_score": 1.0,
       "source": "backend_app_core_graph_agents_py",
-      "target": "graph_agents_fanout_selection_supervisor",
-      "confidence_score": 1.0
+      "target": "graph_agents_fanout_selection_supervisor"
     },
     {
       "relation": "contains",
@@ -9028,9 +9289,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_graph_agents_py",
       "_tgt": "graph_agents_rule_validator",
+      "confidence_score": 1.0,
       "source": "backend_app_core_graph_agents_py",
-      "target": "graph_agents_rule_validator",
-      "confidence_score": 1.0
+      "target": "graph_agents_rule_validator"
     },
     {
       "relation": "contains",
@@ -9040,9 +9301,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_graph_agents_py",
       "_tgt": "graph_agents_schematic_generator",
+      "confidence_score": 1.0,
       "source": "backend_app_core_graph_agents_py",
-      "target": "graph_agents_schematic_generator",
-      "confidence_score": 1.0
+      "target": "graph_agents_schematic_generator"
     },
     {
       "relation": "contains",
@@ -9052,9 +9313,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_graph_agents_py",
       "_tgt": "graph_agents_code_generator",
+      "confidence_score": 1.0,
       "source": "backend_app_core_graph_agents_py",
-      "target": "graph_agents_code_generator",
-      "confidence_score": 1.0
+      "target": "graph_agents_code_generator"
     },
     {
       "relation": "contains",
@@ -9064,9 +9325,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_graph_agents_py",
       "_tgt": "graph_agents_final_review_agent",
+      "confidence_score": 1.0,
       "source": "backend_app_core_graph_agents_py",
-      "target": "graph_agents_final_review_agent",
-      "confidence_score": 1.0
+      "target": "graph_agents_final_review_agent"
     },
     {
       "relation": "rationale_for",
@@ -9076,9 +9337,9 @@
       "weight": 1.0,
       "_src": "graph_agents_rationale_1",
       "_tgt": "backend_app_core_graph_agents_py",
+      "confidence_score": 1.0,
       "source": "backend_app_core_graph_agents_py",
-      "target": "graph_agents_rationale_1",
-      "confidence_score": 1.0
+      "target": "graph_agents_rationale_1"
     },
     {
       "relation": "rationale_for",
@@ -9088,9 +9349,9 @@
       "weight": 1.0,
       "_src": "graph_agents_rationale_42",
       "_tgt": "graph_agents_fanout_selection_supervisor",
+      "confidence_score": 1.0,
       "source": "graph_agents_fanout_selection_supervisor",
-      "target": "graph_agents_rationale_42",
-      "confidence_score": 1.0
+      "target": "graph_agents_rationale_42"
     },
     {
       "relation": "uses",
@@ -9100,9 +9361,9 @@
       "weight": 0.8,
       "_src": "graph_agents_rationale_1",
       "_tgt": "graph_state_analysisstate",
+      "confidence_score": 0.5,
       "source": "graph_agents_rationale_1",
-      "target": "graph_state_analysisstate",
-      "confidence_score": 0.5
+      "target": "graph_state_analysisstate"
     },
     {
       "relation": "uses",
@@ -9112,9 +9373,9 @@
       "weight": 0.8,
       "_src": "graph_agents_rationale_42",
       "_tgt": "graph_state_analysisstate",
+      "confidence_score": 0.5,
       "source": "graph_agents_rationale_42",
-      "target": "graph_state_analysisstate",
-      "confidence_score": 0.5
+      "target": "graph_state_analysisstate"
     },
     {
       "relation": "contains",
@@ -9124,9 +9385,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_graph_builder_py",
       "_tgt": "graph_builder_build_graph",
+      "confidence_score": 1.0,
       "source": "backend_app_core_graph_builder_py",
-      "target": "graph_builder_build_graph",
-      "confidence_score": 1.0
+      "target": "graph_builder_build_graph"
     },
     {
       "relation": "contains",
@@ -9136,9 +9397,9 @@
       "weight": 1.0,
       "_src": "backend_app_core_graph_state_py",
       "_tgt": "graph_state_analysisstate",
+      "confidence_score": 1.0,
       "source": "backend_app_core_graph_state_py",
-      "target": "graph_state_analysisstate",
-      "confidence_score": 1.0
+      "target": "graph_state_analysisstate"
     },
     {
       "relation": "inherits",
@@ -9148,9 +9409,9 @@
       "weight": 1.0,
       "_src": "graph_state_analysisstate",
       "_tgt": "typeddict",
+      "confidence_score": 1.0,
       "source": "graph_state_analysisstate",
-      "target": "typeddict",
-      "confidence_score": 1.0
+      "target": "typeddict"
     },
     {
       "relation": "contains",
@@ -9160,9 +9421,9 @@
       "weight": 1.0,
       "_src": "backend_alembic_versions_a4d5b3e39d74_add_component_graph_tables_py",
       "_tgt": "versions_a4d5b3e39d74_add_component_graph_tables_upgrade",
+      "confidence_score": 1.0,
       "source": "backend_alembic_versions_a4d5b3e39d74_add_component_graph_tables_py",
-      "target": "versions_a4d5b3e39d74_add_component_graph_tables_upgrade",
-      "confidence_score": 1.0
+      "target": "versions_a4d5b3e39d74_add_component_graph_tables_upgrade"
     },
     {
       "relation": "contains",
@@ -9172,9 +9433,9 @@
       "weight": 1.0,
       "_src": "backend_alembic_versions_a4d5b3e39d74_add_component_graph_tables_py",
       "_tgt": "versions_a4d5b3e39d74_add_component_graph_tables_downgrade",
+      "confidence_score": 1.0,
       "source": "backend_alembic_versions_a4d5b3e39d74_add_component_graph_tables_py",
-      "target": "versions_a4d5b3e39d74_add_component_graph_tables_downgrade",
-      "confidence_score": 1.0
+      "target": "versions_a4d5b3e39d74_add_component_graph_tables_downgrade"
     },
     {
       "relation": "rationale_for",
@@ -9184,9 +9445,129 @@
       "weight": 1.0,
       "_src": "versions_a4d5b3e39d74_add_component_graph_tables_rationale_1",
       "_tgt": "backend_alembic_versions_a4d5b3e39d74_add_component_graph_tables_py",
+      "confidence_score": 1.0,
       "source": "backend_alembic_versions_a4d5b3e39d74_add_component_graph_tables_py",
-      "target": "versions_a4d5b3e39d74_add_component_graph_tables_rationale_1",
-      "confidence_score": 1.0
+      "target": "versions_a4d5b3e39d74_add_component_graph_tables_rationale_1"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend\\src\\services\\i18n.ts",
+      "source_location": "L150",
+      "weight": 1.0,
+      "_src": "frontend_src_services_i18n_ts",
+      "_tgt": "services_i18n_t",
+      "confidence_score": 1.0,
+      "source": "frontend_src_services_i18n_ts",
+      "target": "services_i18n_t"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend\\src\\services\\i18n.ts",
+      "source_location": "L154",
+      "weight": 1.0,
+      "_src": "frontend_src_services_i18n_ts",
+      "_tgt": "services_i18n_getinitiallang",
+      "confidence_score": 1.0,
+      "source": "frontend_src_services_i18n_ts",
+      "target": "services_i18n_getinitiallang"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "frontend\\src\\views\\components\\BOMPanel.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_src": "components_bompanel_bompanel",
+      "_tgt": "services_i18n_t",
+      "source": "services_i18n_t",
+      "target": "components_bompanel_bompanel"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "frontend\\src\\views\\components\\Header.tsx",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_src": "components_header_header",
+      "_tgt": "services_i18n_t",
+      "source": "services_i18n_t",
+      "target": "components_header_header"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "frontend\\src\\views\\components\\SettingsModal.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_src": "components_settingsmodal_settingsmodal",
+      "_tgt": "services_i18n_t",
+      "source": "services_i18n_t",
+      "target": "components_settingsmodal_settingsmodal"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend\\src\\views\\components\\BOMPanel.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_src": "frontend_src_views_components_bompanel_tsx",
+      "_tgt": "components_bompanel_bompanel",
+      "confidence_score": 1.0,
+      "source": "frontend_src_views_components_bompanel_tsx",
+      "target": "components_bompanel_bompanel"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend\\src\\views\\components\\CustomNodes.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_src": "frontend_src_views_components_customnodes_tsx",
+      "_tgt": "components_customnodes_handleclass",
+      "confidence_score": 1.0,
+      "source": "frontend_src_views_components_customnodes_tsx",
+      "target": "components_customnodes_handleclass"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend\\src\\views\\components\\Header.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_src": "frontend_src_views_components_header_tsx",
+      "_tgt": "components_header_header",
+      "confidence_score": 1.0,
+      "source": "frontend_src_views_components_header_tsx",
+      "target": "components_header_header"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend\\src\\views\\components\\SettingsModal.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_src": "frontend_src_views_components_settingsmodal_tsx",
+      "_tgt": "components_settingsmodal_settingsmodal",
+      "confidence_score": 1.0,
+      "source": "frontend_src_views_components_settingsmodal_tsx",
+      "target": "components_settingsmodal_settingsmodal"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend\\src\\views\\components\\TopologyPanel.tsx",
+      "source_location": "L141",
+      "weight": 1.0,
+      "_src": "frontend_src_views_components_topologypanel_tsx",
+      "_tgt": "components_topologypanel_addnode",
+      "confidence_score": 1.0,
+      "source": "frontend_src_views_components_topologypanel_tsx",
+      "target": "components_topologypanel_addnode"
     }
   ],
   "hyperedges": [
