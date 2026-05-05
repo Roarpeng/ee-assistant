@@ -204,7 +204,10 @@ export const useStore = create<AppState>((set) => ({
   },
   setBOM: (bom) => set({ bom }),
   setSCLCode: (sclCode) => set({ sclCode }),
-  setProject: (p) => set({ project: p }),
+  setProject: (p) => {
+    try { localStorage.setItem('volta-last-project', JSON.stringify(p)); } catch {}
+    set({ project: p });
+  },
   setStage: (stage) => set({ stage }),
   addMessage: (m) =>
     set((s) => ({
@@ -338,15 +341,28 @@ export const useStore = create<AppState>((set) => ({
 
   loadChatHistory: () => {
     const s = useStore.getState();
-    if (!s.project) return;
+    // If no project in state, try to restore last project from localStorage
+    if (!s.project) {
+      try {
+        const saved = localStorage.getItem('volta-last-project');
+        if (saved) {
+          const p = JSON.parse(saved);
+          if (p && p.id) {
+            set({ project: p });
+          }
+        }
+      } catch {}
+    }
+    const pid = s.project?.id;
+    if (!pid) return;
     try {
       const raw = localStorage.getItem('volta-chat-history');
       if (!raw) return;
       const all: Record<string, ChatMessage[]> = JSON.parse(raw);
-      const msgs = all[s.project.id];
+      const msgs = all[pid];
       if (msgs && msgs.length > 0) {
         set({ messages: msgs });
-        const maxId = msgs.reduce((max, m) => Math.max(max, parseInt(m.id) || 0), 0);
+        const maxId = msgs.reduce((max: number, m: any) => Math.max(max, parseInt(m.id) || 0), 0);
         msgCounter = maxId;
       }
     } catch {}

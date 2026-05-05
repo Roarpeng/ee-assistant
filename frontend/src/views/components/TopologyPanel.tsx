@@ -28,6 +28,7 @@ import {
   removeUserEdges,
   getTopologySnapshot,
 } from '../../models/yjsStore';
+import { toPng } from 'html-to-image';
 
 const nodeTypes = {
   plc: PLCNode,
@@ -271,6 +272,22 @@ export function TopologyPanel() {
     [setEdges, handleSyncToCode]
   );
 
+  const handleExportSvg = useCallback(async () => {
+    const el = document.querySelector('.react-flow__renderer') as HTMLElement | null;
+    if (!el) return;
+    try {
+      const dataUrl = await toPng(el, { backgroundColor: '#111111', pixelRatio: 2 });
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `topology-${project?.id?.slice(0, 8) || 'export'}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Export failed:', err);
+    }
+  }, [project?.id]);
+
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
       setEdges((els) =>
@@ -418,7 +435,10 @@ export function TopologyPanel() {
           >
             {isSyncing ? tr.topology.syncing : tr.topology.sync}
           </button>
-          <button className="px-6 py-2.5 bg-neutral-800 border border-neutral-700 rounded-2xl text-sm font-bold hover:bg-neutral-700 transition-colors">
+          <button
+            onClick={handleExportSvg}
+            className="px-6 py-2.5 bg-neutral-800 border border-neutral-700 rounded-2xl text-sm font-bold hover:bg-neutral-700 transition-colors"
+          >
             {tr.topology.exportSvg}
           </button>
         </div>

@@ -6,6 +6,9 @@ from app.core.rule_engine import validate_all
 
 
 async def requirements_agent(state: AnalysisState) -> dict:
+    # Skip if already completed (continuing conversation)
+    if state.get("stage", "") in ("requirements_done", "selection_done", "continuing") and state.get("requirement"):
+        return {}
     req = await llm_service.analyze_requirements(state["user_input"])
     return {
         "requirement": req,
@@ -15,20 +18,129 @@ async def requirements_agent(state: AnalysisState) -> dict:
 
 
 async def category_mapper(state: AnalysisState) -> dict:
+    # Skip if categories already exist
+    existing_cats = state.get("categories")
+    if existing_cats:
+        return {}
     req = state.get("requirement", {})
     io_list = req.get("io_list", [])
     logic_list = req.get("control_logic", [])
     categories = await llm_service.map_categories(io_list, logic_list)
+
+    # Fallback: if LLM returns empty, derive categories from IO types
+    if not categories:
+        categories = _derive_categories_from_requirement(req)
     return {"categories": categories}
 
 
+def _derive_categories_from_requirement(req: dict) -> list[str]:
+    """Rule-based category derivation when LLM returns empty results."""
+    cats: set[str] = set()
+    io_list: list[dict] = req.get("io_list", [])
+    logic_list: list[str] = req.get("control_logic", [])
+    machine_type = str(req.get("machine_type", "")).lower()
+    plc_family = str(req.get("plc_family", "")).upper()
+
+    io_types = {io.get("type", "") for io in io_list}
+
+    if io_types & {"DI", "DO", "AI", "AO"}:
+        cats.add("PLC_CPU")
+        cats.add("Power_Supply")
+        cats.add("Circuit_Breaker")
+        if io_types & {"DI", "DO"}:
+            cats.add("IO_Module")
+
+    if io_types & {"AI", "AO"}:
+        cats.add("IO_Module")
+
+    combined_text = " ".join(logic_list + [machine_type, plc_family]).lower()
+    for keyword, category in [
+        # Safety
+        ("safety", "Safety_Relay"),
+        ("e-stop", "Safety_Relay"),
+        ("emergency", "Safety_Relay"),
+        ("estop", "Safety_Relay"),
+        # Motion — servo
+        ("servo", "Servo_Drive"),
+        ("滑台", "Servo_Drive"),
+        ("丝杆", "Servo_Drive"),
+        ("线性", "Servo_Drive"),
+        ("模组", "Servo_Drive"),
+        ("定位", "Servo_Drive"),
+        ("精密", "Servo_Drive"),
+        # Motion — VFD / motor
+        ("vfd", "VFD"),
+        ("变频", "VFD"),
+        ("电机", "Contactor"),
+        ("马达", "Contactor"),
+        ("motor", "Contactor"),
+        ("induction", "VFD"),
+        # HMI
+        ("hmi", "HMI"),
+        ("触摸", "HMI"),
+        ("屏", "HMI"),
+        ("touch", "HMI"),
+        ("display", "HMI"),
+        ("人机", "HMI"),
+        # Sensors
+        ("sensor", "Sensor"),
+        ("传感器", "Sensor"),
+        ("限位", "Sensor"),
+        ("光电", "Sensor"),
+        ("接近", "Sensor"),
+        ("位置", "Sensor"),
+        ("编码器", "Sensor"),
+        ("encoder", "Sensor"),
+        ("home", "Sensor"),
+        # Communication
+        ("profinet", "Communication_Module"),
+        ("ethernet", "Communication_Module"),
+        ("ethercat", "Communication_Module"),
+        ("modbus", "Communication_Module"),
+        ("通讯", "Communication_Module"),
+        # Power & protection
+        ("breaker", "Circuit_Breaker"),
+        ("断路器", "Circuit_Breaker"),
+        ("power", "Power_Supply"),
+        ("电源", "Power_Supply"),
+        ("开关电源", "Power_Supply"),
+        ("24v", "Power_Supply"),
+        ("transformer", "Transformer"),
+        ("变压器", "Transformer"),
+        ("fuse", "Fuse"),
+        ("保险", "Fuse"),
+        # Switches & relays
+        ("switch", "Switch"),
+        ("contactor", "Contactor"),
+        ("接触器", "Contactor"),
+        ("继电器", "Relay"),
+        ("relay", "Relay"),
+        # IPC
+        ("ipc", "IPC"),
+        ("工控机", "IPC"),
+    ]:
+        if keyword in combined_text:
+            cats.add(category)
+
+    # Ensure minimum viable BOM — always needed for any automation system
+    cats.add("PLC_CPU")
+    cats.add("Power_Supply")
+    cats.add("Circuit_Breaker")
+
+    return sorted(cats)
+
+
 async def safety_assessor(state: AnalysisState) -> dict:
+    if state.get("safety_level"):
+        return {}
     req = state.get("requirement", {})
     sil = req.get("safety_level", "SIL1")
     return {"safety_level": sil}
 
 
 async def constraint_extractor(state: AnalysisState) -> dict:
+    if state.get("constraints"):
+        return {}
     req = state.get("requirement", {})
     constraints = {
         "plc_family": req.get("plc_family", "S7-1200"),
@@ -52,6 +164,11 @@ async def fanout_selection_supervisor(state: AnalysisState) -> dict:
     from app.core.rag_engine import rag_engine
     from app.core.llm_service import llm_service
     from app.db.repository import async_session
+
+    # Skip if BOM already populated (continuing conversation)
+    existing_bom = state.get("bom_items")
+    if existing_bom and len(existing_bom) > 0:
+        return {}
 
     categories = state.get("categories", [])
     all_bom: list[dict] = []
@@ -140,20 +257,38 @@ async def fanout_selection_supervisor(state: AnalysisState) -> dict:
                     "alternatives": [],
                 })
 
-    # LLM fallback only for categories with no RAG results AND no graph data
+    # LLM fallback for categories with no RAG results at all (neither graph nor vector).
+    # These are clearly marked as non-authoritative — the zero-hallucination rule
+    # applies to graph misses (NOT_FOUND), not to empty knowledge bases.
     if llm_fallback_categories:
-        for cat in llm_fallback_categories:
-            all_bom.append({
-                "category": cat,
-                "manufacturer": "TBD",
-                "model": f"{cat} component — REQUIRES HUMAN VERIFICATION",
-                "order_number": "",
-                "quantity": 1,
-                "specifications": {},
-                "confidence": "llm",
-                "source_chunk_id": None,
-                "alternatives": [],
-            })
+        try:
+            llm_bom = await llm_service.recommend_components(
+                categories=llm_fallback_categories,
+                machine_type=state.get("requirement", {}).get("machine_type", ""),
+            )
+            for item in llm_bom:
+                item["confidence"] = "llm"
+                item["source_chunk_id"] = None
+                item["order_number"] = ""
+                item.setdefault("alternatives", [])
+                item["specifications"] = item.get("specifications", {})
+                item["specifications"]["_warning"] = (
+                    "LLM recommendation — verify against manufacturer catalog before procurement"
+                )
+                all_bom.append(item)
+        except Exception:
+            for cat in llm_fallback_categories:
+                all_bom.append({
+                    "category": cat,
+                    "manufacturer": "TBD",
+                    "model": f"{cat} component — REQUIRES HUMAN VERIFICATION",
+                    "order_number": "",
+                    "quantity": 1,
+                    "specifications": {"_warning": "No knowledge base match — human verification required"},
+                    "confidence": "llm",
+                    "source_chunk_id": None,
+                    "alternatives": [],
+                })
 
     return {
         "bom_items": all_bom,
@@ -217,6 +352,10 @@ def _build_fallback_topology(bom_list: list[dict]) -> dict:
 
 
 async def schematic_generator(state: AnalysisState) -> dict:
+    # Skip if topology already generated
+    topo = state.get("topology")
+    if topo and topo.get("nodes") and len(topo["nodes"]) > 0:
+        return {}
     bom = state.get("bom_items", [])
     req = state.get("requirement", {})
     bom_list = [{"category": i["category"], "manufacturer": i["manufacturer"], "model": i["model"]} for i in bom]
@@ -233,6 +372,10 @@ async def schematic_generator(state: AnalysisState) -> dict:
 
 
 async def code_generator(state: AnalysisState) -> dict:
+    # Skip if ST code already generated
+    existing = state.get("st_modules")
+    if existing and len(existing) > 0:
+        return {}
     bom = state.get("bom_items", [])
     req = state.get("requirement", {})
     req_data = {

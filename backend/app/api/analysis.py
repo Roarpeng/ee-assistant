@@ -63,59 +63,67 @@ async def analyze_project_v2(project_id: str, body: RequirementInput, session: A
             yield f"data: {json_module.dumps({'error': str(e)})}\n\n"
             return
 
+        # DB save runs AFTER SSE stream ends — must not crash the connection
         if final_state:
-            from app.db.repository import async_session
-            async with async_session() as db:
-                req_data = final_state.get("requirement", {})
-                if req_data:
-                    req = Requirement(
-                        project_id=project_id,
-                        machine_type=req_data.get("machine_type"),
-                        safety_level=req_data.get("safety_level"),
-                        environment=req_data.get("environment"),
-                        plc_family=req_data.get("plc_family"),
-                        raw_text=body.text,
+            try:
+                from app.db.repository import async_session
+                async with async_session() as db:
+                    req_data = final_state.get("requirement", {})
+                    if isinstance(req_data, dict) and req_data:
+                        req = Requirement(
+                            project_id=project_id,
+                            machine_type=req_data.get("machine_type"),
+                            safety_level=req_data.get("safety_level"),
+                            environment=req_data.get("environment"),
+                            plc_family=req_data.get("plc_family"),
+                            raw_text=body.text,
+                        )
+                        db.add(req)
+                        await db.flush()
+
+                        for io in req_data.get("io_list", []) or []:
+                            if isinstance(io, dict):
+                                db.add(IOItem(requirement_id=req.id, tag=io.get("tag", ""), io_type=io.get("type", "DI"), description=io.get("description", "")))
+                        for rule in req_data.get("control_logic", []) or []:
+                            db.add(LogicRule(requirement_id=req.id, description=str(rule)))
+
+                    for item_data in final_state.get("bom_items", []) or []:
+                        if not isinstance(item_data, dict):
+                            continue
+                        db.add(BOMItem(
+                            project_id=project_id,
+                            category=str(item_data.get("category", "")),
+                            manufacturer=str(item_data.get("manufacturer", "Unknown")),
+                            model=str(item_data.get("model", "")),
+                            quantity=int(item_data.get("quantity", 1)),
+                            specifications=item_data.get("specifications", {}) if isinstance(item_data.get("specifications"), dict) else {},
+                            confidence=str(item_data.get("confidence", "rag")),
+                            source_chunk_id=item_data.get("source_chunk_id"),
+                            alternatives=item_data.get("alternatives", []) if isinstance(item_data.get("alternatives"), list) else [],
+                        ))
+
+                    mermaid = final_state.get("mermaid_code")
+                    if mermaid and isinstance(mermaid, str):
+                        db.add(Schematic(project_id=project_id, mermaid_code=mermaid))
+
+                    for i, mod in enumerate(final_state.get("st_modules", []) or []):
+                        if not isinstance(mod, dict):
+                            mod = {"name": f"Module_{i}", "module_type": "FC", "code": str(mod)}
+                        db.add(STModule(
+                            project_id=project_id,
+                            name=str(mod.get("name", f"Module_{i}")),
+                            module_type=str(mod.get("module_type", "FC")),
+                            code=str(mod.get("code", "")),
+                            sort_order=i
+                        ))
+
+                    await db.execute(
+                        update(Project).where(Project.id == project_id).values(status="ready")
                     )
-                    db.add(req)
-                    await db.flush()
-
-                    for io in req_data.get("io_list", []):
-                        db.add(IOItem(requirement_id=req.id, tag=io["tag"], io_type=io["type"], description=io["description"]))
-                    for rule in req_data.get("control_logic", []):
-                        db.add(LogicRule(requirement_id=req.id, description=rule))
-
-                for item_data in final_state.get("bom_items", []):
-                    db.add(BOMItem(
-                        project_id=project_id,
-                        category=item_data.get("category", ""),
-                        manufacturer=item_data.get("manufacturer", "Unknown"),
-                        model=item_data.get("model", ""),
-                        quantity=item_data.get("quantity", 1),
-                        specifications=item_data.get("specifications", {}),
-                        confidence=item_data.get("confidence", "rag"),
-                        source_chunk_id=item_data.get("source_chunk_id"),
-                        alternatives=item_data.get("alternatives", []),
-                    ))
-
-                mermaid = final_state.get("mermaid_code")
-                if mermaid:
-                    # If we had a topology column, we'd save it here. 
-                    # For now, ensure it's in the SSE response (already handled by event_generator)
-                    db.add(Schematic(project_id=project_id, mermaid_code=mermaid))
-
-                for i, mod in enumerate(final_state.get("st_modules", []) or []):
-                    db.add(STModule(
-                        project_id=project_id,
-                        name=mod.get("name", f"Module_{i}"),
-                        module_type=mod.get("module_type", "FC"),
-                        code=mod.get("code", ""),
-                        sort_order=i
-                    ))
-
-                await db.execute(
-                    update(Project).where(Project.id == project_id).values(status="ready")
-                )
-                await db.commit()
+                    await db.commit()
+            except Exception as e:
+                # DB save failed but SSE already completed — log only, don't break connection
+                print(f"DB save error (non-fatal, SSE already sent): {e}")
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
@@ -149,55 +157,63 @@ async def resume_project_analysis(project_id: str, body: ResumeRequest, session:
             return
 
         if final_state:
-            from app.db.repository import async_session
-            async with async_session() as db:
-                req_data = final_state.get("requirement", {})
-                if req_data:
-                    req = Requirement(
-                        project_id=project_id,
-                        machine_type=req_data.get("machine_type"),
-                        safety_level=req_data.get("safety_level"),
-                        environment=req_data.get("environment"),
-                        plc_family=req_data.get("plc_family"),
-                        raw_text="[Resumed with human selection]",
+            try:
+                from app.db.repository import async_session
+                async with async_session() as db:
+                    req_data = final_state.get("requirement", {})
+                    if isinstance(req_data, dict) and req_data:
+                        req = Requirement(
+                            project_id=project_id,
+                            machine_type=req_data.get("machine_type"),
+                            safety_level=req_data.get("safety_level"),
+                            environment=req_data.get("environment"),
+                            plc_family=req_data.get("plc_family"),
+                            raw_text="[Resumed with human selection]",
+                        )
+                        db.add(req)
+                        await db.flush()
+
+                        for io in req_data.get("io_list", []) or []:
+                            if isinstance(io, dict):
+                                db.add(IOItem(requirement_id=req.id, tag=io.get("tag", ""), io_type=io.get("type", "DI"), description=io.get("description", "")))
+                        for rule in req_data.get("control_logic", []) or []:
+                            db.add(LogicRule(requirement_id=req.id, description=str(rule)))
+
+                    for item_data in final_state.get("bom_items", []) or []:
+                        if not isinstance(item_data, dict):
+                            continue
+                        db.add(BOMItem(
+                            project_id=project_id,
+                            category=str(item_data.get("category", "")),
+                            manufacturer=str(item_data.get("manufacturer", "Unknown")),
+                            model=str(item_data.get("model", "")),
+                            quantity=int(item_data.get("quantity", 1)),
+                            specifications=item_data.get("specifications", {}) if isinstance(item_data.get("specifications"), dict) else {},
+                            confidence=str(item_data.get("confidence", "rag")),
+                            source_chunk_id=item_data.get("source_chunk_id"),
+                            alternatives=item_data.get("alternatives", []) if isinstance(item_data.get("alternatives"), list) else [],
+                        ))
+
+                    mermaid = final_state.get("mermaid_code")
+                    if mermaid and isinstance(mermaid, str):
+                        db.add(Schematic(project_id=project_id, mermaid_code=mermaid))
+
+                    for i, mod in enumerate(final_state.get("st_modules", []) or []):
+                        if not isinstance(mod, dict):
+                            mod = {"name": f"Module_{i}", "module_type": "FC", "code": str(mod)}
+                        db.add(STModule(
+                            project_id=project_id,
+                            name=str(mod.get("name", f"Module_{i}")),
+                            module_type=str(mod.get("module_type", "FC")),
+                            code=str(mod.get("code", "")),
+                            sort_order=i
+                        ))
+
+                    await db.execute(
+                        update(Project).where(Project.id == project_id).values(status="ready")
                     )
-                    db.add(req)
-                    await db.flush()
-
-                    for io in req_data.get("io_list", []):
-                        db.add(IOItem(requirement_id=req.id, tag=io["tag"], io_type=io["type"], description=io["description"]))
-                    for rule in req_data.get("control_logic", []):
-                        db.add(LogicRule(requirement_id=req.id, description=rule))
-
-                for item_data in final_state.get("bom_items", []):
-                    db.add(BOMItem(
-                        project_id=project_id,
-                        category=item_data.get("category", ""),
-                        manufacturer=item_data.get("manufacturer", "Unknown"),
-                        model=item_data.get("model", ""),
-                        quantity=item_data.get("quantity", 1),
-                        specifications=item_data.get("specifications", {}),
-                        confidence=item_data.get("confidence", "rag"),
-                        source_chunk_id=item_data.get("source_chunk_id"),
-                        alternatives=item_data.get("alternatives", []),
-                    ))
-
-                mermaid = final_state.get("mermaid_code")
-                if mermaid:
-                    db.add(Schematic(project_id=project_id, mermaid_code=mermaid))
-
-                for i, mod in enumerate(final_state.get("st_modules", []) or []):
-                    db.add(STModule(
-                        project_id=project_id,
-                        name=mod.get("name", f"Module_{i}"),
-                        module_type=mod.get("module_type", "FC"),
-                        code=mod.get("code", ""),
-                        sort_order=i
-                    ))
-
-                await db.execute(
-                    update(Project).where(Project.id == project_id).values(status="ready")
-                )
-                await db.commit()
+                    await db.commit()
+            except Exception as e:
+                print(f"DB save error in resume (non-fatal, SSE already sent): {e}")
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 from enum import Enum
 
 
@@ -33,7 +33,7 @@ class ProjectStatus(str, Enum):
 
 
 class RequirementInput(BaseModel):
-    text: str = Field("", validation_alias="message")
+    text: str = Field("", validation_alias=AliasChoices("text", "message"))
     machine_type: str | None = None
     safety_level: str | None = None
     environment: str | None = None

@@ -108,18 +108,55 @@ class LLMService:
         raise ValueError(f"Failed to parse JSON: {text[:200]}...")
 
     async def analyze_requirements(self, user_input: str) -> dict:
-        system = """You are an electrical engineering requirements analyst for industrial automation (Siemens PLC).
-Analyze the user's description and extract structured requirements as JSON.
-Include: machine_type, safety_level (SIL1/SIL2/SIL3), environment (indoor/outdoor/explosive),
-io_list (array of {tag, type:DI/DO/AI/AO, description}), control_logic (array of strings),
-plc_family (S7-1200/S7-1500). Output valid JSON only, no markdown wrapping."""
+        system = """You are an electrical engineering requirements analyst for industrial automation.
+Deeply analyze the user's description from a MECHANICAL EXECUTION perspective.
 
-        text = await self.chat(system, user_input, max_tokens=4096)
-        try:
-            return self._parse_json(text)
-        except ValueError:
-            text = await self.chat(system, user_input + "\n\nIMPORTANT: Output ONLY valid JSON. Ensure all strings are properly closed.", max_tokens=4096)
-            return self._parse_json(text)
+KEY PRINCIPLE: Every motion system requires specific electrical components driven by its mechanical structure:
+
+- **Servo Slide / Linear Axis** (伺服滑台/线性模组):
+  Motion: Servo motor + ball screw or linear motor → REQUIRES: PLC_CPU (motion control), Servo_Drive, HMI (parameter setting), Power_Supply (24VDC for control, 220VAC/380VAC for drive), 2-3 Sensors (limit/home/position feedback), Circuit_Breaker, Contactor or Safety_Relay (if E-Stop present).
+
+- **Conveyor Belt** (传送带):
+  Motion: Induction motor + gearbox → REQUIRES: PLC_CPU, VFD (variable speed), Contactor + Thermal_Overload, 2 Sensors (speed/proximity), Safety_Relay (if E-Stop), Power_Supply, Circuit_Breaker.
+
+- **Robot Arm / Manipulator** (机械臂):
+  Motion: Multi-axis servo → REQUIRES: PLC_CPU or Robot_Controller, Servo_Drive (per axis), Safety_PLC (collaborative), HMI, Power_Supply, EtherCAT network, Safety_Relay, Sensors (torque/position).
+
+- **CNC / Machining**:
+  Motion: Spindle + feed axes → REQUIRES: PLC_CPU, multiple Servo_Drives or VFDs, HMI, Power_Supply, Sensors (tool/position/coolant), E-Stop + Safety_Relay.
+
+- **Hydraulic / Pneumatic Press**:
+  Actuation: Solenoid valves + cylinders → REQUIRES: PLC_CPU, IO_Module (DI/DO for valves, AI for pressure), Power_Supply, Circuit_Breaker, Safety_Relay.
+
+Output structured JSON:
+{
+  "machine_type": "precise mechanical description (e.g., 'Servo-driven linear slide table with ball screw')",
+  "safety_level": "SIL1/SIL2/SIL3",
+  "environment": "indoor/outdoor/explosive",
+  "plc_family": "S7-1200 or S7-1500 based on motion complexity (S7-1200 for simple, S7-1500 for multi-axis or high-speed)",
+  "io_list": [
+    {"tag": "string", "type": "DI/DO/AI/AO", "description": "functional description"}
+  ],
+  "control_logic": [
+    "detailed control sequence including motion profile, homing, alarm handling"
+  ]
+}
+
+IMPORTANT:
+- For servo systems, ALWAYS include home sensor (DI), limit sensors (DI), servo enable (DO), and alarm reset (DO).
+- For any system with E-Stop, ALWAYS include safety relay monitoring (DI) and contactor control (DO).
+- S7-1200 for ≤3 axes, S7-1500 for >3 axes or high-speed coordinated motion.
+- ALWAYS include a Power_Supply 24VDC requirement in the io_list implications.
+Output valid JSON only, no markdown wrapping."""
+
+        for attempt in range(2):
+            try:
+                prompt = user_input + ("\n\nIMPORTANT: Output ONLY valid JSON. Ensure all strings are properly closed." if attempt > 0 else "")
+                text = await self.chat(system, prompt, max_tokens=4096)
+                return self._parse_json(text)
+            except Exception as e:
+                print(f"analyze_requirements attempt {attempt+1} failed: {e}")
+        return {"machine_type": None, "safety_level": None, "environment": None, "plc_family": None, "io_list": [], "control_logic": []}
 
     async def map_categories(self, io_items: list, logic_rules: list) -> list[str]:
         system = """Map the given IO list and control logic to required component categories.
@@ -128,12 +165,13 @@ VFD, Safety_Relay, Terminal_Block, Sensor, Actuator, Communication_Module.
 Return JSON array of strings. Output valid JSON only, no markdown wrapping."""
 
         user = f"IO: {io_items}\nLogic: {logic_rules}"
-        text = await self.chat(system, user, max_tokens=1024)
-        try:
-            return self._parse_json(text)
-        except ValueError:
-            text = await self.chat(system, user + "\n\nOutput ONLY a JSON array of strings.", max_tokens=1024)
-            return self._parse_json(text)
+        for attempt in range(2):
+            try:
+                text = await self.chat(system, user + ("\n\nOutput ONLY a JSON array of strings." if attempt > 0 else ""), max_tokens=1024)
+                return self._parse_json(text)
+            except Exception as e:
+                print(f"map_categories attempt {attempt+1} failed: {e}")
+        return []  # graceful degradation — downstream nodes will handle empty categories
 
     async def generate_schematic_mermaid(self, bom: list, requirement: dict) -> str:
         import json

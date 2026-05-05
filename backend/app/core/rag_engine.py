@@ -231,8 +231,11 @@ class RAGEngine:
             vr["authoritative"] = False
             output.append(vr)
 
-        # If graph returned NOT_FOUND, prepend a sentinel entry
-        if graph.status == "NOT_FOUND" and not graph.components:
+        # NOT_FOUND sentinel: only when graph HAS matching nodes but no exact
+        # order number (real NOT_FOUND). Empty DB (no nodes at all) falls through
+        # to LLM fallback — the zero-hallucination gate applies to graph misses,
+        # not to missing data.
+        if graph.status == "NOT_FOUND" and graph.components:
             output.insert(0, {
                 "id": f"NOT_FOUND_{component_type}",
                 "content": f"STATUS: NOT_FOUND — {graph.message}",

@@ -9,7 +9,12 @@ export function useChatHistory() {
   const loadChatHistory = useStore((s) => s.loadChatHistory);
   const saveChatHistory = useStore((s) => s.saveChatHistory);
 
-  // Load history when project changes
+  // Load history on mount (restores project + messages from localStorage)
+  useEffect(() => {
+    loadChatHistory();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load history when project changes (e.g., user creates or switches project)
   useEffect(() => {
     if (project) {
       loadChatHistory();
