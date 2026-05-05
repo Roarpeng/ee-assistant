@@ -1,7 +1,26 @@
 from fastapi import WebSocket
+from langgraph.types import Command
 from app.core.llm_service import llm_service
 from app.core.schemas import ProgressEvent
 from app.db.models import Requirement, IOItem, LogicRule
+
+
+# LangGraph node → user-facing message mapping
+_NODE_MESSAGES: dict[str, str] = {
+    "requirements_agent": "需求分析完成。",
+    "category_mapper": "组件类别映射完成。",
+    "safety_assessor": "安全性评估完成。",
+    "constraint_extractor": "设计约束提取完成。",
+    "selection_supervisor": "组件选型（RAG检索）完成。",
+    "rule_validator": "设计规则验证完成。",
+    "schematic_generator": "系统拓扑结构生成完成。",
+    "code_generator": "PLC ST 代码生成完成。",
+    "final_review_agent": "最终审查完成。",
+}
+
+
+def _node_message(node_name: str) -> str:
+    return _NODE_MESSAGES.get(node_name, f"节点 '{node_name}' 执行完成。")
 
 
 class Orchestrator:
@@ -46,15 +65,9 @@ class Orchestrator:
         await self.push(project_id, ProgressEvent(stage="ready", message="Requirements analysis complete.", data=req_data))
         return req_data
 
-    async def stream_graph_analysis(self, project_id: str, user_input: str,
-                                     llm_config: dict | None = None,
-                                     embedding_config: dict | None = None):
-        from app.core.graph.builder import build_graph
+    async def _configure_services(self, llm_config: dict | None, embedding_config: dict | None):
+        """Apply runtime LLM / embedding overrides."""
         from app.core.rag_engine import rag_engine
-
-        # Immediate feedback to frontend
-        yield {"step": "正在准备 LangGraph 执行环境...", "node": "init"}
-
         if llm_config or embedding_config:
             llm_service.configure(chat_config=llm_config, embed_config=embedding_config)
         if embedding_config:
@@ -65,95 +78,130 @@ class Orchestrator:
                 dimensions=embedding_config.get("dimension", 0),
             )
 
+    def _build_input_state(
+        self, project_id: str, user_input: str,
+        llm_config: dict | None, embedding_config: dict | None,
+        history: list[dict] | None, graph,
+    ) -> dict:
+        """Build input state: full initial for new projects, incremental for continuing."""
+        config = {"configurable": {"thread_id": project_id}}
+        current_state = graph.get_state(config)
+
+        if not current_state.values:
+            return {
+                "project_id": project_id,
+                "user_input": user_input,
+                "requirement": None,
+                "categories": None,
+                "safety_level": None,
+                "constraints": None,
+                "bom_items": None,
+                "violations": None,
+                "mermaid_code": None,
+                "st_modules": None,
+                "topology": None,
+                "review_notes": None,
+                "graph_traces": [],
+                "errors": [],
+                "messages": [],
+                "llm_fallback_categories": None,
+                "stage": "started",
+                "llm_config": llm_config,
+                "embedding_config": embedding_config,
+            }
+        else:
+            state: dict = {
+                "user_input": user_input,
+                "stage": "continuing",
+                "llm_config": llm_config,
+                "embedding_config": embedding_config,
+            }
+            if history:
+                state["messages"] = history
+            return state
+
+    async def _stream_events(self, graph, input_state_or_command, config: dict):
+        """Core event loop: yield step/interrupt/done events from graph.astream.
+
+        Handles three event types:
+          - Normal node completion → {"step": ..., "node": ...}
+          - Interrupt (NOT_FOUND)   → {"event": "interrupt", "data": ...}
+          - Graph done              → {"done": True, "payload": ...}
+        """
+        async for event in graph.astream(input_state_or_command, config):
+            # ── Interrupt gate: human intervention required ──
+            if "__interrupt__" in event:
+                interrupt_tuple = event["__interrupt__"]
+                interrupt_obj = interrupt_tuple[0] if interrupt_tuple else None
+                interrupt_value = getattr(interrupt_obj, "value", interrupt_obj)
+                yield {
+                    "event": "interrupt",
+                    "data": interrupt_value,
+                    "message": (
+                        "缺少匹配元器件，请人工选择。"
+                        if isinstance(interrupt_value, dict)
+                        else str(interrupt_value)
+                    ),
+                }
+                return  # Stop streaming — wait for resume
+
+            for node_name, state_update in event.items():
+                yield {"step": _node_message(node_name), "node": node_name}
+
+        # Stream complete — read full final state from checkpoint
+        final_state = graph.get_state(config).values
+        yield {"done": True, "payload": final_state}
+
+    async def stream_graph_analysis(self, project_id: str, user_input: str,
+                                     llm_config: dict | None = None,
+                                     embedding_config: dict | None = None,
+                                     history: list[dict] | None = None):
+        """Start (or continue) a LangGraph analysis, streaming SSE events."""
+        from app.core.graph.builder import build_graph
+
+        yield {"step": "正在准备 LangGraph 执行环境...", "node": "init"}
+        await self._configure_services(llm_config, embedding_config)
+
         graph = build_graph()
         config = {"configurable": {"thread_id": project_id}}
-        initial_state = {
-            "project_id": project_id,
-            "user_input": user_input,
-            "requirement": None,
-            "categories": None,
-            "safety_level": None,
-            "constraints": None,
-            "bom_items": None,
-            "violations": None,
-            "mermaid_code": None,
-            "st_modules": None,
-            "topology": None,
-            "review_notes": None,
-            "graph_traces": [],
-            "errors": [],
-            "llm_fallback_categories": None,
-            "stage": "started",
-            "llm_config": llm_config,
-            "embedding_config": embedding_config,
-        }
+        input_state = self._build_input_state(
+            project_id, user_input, llm_config, embedding_config, history, graph
+        )
 
-        final_state = initial_state.copy()
-        
-        async for event in graph.astream(initial_state, config):
-            for node_name, state_update in event.items():
-                if isinstance(state_update, dict):
-                    final_state.update(state_update)
-                
-                message = f"节点 '{node_name}' 执行完成。"
-                if node_name == "requirements_agent":
-                    message = "需求分析完成。"
-                elif node_name == "category_mapper":
-                    message = "组件类别映射完成。"
-                elif node_name == "safety_assessor":
-                    message = "安全性评估完成。"
-                elif node_name == "selection_supervisor":
-                    message = "组件选型（RAG检索）完成。"
-                elif node_name == "rule_validator":
-                    message = "设计规则验证完成。"
-                elif node_name == "schematic_generator":
-                    message = "系统拓扑结构生成完成。"
-                elif node_name == "code_generator":
-                    message = "PLC ST 代码生成完成。"
-                
-                yield {"step": message, "node": node_name}
-        
-        # Stream is done, yield payload from collected state
-        yield {"done": True, "payload": final_state}
+        async for evt in self._stream_events(graph, input_state, config):
+            yield evt
+
+    async def resume_graph_analysis(self, project_id: str, resume_value: dict):
+        """Resume a paused LangGraph analysis after human provides manual selection.
+
+        resume_value shape:
+          {"manual_selections": [{"category": "IO_Module", "order_number": "6ES7...", ...}]}
+        """
+        from app.core.graph.builder import build_graph
+
+        yield {"step": "人工选型数据已接收，继续工程分析...", "node": "resume"}
+        await self._configure_services(None, None)
+
+        graph = build_graph()
+        config = {"configurable": {"thread_id": project_id}}
+
+        async for evt in self._stream_events(graph, Command(resume=resume_value), config):
+            yield evt
 
     async def run_graph_analysis(self, project_id: str, user_input: str,
                                   llm_config: dict | None = None,
                                   embedding_config: dict | None = None) -> dict:
         from app.core.graph.builder import build_graph
-        from app.core.rag_engine import rag_engine
 
-        # Configure LLM with frontend-provided settings (falls back to env vars)
-        if llm_config or embedding_config:
-            llm_service.configure(chat_config=llm_config, embed_config=embedding_config)
-        if embedding_config:
-            rag_engine.configure(
-                api_key=embedding_config.get("api_key", ""),
-                base_url=embedding_config.get("base_url", ""),
-                model=embedding_config.get("model", ""),
-                dimensions=embedding_config.get("dimension", 0),
-            )
+        await self._configure_services(llm_config, embedding_config)
 
         graph = build_graph()
         config = {"configurable": {"thread_id": project_id}}
-        initial_state = {
-            "project_id": project_id,
-            "user_input": user_input,
-            "requirement": None,
-            "categories": None,
-            "safety_level": None,
-            "constraints": None,
-            "bom_items": None,
-            "violations": None,
-            "mermaid_code": None,
-            "st_modules": None,
-            "review_notes": None,
-            "graph_traces": [],
-            "errors": [],
-            "stage": "started",
-            "llm_config": llm_config,
-            "embedding_config": embedding_config,
-        }
-        final_state = await graph.ainvoke(initial_state, config)
+        input_state = self._build_input_state(
+            project_id, user_input, llm_config, embedding_config, None, graph
+        )
+
+        final_state = await graph.ainvoke(input_state, config)
         return final_state
 
 

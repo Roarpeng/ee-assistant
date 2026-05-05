@@ -21,6 +21,10 @@ export function ChatPanel() {
   const topology = useStore((s) => s.topology);
   const resetUnread = useStore((s) => s.resetUnread);
 
+  // Track whether LangGraph is paused waiting for human component selection
+  const interruptedRef = useRef(false);
+  const interruptedRef2 = useRef<any>(null);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -97,6 +101,116 @@ export function ChatPanel() {
       }
     }
 
+    // ── Resume flow: human provides manual component selection ──
+    if (interruptedRef.current && p) {
+      interruptedRef.current = false;
+      let manualSelections: any[];
+      try {
+        const parsed = JSON.parse(userMessage);
+        manualSelections = Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        // Free-text fallback: try to extract category and order number
+        manualSelections = [{
+          category: interruptedRef2.current?.not_found_categories?.[0] || '',
+          manufacturer: '',
+          order_number: userMessage.trim(),
+          model: userMessage.trim(),
+        }];
+      }
+      interruptedRef2.current = null;
+
+      store.addMessage({
+        id: '',
+        role: 'assistant',
+        content: '人工选型数据已接收，继续工程分析...',
+        timestamp: 0,
+      });
+
+      try {
+        const response = await api.resumeAnalysis(p.id, manualSelections);
+        // ... SSE processing (same as below)
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('text/event-stream')) {
+          if (!response.body) throw new Error('No body in response');
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          let fullText = '';
+          let buffer = '';
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed || !trimmed.startsWith('data: ')) continue;
+              try {
+                const data = JSON.parse(trimmed.replace('data: ', ''));
+                if (data.event === 'interrupt') {
+                  setIsProcessing(false);
+                  interruptedRef.current = true;
+                  interruptedRef2.current = data.data;
+                  const notFoundCats = data.data?.not_found_categories || [];
+                  const interruptMsg = `${tr.chat.error}: 缺少匹配元器件: ${notFoundCats.join(', ')}。请提供确切的制造商和订货号。`;
+                  fullText += '\n\n' + interruptMsg;
+                  updateLastMessage(fullText);
+                  store.addMessage({ id: '', role: 'system', content: interruptMsg, timestamp: 0 });
+                  break;
+                }
+                if (data.done) {
+                  setIsProcessing(false);
+                  useStore.getState().saveChatHistory();
+                  fullText += '\n\n' + tr.chat.completed;
+                  updateLastMessage(fullText);
+                  if (data.payload) {
+                    const state = data.payload;
+                    if (state.bom_items) {
+                      useStore.getState().setBOM(state.bom_items.map((b: any, i: number) => ({
+                        id: String(i + 1),
+                        name: `${b.category || ''} ${b.model || ''}`.trim(),
+                        mfg: b.manufacturer || 'Unknown',
+                        pn: b.model || '',
+                        qty: b.quantity || 1,
+                        specs: Object.entries(b.specifications || {}).map(([k, v]) => `${k}: ${v}`).join(', ')
+                      })));
+                    }
+                    if (state.topology && Array.isArray(state.topology.nodes) && state.topology.nodes.length > 0) {
+                      useStore.getState().setTopology(state.topology.nodes, state.topology.edges || [], 'ai');
+                      useStore.getState().setActiveCanvasTab('topology');
+                    }
+                    if (state.st_modules) {
+                      const codeText = state.st_modules
+                        .map((m: any) => `// ${m.name} (${m.module_type})\n${m.code}`)
+                        .join('\n\n');
+                      useStore.getState().setSCLCode(codeText);
+                    }
+                  }
+                  break;
+                } else if (data.step) {
+                  fullText += (fullText ? '\n' : '') + data.step;
+                  updateLastMessage(fullText);
+                  useStore.getState().incrementUnread();
+                }
+              } catch (e) {
+                console.error('Failed to parse SSE line:', line, e);
+              }
+            }
+          }
+        }
+      } catch (error: any) {
+        setIsProcessing(false);
+        store.addMessage({
+          id: '',
+          role: 'system',
+          content: `${tr.chat.error}: ${error.message}`,
+          timestamp: 0,
+        });
+      }
+      return;
+    }
+
     store.addMessage({
       id: '',
       role: 'assistant',
@@ -105,7 +219,14 @@ export function ChatPanel() {
     });
 
     try {
-      const response = await api.analyzeV2SSE(p.id, userMessage);
+      // Extract recent conversation history (last 10 non-system messages)
+      const storeMessages = useStore.getState().messages;
+      const history = storeMessages
+        .filter(m => m.role !== 'system')
+        .slice(-10)
+        .map(m => ({ role: m.role, content: m.content }));
+
+      const response = await api.analyzeV2SSE(p.id, userMessage, history);
       const contentType = response.headers.get('content-type') || '';
 
       if (contentType.includes('text/event-stream')) {
@@ -129,6 +250,22 @@ export function ChatPanel() {
             
             try {
               const data = JSON.parse(trimmed.replace('data: ', ''));
+              if (data.event === 'interrupt') {
+                setIsProcessing(false);
+                interruptedRef.current = true;
+                interruptedRef2.current = data.data;
+                const notFoundCats = data.data?.not_found_categories || [];
+                const interruptMsg = `${tr.chat.error}: 缺少匹配元器件: ${notFoundCats.join(', ')}。请提供确切的制造商和订货号。`;
+                fullText += '\n\n' + interruptMsg;
+                updateLastMessage(fullText);
+                store.addMessage({
+                  id: '',
+                  role: 'system',
+                  content: interruptMsg,
+                  timestamp: 0,
+                });
+                break;
+              }
               if (data.done) {
                 setIsProcessing(false);
                 useStore.getState().saveChatHistory();
@@ -151,20 +288,11 @@ export function ChatPanel() {
                     })));
                   }
                   
-                  if (state.topology && state.topology.nodes && state.topology.nodes.length > 0) {
+                  if (state.topology && Array.isArray(state.topology.nodes) && state.topology.nodes.length > 0) {
                     console.log('Mapping Structured Topology...', state.topology.nodes.length, 'nodes');
-                    // Force clear before setting new AI topology to ensure reactivity
-                    useStore.getState().setTopology([], [], 'user');
-                    
-                    setTimeout(() => {
-                      useStore.getState().setTopology(
-                        state.topology.nodes,
-                        state.topology.edges || [],
-                        'ai'
-                      );
-                      useStore.getState().setActiveCanvasTab('topology');
-                      console.log('Topology set in store and switched to tab.');
-                    }, 50);
+                    useStore.getState().setTopology(state.topology.nodes, state.topology.edges || [], 'ai');
+                    useStore.getState().setActiveCanvasTab('topology');
+                    console.log('Topology set in store and switched to tab.');
                   } else {
                     console.warn('No structured topology found in payload, or nodes empty.', state.topology);
                   }
@@ -251,7 +379,7 @@ export function ChatPanel() {
         <div className="flex gap-3 items-center">
           <button
             className="hover:text-indigo-400 transition-colors text-[10px] px-2 py-1 rounded-lg hover:bg-indigo-500/10"
-            onClick={newProject}
+            onClick={() => { interruptedRef.current = false; interruptedRef2.current = null; newProject(); }}
             title={tr.chat.newProject}
           >
             + {tr.chat.newProject}

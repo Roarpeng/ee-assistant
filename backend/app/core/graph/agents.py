@@ -1,4 +1,5 @@
 """LangGraph agent node functions — each node receives state, returns partial state update."""
+from langgraph.types import interrupt
 from app.core.graph.state import AnalysisState
 from app.core.llm_service import llm_service
 from app.core.rule_engine import validate_all
@@ -38,14 +39,24 @@ async def constraint_extractor(state: AnalysisState) -> dict:
 
 
 async def fanout_selection_supervisor(state: AnalysisState) -> dict:
-    """Fan-out: for each category, search RAG + graph neighbors. Falls back to LLM when no match."""
+    """Fan-out selection with zero-hallucination guarantee.
+
+    For each category:
+      - Graph path (authoritative): exact part number + accessory verification.
+      - If NOT_FOUND → NO LLM fallback → interrupt workflow for human input.
+
+    The node can be called in two modes:
+      1. Initial run: processes categories from state, may interrupt.
+      2. Resume run: receives manual selections via interrupt() return value.
+    """
     from app.core.rag_engine import rag_engine
     from app.core.llm_service import llm_service
     from app.db.repository import async_session
 
     categories = state.get("categories", [])
-    all_bom = []
-    new_traces = []
+    all_bom: list[dict] = []
+    new_traces: list[dict] = []
+    not_found_categories: list[str] = []
     llm_fallback_categories: list[str] = []
 
     async with async_session() as session:
@@ -59,55 +70,90 @@ async def fanout_selection_supervisor(state: AnalysisState) -> dict:
                 )
             except Exception:
                 results = []
-            if results:
-                best = results[0]
-                item = {
-                    "category": cat,
-                    "manufacturer": best["metadata"].get("manufacturer", "Unknown"),
-                    "model": best.get("content", "")[:80],
-                    "quantity": 1,
-                    "specifications": best.get("metadata", {}),
-                    "confidence": "rag" if best.get("source") == "qdrant" else "graph",
-                    "source_chunk_id": best.get("id") if best.get("source") == "qdrant" else None,
-                    "alternatives": [
-                        {"manufacturer": c["metadata"].get("manufacturer", ""), "model": c.get("content", "")[:60]}
-                        for c in results[1:3]
-                    ],
-                }
-                all_bom.append(item)
-                if best.get("source") == "graph":
-                    new_traces.append({
-                        "category": cat,
-                        "node_id": best.get("id"),
-                        "component": best.get("content", "")[:60],
-                    })
-            else:
-                llm_fallback_categories.append(cat)
 
-    # LLM fallback for categories with no RAG results
-    if llm_fallback_categories:
-        try:
-            llm_bom = await llm_service.recommend_components(
-                categories=llm_fallback_categories,
-                machine_type=state.get("requirement", {}).get("machine_type", ""),
+            if not results:
+                llm_fallback_categories.append(cat)
+                continue
+
+            # Check for NOT_FOUND sentinel from GraphRetriever
+            best = results[0]
+            is_not_found = (
+                best.get("metadata", {}).get("status") == "NOT_FOUND"
+                or best.get("content", "").startswith("STATUS: NOT_FOUND")
             )
-            for item in llm_bom:
-                item["confidence"] = "llm"
-                item["source_chunk_id"] = None
-                item.setdefault("alternatives", [])
-                all_bom.append(item)
-        except Exception:
-            for cat in llm_fallback_categories:
-                all_bom.append({
+            if is_not_found:
+                not_found_categories.append(cat)
+                continue
+
+            # Valid match — build BOM item
+            is_graph = best.get("source") == "graph" and best.get("authoritative", False)
+            item = {
+                "category": cat,
+                "manufacturer": best["metadata"].get("manufacturer", "Unknown"),
+                "model": best["metadata"].get("order_number", "") or best.get("content", "")[:80],
+                "order_number": best["metadata"].get("order_number", ""),
+                "quantity": 1,
+                "specifications": best.get("metadata", {}),
+                "confidence": "graph" if is_graph else "rag",
+                "source_chunk_id": best.get("id") if best.get("source") == "qdrant" else None,
+                "alternatives": [
+                    {
+                        "manufacturer": c["metadata"].get("manufacturer", ""),
+                        "model": c["metadata"].get("order_number", "") or c.get("content", "")[:60],
+                    }
+                    for c in results[1:3]
+                ],
+            }
+            all_bom.append(item)
+            if is_graph:
+                new_traces.append({
                     "category": cat,
-                    "manufacturer": "TBD",
-                    "model": f"{cat} component",
-                    "quantity": 1,
-                    "specifications": {},
-                    "confidence": "llm",
+                    "node_id": best.get("id"),
+                    "component": best.get("content", "")[:60],
+                })
+
+    # ── Zero-hallucination gate: NOT_FOUND → interrupt workflow ──
+    if not_found_categories:
+        human_input = interrupt({
+            "action": "human_selection_required",
+            "not_found_categories": not_found_categories,
+            "message": (
+                f"缺少匹配元器件: {', '.join(not_found_categories)}。"
+                f"请人工输入确切的制造商和订货号。"
+            ),
+            "current_bom": all_bom,
+            "llm_fallback_attempted": len(llm_fallback_categories) > 0,
+        })
+
+        # On resume: human_input contains { "manual_selections": [...] }
+        if isinstance(human_input, dict) and human_input.get("manual_selections"):
+            for manual in human_input["manual_selections"]:
+                all_bom.append({
+                    "category": manual.get("category", ""),
+                    "manufacturer": manual.get("manufacturer", "Human Selected"),
+                    "model": manual.get("order_number", "") or manual.get("model", ""),
+                    "order_number": manual.get("order_number", ""),
+                    "quantity": manual.get("quantity", 1),
+                    "specifications": manual.get("specifications", {}),
+                    "confidence": "human",
                     "source_chunk_id": None,
                     "alternatives": [],
                 })
+
+    # LLM fallback only for categories with no RAG results AND no graph data
+    if llm_fallback_categories:
+        for cat in llm_fallback_categories:
+            all_bom.append({
+                "category": cat,
+                "manufacturer": "TBD",
+                "model": f"{cat} component — REQUIRES HUMAN VERIFICATION",
+                "order_number": "",
+                "quantity": 1,
+                "specifications": {},
+                "confidence": "llm",
+                "source_chunk_id": None,
+                "alternatives": [],
+            })
 
     return {
         "bom_items": all_bom,

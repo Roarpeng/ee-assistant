@@ -5,6 +5,13 @@ from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, Fi
 from openai import AsyncOpenAI
 
 from app.config import settings
+from app.core.graph_rag import (
+    GraphRetriever,
+    GraphRetrievalRequest,
+    GraphRetrievalResult,
+    HybridSearchResult,
+    VectorRetriever,
+)
 
 
 class RAGEngine:
@@ -136,27 +143,110 @@ class RAGEngine:
             points_selector=Filter(must=[FieldCondition(key="doc_id", match=MatchValue(value=doc_id))]),
         )
 
-    async def search_with_graph(self, query: str, component_type: str, top_k: int, session) -> list[dict]:
-        """Dual-path search: Qdrant semantic + graph neighbor lookup."""
-        from app.core.knowledge_graph import ComponentGraph
-        results = await self.search(query, top_k=top_k)
-        for r in results:
-            r["source"] = "qdrant"
+    async def hybrid_search(
+        self,
+        query: str,
+        component_type: str,
+        top_k: int,
+        session,
+        machine_type: str = "",
+        safety_level: str = "",
+        plc_family: str = "S7-1200",
+    ) -> HybridSearchResult:
+        """Dual-path retrieval with strict separation:
 
-        graph = ComponentGraph(session)
-        graph_nodes = await graph.search_by_type(component_type, limit=top_k)
-        seen_names = {r.get("content", "")[:60] for r in results}
-        for node in graph_nodes:
-            name_snippet = f"{node.name}: {node.component_type}"
-            if name_snippet not in seen_names:
-                results.append({
-                    "id": node.id,
-                    "content": f"{node.name} ({node.component_type}) — {node.properties}",
-                    "score": 1.0,
-                    "metadata": {"name": node.name, "component_type": node.component_type, **node.properties},
-                    "source": "graph",
-                })
-        return results[:top_k + 3]
+        Path 1 (Vector / soft):  Qdrant — supplementary docs only.
+        Path 2 (Graph  / hard):  PostgreSQL graph — exact part numbers + accessories.
+
+        The graph path is authoritative for BOM selection. The vector path
+        provides contextual documentation only and must NOT influence part numbers.
+        """
+        # ── Path 1: Vector (soft) — documentation search ──
+        vec_retriever = VectorRetriever(self)
+        vector_results = await vec_retriever.search_manuals(query, top_k=top_k * 2)
+        for r in vector_results:
+            r["source"] = "vector"
+            r["authoritative"] = False  # vector results are NEVER authoritative for part numbers
+
+        # ── Path 2: Graph (hard) — exact part number retrieval ──
+        graph_retriever = GraphRetriever(session)
+        graph_request = GraphRetrievalRequest(
+            category=component_type,
+            machine_type=machine_type,
+            safety_level=safety_level,
+            plc_family=plc_family,
+        )
+        graph_result = await graph_retriever.retrieve(graph_request)
+
+        requires_human = (
+            graph_result.human_intervention_required
+            or graph_result.status in ("NOT_FOUND", "PARTIAL")
+        )
+
+        return HybridSearchResult(
+            graph_result=graph_result,
+            vector_results=vector_results,
+            requires_human_review=requires_human,
+        )
+
+    async def search_with_graph(
+        self, query: str, component_type: str, top_k: int, session
+    ) -> list[dict]:
+        """Backward-compatible wrapper: converts HybridSearchResult to legacy list format.
+
+        Used by fanout_selection_supervisor agent node. New code should use
+        hybrid_search() directly for structured GraphRetrievalResult access.
+        """
+        result = await self.hybrid_search(
+            query=query,
+            component_type=component_type,
+            top_k=top_k,
+            session=session,
+        )
+
+        graph = result.graph_result
+        output: list[dict] = []
+
+        # Graph results (authoritative — carry exact order numbers)
+        for comp in graph.components:
+            output.append({
+                "id": comp.id,
+                "content": f"{comp.name} ({comp.component_type}) — MLFB: {comp.order_number or 'N/A'}",
+                "score": 1.0,
+                "metadata": {
+                    "name": comp.name,
+                    "component_type": comp.component_type,
+                    "manufacturer": comp.manufacturer,
+                    "order_number": comp.order_number,
+                    **comp.properties,
+                },
+                "source": "graph",
+                "authoritative": True,
+            })
+
+        # Vector results (supplementary — tagged non-authoritative)
+        for vr in result.vector_results:
+            if len(output) >= top_k + 5:
+                break
+            vr["authoritative"] = False
+            output.append(vr)
+
+        # If graph returned NOT_FOUND, prepend a sentinel entry
+        if graph.status == "NOT_FOUND" and not graph.components:
+            output.insert(0, {
+                "id": f"NOT_FOUND_{component_type}",
+                "content": f"STATUS: NOT_FOUND — {graph.message}",
+                "score": 0.0,
+                "metadata": {
+                    "status": "NOT_FOUND",
+                    "human_intervention_required": True,
+                    "message": graph.message,
+                },
+                "source": "graph",
+                "authoritative": True,
+            })
+
+        return output
 
 
 rag_engine = RAGEngine()

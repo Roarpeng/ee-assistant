@@ -62,13 +62,14 @@ export const api = {
   },
 
   // Analysis v2 (LangGraph via SSE)
-  analyzeV2SSE: (projectId: string, message: string) => {
+  analyzeV2SSE: (projectId: string, message: string, history: any[] = []) => {
     const settings = getSettings();
     return fetch(`${BASE}/projects/${projectId}/analyze-v2`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text: message,
+        history,
         llm_config: {
           api_key: settings.chat.apiKey,
           base_url: settings.chat.baseUrl,
@@ -83,6 +84,15 @@ export const api = {
           dimension: settings.embedding.dimension ?? 4096,
         },
       }),
+    });
+  },
+
+  // Resume paused analysis (human selection after NOT_FOUND)
+  resumeAnalysis: (projectId: string, manualSelections: any[]) => {
+    return fetch(`${BASE}/projects/${projectId}/resume`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ manual_selections: manualSelections }),
     });
   },
 

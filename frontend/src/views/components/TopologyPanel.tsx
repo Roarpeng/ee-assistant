@@ -19,6 +19,15 @@ import { PLCNode, HMINode, IONode, VFDNode, ServoNode, PowerNode, SwitchNode, Sa
 import { CanvasContextMenu } from './CanvasContextMenu';
 import { NodeInfoCard } from './NodeInfoCard';
 import { api } from '../../services/api';
+import {
+  observeTopology,
+  updateNodePosition,
+  addUserNode,
+  removeUserNodes,
+  addUserEdge,
+  removeUserEdges,
+  getTopologySnapshot,
+} from '../../models/yjsStore';
 
 const nodeTypes = {
   plc: PLCNode,
@@ -43,7 +52,6 @@ const nodeTypes = {
 
 export function TopologyPanel() {
   const topology = useStore((s) => s.topology);
-  const setStoreTopology = useStore((s) => s.setTopology);
   const setSCLCode = useStore((s) => s.setSCLCode);
   const project = useStore((s) => s.project);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -61,41 +69,80 @@ export function TopologyPanel() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-  // Sync from store when AI updates topology
+  // Track which nodes are being dragged to suppress Yjs→ReactFlow position sync
+  const draggingNodeIdsRef = useRef<Set<string>>(new Set());
+
+  // Yjs CRDT observer: incrementally syncs topology into ReactFlow local state.
+  // Unlike the old Zustand effect, this does NOT replace all nodes — it diffs
+  // and preserves user drag positions via the draggingNodeIdsRef guard.
   useEffect(() => {
-    if (!topology.nodes || topology.nodes.length === 0) return;
-    if (topology.source !== 'ai') return;
-
-    console.log('TopologyPanel: AI data detected, updating local state...', topology.nodes.length);
-    
-    const newNodes = topology.nodes.map((node) => ({
-      id: node.id,
-      type: node.type,
-      position: { x: node.x, y: node.y },
-      data: { label: node.label, status: node.status || 'ok' },
-    }));
-
-    const newEdges = topology.edges.map((edge) => ({
-      id: edge.id,
-      source: edge.source,
-      target: edge.target,
-      label: edge.protocol,
+    const edgeStyle = (protocol: string) => ({
+      id: '', source: '', target: '',
       type: 'smoothstep' as const,
-      animated: edge.protocol === 'ETHERCAT',
+      animated: protocol === 'ETHERCAT',
       reconnectable: true,
       style: { stroke: '#737373', strokeWidth: 2 },
       labelStyle: { fill: '#a3a3a3', fontWeight: 700, fontSize: 12 },
       labelBgStyle: { fill: '#171717', fillOpacity: 0.8 },
       markerEnd: { type: MarkerType.ArrowClosed, color: '#737373' },
-    }));
+    });
 
-    setNodes(newNodes);
-    setEdges(newEdges);
+    const unsub = observeTopology((snapshot) => {
+      const draggingIds = draggingNodeIdsRef.current;
+      const snapNodeIds = new Set(snapshot.nodes.map((n) => n.id));
 
-    if (rfInstance) {
-      setTimeout(() => rfInstance.fitView({ padding: 0.2 }), 100);
-    }
-  }, [topology, rfInstance, setNodes, setEdges]);
+      setNodes((current) => {
+        // Remove nodes absent from snapshot
+        let next = current.filter((n) => snapNodeIds.has(n.id));
+
+        for (const snap of snapshot.nodes) {
+          const existingIdx = next.findIndex((n) => n.id === snap.id);
+          if (existingIdx < 0) {
+            // New node
+            next.push({
+              id: snap.id,
+              type: snap.type,
+              position: { x: snap.x, y: snap.y },
+              data: { label: snap.label, status: snap.status || 'ok' },
+            });
+          } else if (!draggingIds.has(snap.id)) {
+            // Update type/label/status — x,y preserved if dragging
+            const existing = next[existingIdx];
+            next[existingIdx] = {
+              ...existing,
+              type: snap.type,
+              data: { ...existing.data, label: snap.label, status: snap.status || 'ok' },
+            };
+          }
+        }
+        return next;
+      });
+
+      setEdges((current) => {
+        const snapEdgeIds = new Set(snapshot.edges.map((e) => e.id));
+        let next = current.filter((e) => snapEdgeIds.has(e.id));
+
+        for (const snap of snapshot.edges) {
+          const exists = next.some((e) => e.id === snap.id);
+          if (!exists) {
+            next.push({
+              ...edgeStyle(snap.protocol),
+              id: snap.id,
+              source: snap.source,
+              target: snap.target,
+              label: snap.protocol,
+            });
+          }
+        }
+        return next;
+      });
+
+      // Keep Zustand in sync for non-ReactFlow subscribers
+      useStore.getState().syncTopologyFromYjs();
+    });
+
+    return unsub;
+  }, [setNodes, setEdges]);
 
   // Refs to escape stale closures
   const nodesRef = useRef(nodes);
@@ -103,85 +150,110 @@ export function TopologyPanel() {
   const edgesRef = useRef(edges);
   edgesRef.current = edges;
 
-  const mapToStoreFormat = useCallback(() => {
-    return {
-      nodes: nodesRef.current.map((n) => ({
-        id: n.id,
-        type: n.type || 'unknown',
-        label: n.data.label,
-        x: n.position.x,
-        y: n.position.y,
-      })),
-      edges: edgesRef.current.map((e) => ({
-        id: e.id,
-        source: e.source,
-        target: e.target,
-        protocol: (e.label as string) || 'PROFINET',
-      })),
-    };
-  }, []);
-
   const handleSyncToCode = useCallback(async () => {
     if (isSyncing || !project) return;
     setIsSyncing(true);
-    const mapped = mapToStoreFormat();
-    setStoreTopology(mapped.nodes, mapped.edges);
+    // Read from Yjs snapshot (authoritative source)
+    const snapshot = getTopologySnapshot();
     try {
-      const data = await api.updateCodeFromTopology(project.id, { nodes: mapped.nodes, edges: mapped.edges });
+      const data = await api.updateCodeFromTopology(project.id, snapshot);
       if (data.sclCode) setSCLCode(data.sclCode);
     } catch (err) {
       console.error('Failed to sync code', err);
     } finally {
       setIsSyncing(false);
     }
-  }, [isSyncing, project, mapToStoreFormat, setStoreTopology, setSCLCode]);
+  }, [isSyncing, project, setSCLCode]);
 
   const addNode = (type: string) => {
-    const newNode = {
-      id: `${type}_${Date.now()}`,
-      type,
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
-      data: { label: `New ${type.toUpperCase()}`, status: 'ok' as const },
-    };
-    setNodes((nds) => nds.concat(newNode));
+    const id = `${type}_${Date.now()}`;
+    const x = Math.random() * 200 + 100;
+    const y = Math.random() * 200 + 100;
+    const label = `New ${type.toUpperCase()}`;
+
+    // Write to Yjs first (CRDT source of truth)
+    addUserNode({ id, type, label, x, y, status: 'ok' });
+
+    // Then update ReactFlow local state
+    setNodes((nds) =>
+      nds.concat({
+        id,
+        type,
+        position: { x, y },
+        data: { label, status: 'ok' },
+      })
+    );
     setTimeout(handleSyncToCode, 500);
   };
 
   const handleNodesChange = useCallback(
     (changes: any) => {
       onNodesChange(changes);
-      setTimeout(() => {
-        const mapped = mapToStoreFormat();
-        setStoreTopology(mapped.nodes, mapped.edges, 'user');
-      }, 50);
-      if (changes.some((c: any) => c.type === 'remove' || c.type === 'add')) {
+
+      // Track drag state & persist position to Yjs on drag end
+      for (const c of changes) {
+        if (c.type === 'position') {
+          if (c.dragging) {
+            draggingNodeIdsRef.current.add(c.id);
+          } else {
+            draggingNodeIdsRef.current.delete(c.id);
+            const rfNode = nodesRef.current.find((n) => n.id === c.id);
+            if (rfNode) {
+              updateNodePosition(c.id, rfNode.position.x, rfNode.position.y);
+            }
+          }
+        }
+      }
+
+      // Handle structural changes (remove) — sync to Yjs & trigger codegen
+      const removedIds = changes
+        .filter((c: any) => c.type === 'remove')
+        .map((c: any) => c.id);
+      if (removedIds.length > 0) {
+        removeUserNodes(removedIds);
+        setTimeout(handleSyncToCode, 500);
+      }
+
+      if (changes.some((c: any) => c.type === 'add')) {
         setTimeout(handleSyncToCode, 500);
       }
     },
-    [onNodesChange, handleSyncToCode, mapToStoreFormat, setStoreTopology]
+    [onNodesChange, handleSyncToCode]
   );
 
   const handleEdgesChange = useCallback(
     (changes: any) => {
       onEdgesChange(changes);
-      setTimeout(() => {
-        const mapped = mapToStoreFormat();
-        setStoreTopology(mapped.nodes, mapped.edges, 'user');
-      }, 50);
+
+      const removedIds = changes
+        .filter((c: any) => c.type === 'remove')
+        .map((c: any) => c.id);
+      if (removedIds.length > 0) {
+        removeUserEdges(removedIds);
+      }
+
       if (changes.some((c: any) => c.type === 'remove' || c.type === 'add')) {
         setTimeout(handleSyncToCode, 500);
       }
     },
-    [onEdgesChange, handleSyncToCode, mapToStoreFormat, setStoreTopology]
+    [onEdgesChange, handleSyncToCode]
   );
 
   const onConnect = useCallback(
     (params: Edge | Connection) => {
+      const source = params.source;
+      const target = params.target;
+      if (!source || !target) return;
+
+      const id = `e_${source}_${target}_${Date.now()}`;
+      const protocol = 'PROFINET';
       const newEdge = {
         ...params,
-        id: `e_${params.source}_${params.target}_${Date.now()}`,
+        id,
+        source,
+        target,
         type: 'smoothstep' as const,
-        label: 'PROFINET',
+        label: protocol,
         animated: false,
         reconnectable: true,
         style: { stroke: '#737373', strokeWidth: 2 },
@@ -189,6 +261,10 @@ export function TopologyPanel() {
         labelBgStyle: { fill: '#171717', fillOpacity: 0.8 },
         markerEnd: { type: MarkerType.ArrowClosed, color: '#737373' },
       };
+
+      // Write to Yjs (CRDT source of truth)
+      addUserEdge({ id, source, target, protocol });
+
       setEdges((eds) => addEdge(newEdge, eds));
       setTimeout(handleSyncToCode, 500);
     },
@@ -350,7 +426,7 @@ export function TopologyPanel() {
 
       <div className="flex-1 relative z-10 p-0 rounded-3xl overflow-hidden border border-neutral-800/50 bg-[#111111]">
         <ReactFlow
-          key={`rf-${topology.nodes.length}-${topology.edges.length}-${topology.source}`}
+          key={`rf-${project?.id || 'default'}`}
           nodes={nodes}
           edges={edges}
           onNodesChange={handleNodesChange}

@@ -40,6 +40,7 @@ class RequirementInput(BaseModel):
     plc_family: str = "S7-1200"
     llm_config: dict | None = None
     embedding_config: dict | None = None
+    history: list[dict] | None = None
 
 
 class SelectionInput(BaseModel):
@@ -169,3 +170,61 @@ class ProgressEvent(BaseModel):
     stage: str
     message: str
     data: dict | None = None
+
+
+class ResumeRequest(BaseModel):
+    """Human-provided manual component selection to resume a paused workflow."""
+    manual_selections: list[dict] = Field(default_factory=list)
+    # Each dict: {"category": str, "manufacturer": str, "order_number": str, "model": str, "quantity": int}
+
+
+# ── GraphRAG API Schemas ──
+
+class GraphRetrievalRequestSchema(BaseModel):
+    """API request body for graph-based component retrieval."""
+    category: str
+    machine_type: str = ""
+    safety_level: str = ""
+    plc_family: str = "S7-1200"
+    required_protocols: list[str] = Field(default_factory=list)
+    constraints: dict = Field(default_factory=dict)
+
+
+class ComponentNodeOut(BaseModel):
+    """API response: a component node from the knowledge graph."""
+    id: str
+    name: str
+    component_type: str
+    manufacturer: str = ""
+    order_number: str = ""
+    properties: dict = Field(default_factory=dict)
+    community: str | None = None
+
+
+class AccessoryRequirementOut(BaseModel):
+    """API response: a mandatory accessory dependency."""
+    source_component_id: str
+    target_accessory_type: str
+    target_order_number: str = ""
+    target_name: str = ""
+    relation: str
+    quantity: int = 1
+    mandatory: bool = True
+
+
+class GraphRetrievalResponseSchema(BaseModel):
+    """API response for graph-based component retrieval."""
+    status: str  # FOUND | NOT_FOUND | PARTIAL | EMPTY
+    components: list[ComponentNodeOut] = Field(default_factory=list)
+    accessory_requirements: list[AccessoryRequirementOut] = Field(default_factory=list)
+    missing_accessories: list[str] = Field(default_factory=list)
+    graph_trace: list[dict] = Field(default_factory=list)
+    human_intervention_required: bool = False
+    message: str = ""
+
+
+class HybridSearchResponseSchema(BaseModel):
+    """API response for dual-path (graph + vector) retrieval."""
+    graph_result: GraphRetrievalResponseSchema
+    vector_results: list[dict] = Field(default_factory=list)
+    requires_human_review: bool = False

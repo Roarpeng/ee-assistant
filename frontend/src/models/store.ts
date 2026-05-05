@@ -1,5 +1,10 @@
 import { create } from 'zustand';
 import { type Lang, getInitialLang } from '../services/i18n';
+import {
+  mergeAITopology,
+  getTopologySnapshot,
+  resetYjsDoc,
+} from './yjsStore';
 
 // ===== Topology Types =====
 export type NodeData = {
@@ -103,6 +108,7 @@ function saveSettings(s: AppSettings) {
 
 interface AppState {
   topology: { nodes: NodeData[]; edges: EdgeData[]; source?: 'ai' | 'user' };
+  yTopologyVersion: number; // incremented on every Yjs→Zustand sync
   bom: BOMItem[];
   sclCode: string;
   project: { id: string; name: string } | null;
@@ -121,6 +127,7 @@ interface AppState {
   unreadChatCount: number;
 
   setTopology: (nodes: NodeData[], edges: EdgeData[], source?: 'ai' | 'user') => void;
+  syncTopologyFromYjs: () => void;
   setBOM: (bom: BOMItem[]) => void;
   setSCLCode: (code: string) => void;
   setProject: (p: { id: string; name: string }) => void;
@@ -154,6 +161,7 @@ export const useStore = create<AppState>((set) => ({
     nodes: [],
     edges: [],
   },
+  yTopologyVersion: 0,
   bom: [],
   sclCode: '',
 
@@ -172,8 +180,28 @@ export const useStore = create<AppState>((set) => ({
   previewNodeId: null,
   unreadChatCount: 0,
 
-  setTopology: (nodes, edges, source = 'user') =>
-    set({ topology: { nodes, edges, source } }),
+  setTopology: (nodes, edges, source = 'user') => {
+    if (source === 'ai') {
+      // Route AI writes through Yjs for CRDT merge (preserves user x,y)
+      mergeAITopology(nodes, edges);
+      // Sync merged result back into Zustand for non-ReactFlow subscribers
+      const snapshot = getTopologySnapshot();
+      set((s) => ({
+        topology: { nodes: snapshot.nodes, edges: snapshot.edges, source },
+        yTopologyVersion: s.yTopologyVersion + 1,
+      }));
+    } else {
+      set({ topology: { nodes, edges, source } });
+    }
+  },
+
+  syncTopologyFromYjs: () => {
+    const snapshot = getTopologySnapshot();
+    set((s) => ({
+      topology: { nodes: snapshot.nodes, edges: snapshot.edges, source: s.topology.source },
+      yTopologyVersion: s.yTopologyVersion + 1,
+    }));
+  },
   setBOM: (bom) => set({ bom }),
   setSCLCode: (sclCode) => set({ sclCode }),
   setProject: (p) => set({ project: p }),
@@ -223,16 +251,19 @@ export const useStore = create<AppState>((set) => ({
   setChatContext: (chatContext) => set({ chatContext }),
   setPreviewNodeId: (previewNodeId) => set({ previewNodeId }),
 
-  resetCanvasWorkspace: () =>
+  resetCanvasWorkspace: () => {
+    resetYjsDoc();
     set({
       topology: { nodes: [], edges: [] },
+      yTopologyVersion: 0,
       bom: [],
       sclCode: '',
       messages: [],
       chatContext: null,
       previewNodeId: null,
       stage: 'idle',
-    }),
+    });
+  },
 
   clearChat: () => {
     const s = useStore.getState();
@@ -260,9 +291,11 @@ export const useStore = create<AppState>((set) => ({
     try {
       const { api } = await import('../services/api');
       const p = await api.createProject('New Project');
+      resetYjsDoc();
       set({
         project: p,
         topology: { nodes: [], edges: [] },
+        yTopologyVersion: 0,
         bom: [],
         sclCode: '',
         messages: [],
@@ -272,10 +305,12 @@ export const useStore = create<AppState>((set) => ({
         unreadChatCount: 0,
       });
     } catch {
+      resetYjsDoc();
       const fallbackId = 'proj_' + Date.now();
       set({
         project: { id: fallbackId, name: 'New Project' },
         topology: { nodes: [], edges: [] },
+        yTopologyVersion: 0,
         bom: [],
         sclCode: '',
         messages: [],

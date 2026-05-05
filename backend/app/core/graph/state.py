@@ -1,6 +1,8 @@
 import operator
 from typing import Annotated, TypedDict
 
+from langgraph.graph.message import add_messages
+
 
 class AnalysisState(TypedDict):
     project_id: str
@@ -17,6 +19,7 @@ class AnalysisState(TypedDict):
     review_notes: list[str] | None
     graph_traces: Annotated[list[dict], operator.add]
     errors: Annotated[list[str], operator.add]
+    messages: Annotated[list[dict], add_messages]
     llm_fallback_categories: list[str] | None  # categories where RAG had no results
     stage: str
     llm_config: dict | None
