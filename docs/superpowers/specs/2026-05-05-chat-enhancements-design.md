@@ -1,69 +1,69 @@
-# Chat Enhancements: Title/Tags + Search + Clustering
+# 对话系统增强：自动标题/话题标签 + 搜索 + 聚类
 
-**Date:** 2026-05-05
-**Status:** design-approved
+**日期：** 2026-05-05
+**状态：** 设计已确认
 
-## Overview
+## 概述
 
-Three enhancements to the conversation system:
-1. **Auto title & topic tag generation** — LLM generates a 2-6 char title and 2-4 topic tags from the first user message
-2. **Conversation search** — Backend ILIKE search across title, name, and topic_tags
-3. **Topic clustering** — Embedding-based cosine similarity grouping of conversations by topic
+对话系统的三项增强：
+1. **自动标题与话题标签生成** — LLM 根据首条用户消息自动生成 2-6 字标题和 2-4 个话题标签
+2. **对话搜索** — 后端 ILIKE 搜索标题、项目名和话题标签
+3. **话题聚类** — 基于 Embedding 的余弦相似度对话分组
 
-All backend-driven; PG is the authoritative source for title/tags.
+全部后端驱动，PG 是 title/tags 的唯一权威数据源。
 
-## Architecture
+## 架构
 
 ```
-requirements_agent (natural language → structured req)
+requirements_agent (自然语言 → 结构化需求)
     │
     ├── category_mapper ──────────┐
     ├── safety_assessor ──────────┤
     ├── constraint_extractor ─────┤
-    └── title_generator (NEW) ────┘  ← fan-out, zero added latency
+    └── title_generator (新增) ───┘  ← fan-out 并行，零额外延迟
 
-        ... (existing graph continues) ...
+        ... (现有图谱继续) ...
 
-        END → SSE done payload includes title + topic_tags
+        END → SSE done 负载中附带 title + topic_tags
 ```
 
-Title generation runs as a parallel fan-out node alongside the 3 existing nodes — total graph latency unchanged.
+标题生成与已有 3 个节点并列 fan-out — 总图谱执行时间不变。
 
-## Data Model
+## 数据模型
 
-### projects table — 2 new columns
+### projects 表 — 新增 2 列
 
 ```python
 title: Mapped[str | None] = mapped_column(String(200), nullable=True)
 topic_tags: Mapped[list | None] = mapped_column(JSONB, nullable=True)
 ```
 
-### AnalysisState — 2 new keys
+### AnalysisState — 新增 2 个字段
 
 ```python
 title: str | None
 topic_tags: list[str] | None
 ```
 
-### ProjectOut — 2 new fields
+### ProjectOut — 新增 2 个字段
 
 ```python
 title: str | None = None
 topic_tags: list[str] | None = None
 ```
 
-Data authority: PG → frontend localStorage as display cache only.
+数据权威链路：PG → 前端 localStorage 仅作展示缓存。
 
-## Backend Changes
+## 后端变更
 
-### 1. title_generator node (agents.py)
+### 1. title_generator 节点
 
-- Receives `state["user_input"]`
-- Calls `llm_service.generate_title_and_tags(user_input)` — lightweight LLM prompt
-- Returns `{"title": "...", "topic_tags": ["...", "..."]}` 
-- Returns `{"title": None, "topic_tags": None}` on LLM failure (non-blocking)
+- 接收 `state["user_input"]`
+- 调用 `llm_service.generate_title_and_tags(user_input)` — 轻量 LLM 调用
+- 成功返回 `{"title": "...", "topic_tags": ["...", "..."]}`
+- 失败返回 `{"title": None, "topic_tags": None}`，不影响主流程
 
-### 2. Graph registration (builder.py)
+### 2. 图谱注册
 
 ```python
 workflow.add_node("title_generator", title_generator)
@@ -71,9 +71,9 @@ workflow.add_edge("requirements_agent", "title_generator")
 workflow.add_edge("title_generator", "selection_supervisor")
 ```
 
-### 3. DB persistence (analysis.py)
+### 3. 数据库持久化
 
-In `analyze_project_v2` and `resume_project_analysis`, extend the final `update(Project)` call:
+在 `analyze_project_v2` 和 `resume_project_analysis` 中，扩展最终 `update(Project)` 调用：
 
 ```python
 await db.execute(
@@ -85,29 +85,29 @@ await db.execute(
 )
 ```
 
-### 4. Search endpoint (projects.py)
+### 4. 搜索端点
 
 ```
-GET /api/projects/search?q=<query>
+GET /api/projects/search?q=<关键词>
 ```
 
-- ILIKE on `title`, `name`, and `array_to_string(topic_tags, ',')`
-- Ordered by `updated_at` desc, limit 20
-- Returns `list[ProjectOut]`
+- 在 `title`、`name` 和 `topic_tags`（JSONB 数组转字符串）上做 ILIKE 模糊匹配
+- 按 `updated_at` 降序排列，最多返回 20 条
+- 返回 `list[ProjectOut]`
 
-### 5. Cluster endpoint (projects.py)
+### 5. 聚类端点
 
 ```
 POST /api/projects/cluster
 Body: { embedding_config: { api_key, base_url, model, dimension } }
 ```
 
-- Fetches all projects with non-null `title`
-- Embeds each title via the configured embedding API
-- Computes pairwise cosine similarity (threshold 0.75)
-- Returns groups with auto-generated labels (most frequent topic_tag in cluster)
+- 查询所有 title 不为空的项目
+- 通过 Embedding API 向量化每个项目的 title
+- 两两计算余弦相似度，阈值 ≥ 0.75 归为一组
+- 聚类标签取组内出现最多的 topic_tag
 
-Response shape:
+响应格式：
 ```json
 {
   "clusters": [
@@ -121,46 +121,46 @@ Response shape:
 }
 ```
 
-## Frontend Changes
+## 前端变更
 
-| File | Change |
-|------|--------|
-| `ConversationSidebar.tsx` | Search input (300ms debounce) + cluster grouped view + time/topic view toggle |
-| `ChatPanel.tsx` | Parse `title` + `topic_tags` from SSE `done` event, update sidebar cache |
-| `store.ts` | `searchConversations()`, `clusterConversations()` actions, `conversationViewMode` state |
-| `api.ts` | `searchProjects(q)`, `clusterProjects(config)` |
-| `i18n.ts` | Search placeholder, cluster labels, view toggle text |
+| 文件 | 改动内容 |
+|------|---------|
+| `ConversationSidebar.tsx` | 搜索输入框（300ms 防抖）+ 聚类分组视图 + 时间/话题视图切换 |
+| `ChatPanel.tsx` | 从 SSE `done` 事件解析 `title` + `topic_tags`，更新侧边栏缓存 |
+| `store.ts` | `searchConversations()`、`clusterConversations()` 动作，`conversationViewMode` 状态 |
+| `api.ts` | `searchProjects(q)`、`clusterProjects(config)` |
+| `i18n.ts` | 搜索占位符、聚类标签、视图切换文字 |
 
-## llm_service Changes
+## llm_service 变更
 
-New method:
+新增方法：
 ```python
 async def generate_title_and_tags(self, user_input: str) -> dict:
-    """Generate a concise title and topic tags from user's natural language input."""
+    """根据用户自然语言输入，生成简洁标题和话题标签。"""
 ```
 
-Prompt: "Generate a 2-6 character title and 2-4 topic tags for an industrial automation project. Return JSON: {title, topic_tags}."
+Prompt 示例："为以下工业自动化项目生成一个 2-6 字的中文标题和 2-4 个话题标签。以 JSON 返回：{title, topic_tags}。"
 
-## Implementation Steps
+## 实现步骤
 
-| Step | What | Files |
-|------|------|-------|
-| 1 | Add title/topic_tags columns + alembic migration | `models.py`, migration |
-| 2 | Update AnalysisState + ProjectOut schemas | `state.py`, `schemas.py` |
-| 3 | Add generate_title_and_tags to llm_service | `llm_service.py` |
-| 4 | Add title_generator node + register in graph | `agents.py`, `builder.py` |
-| 5 | DB persistence in analysis.py final state handler | `analysis.py` |
-| 6 | Search endpoint | `projects.py` |
-| 7 | Cluster endpoint | `projects.py` |
-| 8 | Frontend: API methods | `api.ts` |
-| 9 | Frontend: store actions | `store.ts` |
-| 10 | Frontend: ConversationSidebar search + cluster UI | `ConversationSidebar.tsx` |
-| 11 | Frontend: ChatPanel SSE title/tags parsing | `ChatPanel.tsx` |
-| 12 | Frontend: i18n strings | `i18n.ts` |
+| 步骤 | 内容 | 涉及文件 |
+|------|------|---------|
+| 1 | projects 表加 title/topic_tags 列 + alembic 迁移 | `models.py`, 迁移文件 |
+| 2 | 更新 AnalysisState + ProjectOut schema | `state.py`, `schemas.py` |
+| 3 | llm_service 新增 generate_title_and_tags 方法 | `llm_service.py` |
+| 4 | 新增 title_generator 节点 + 注册到图谱 | `agents.py`, `builder.py` |
+| 5 | analysis.py 最终状态处理中持久化 title/tags | `analysis.py` |
+| 6 | 搜索端点 | `projects.py` |
+| 7 | 聚类端点 | `projects.py` |
+| 8 | 前端：API 方法 | `api.ts` |
+| 9 | 前端：store 动作 | `store.ts` |
+| 10 | 前端：ConversationSidebar 搜索 + 聚类 UI | `ConversationSidebar.tsx` |
+| 11 | 前端：ChatPanel SSE 解析 title/tags | `ChatPanel.tsx` |
+| 12 | 前端：i18n 文案 | `i18n.ts` |
 
-## Error Handling
+## 错误处理
 
-- Title generation failure → graceful degradation, title stays null, no user-visible error
-- Search returns empty → normal, shows "no results" in UI
-- Cluster embedding API fails → return everything as unclustered with a warning
-- Clustering with 0 or 1 projects → skip computation, return empty clusters
+- **标题生成失败** → 优雅降级，title 保持 null，用户无感知
+- **搜索无结果** → 正常返回空列表，UI 显示"无匹配结果"
+- **聚类 Embedding API 失败** → 全部项目归入 unclustered，附带警告信息
+- **可聚类项目 ≤ 1 个** → 跳过计算，直接返回空 clusters
