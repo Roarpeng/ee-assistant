@@ -286,6 +286,20 @@ async def requirements_agent(state: AnalysisState) -> dict:
     return update
 
 
+async def title_generator(state: AnalysisState) -> dict:
+    """Generate conversation title and topic tags from user input. Non-blocking on failure."""
+    if state.get("title") or state.get("stage", "") in ("selection_done", "continuing"):
+        return {}
+    try:
+        result = await llm_service.generate_title_and_tags(state["user_input"])
+        return {
+            "title": result.get("title"),
+            "topic_tags": result.get("topic_tags"),
+        }
+    except Exception:
+        return {"title": None, "topic_tags": None}
+
+
 async def category_mapper(state: AnalysisState) -> dict:
     # Skip if categories already exist
     existing_cats = state.get("categories")

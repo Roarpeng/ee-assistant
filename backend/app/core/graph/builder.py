@@ -68,6 +68,7 @@ async def build_graph():
 
         from app.core.graph.agents import (
             requirements_agent,
+            title_generator,
             category_mapper,
             safety_assessor,
             constraint_extractor,
@@ -84,6 +85,7 @@ async def build_graph():
         workflow.add_node("category_mapper", category_mapper)
         workflow.add_node("safety_assessor", safety_assessor)
         workflow.add_node("constraint_extractor", constraint_extractor)
+        workflow.add_node("title_generator", title_generator)
         workflow.add_node("selection_supervisor", fanout_selection_supervisor)
         workflow.add_node("rule_validator", rule_validator)
         workflow.add_node("schematic_generator", schematic_generator)
@@ -96,9 +98,11 @@ async def build_graph():
         workflow.add_edge("requirements_agent", "category_mapper")
         workflow.add_edge("requirements_agent", "safety_assessor")
         workflow.add_edge("requirements_agent", "constraint_extractor")
+        workflow.add_edge("requirements_agent", "title_generator")
         workflow.add_edge("category_mapper", "selection_supervisor")
         workflow.add_edge("safety_assessor", "selection_supervisor")
         workflow.add_edge("constraint_extractor", "selection_supervisor")
+        workflow.add_edge("title_generator", "selection_supervisor")
         workflow.add_edge("selection_supervisor", "rule_validator")
         workflow.add_edge("rule_validator", "schematic_generator")
         workflow.add_edge("rule_validator", "code_generator")
