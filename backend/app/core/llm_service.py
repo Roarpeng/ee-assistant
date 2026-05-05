@@ -392,6 +392,22 @@ Output valid JSON only, no markdown wrapping."""
             )
             return self._parse_json(text)
 
+    async def generate_title_and_tags(self, user_input: str) -> dict:
+        """根据用户自然语言输入生成 2-6 字中文标题和 2-4 个话题标签。"""
+        system = """你是工业自动化领域的项目命名专家。
+根据用户的自然语言需求描述，生成：
+- title: 2-6 个中文字符的简洁标题（如"三电机传送带控制"）
+- topic_tags: 2-4 个话题标签（如 ["电机控制", "安全回路", "PROFINET"]）
+
+标签应涵盖：运动类型（伺服/变频/步进）、安全等级（SIL2/安全回路）、通信协议（PROFINET/EtherCAT）、设备类型（传送带/机械臂/CNC）等维度。
+Output valid JSON only, no markdown wrapping: {"title": "...", "topic_tags": ["...", "..."]}"""
+        try:
+            text = await self.chat(system, user_input, max_tokens=256)
+            return self._parse_json(text)
+        except Exception as e:
+            print(f"generate_title_and_tags failed: {e}")
+            return {"title": None, "topic_tags": None}
+
     async def recommend_components(self, categories: list[str], machine_type: str = "") -> list[dict]:
         """LLM-based component recommendation when RAG knowledge base has no matches."""
         import json
