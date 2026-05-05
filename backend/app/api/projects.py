@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import or_, select
+from sqlalchemy import select, or_, func
 from sqlalchemy.orm import selectinload
 
 from app.core.clustering import render_clusters
@@ -89,6 +89,31 @@ async def search_projects(body: ProjectSearchInput, session: AsyncSession = Depe
     return result.scalars().all()
 
 
+@router.get("/search", response_model=list[ProjectOut])
+async def search_projects_by_query(q: str, session: AsyncSession = Depends(get_session)):
+    """搜索项目：按标题、项目名和话题标签模糊匹配"""
+    result = await session.execute(
+        select(Project)
+        .where(
+            or_(
+                Project.title.ilike(f"%{q}%"),
+                Project.name.ilike(f"%{q}%"),
+                func.array_to_string(Project.topic_tags, ',').ilike(f"%{q}%"),
+            )
+        )
+        .order_by(Project.updated_at.desc())
+        .limit(20)
+        .options(
+            selectinload(Project.requirement).selectinload(Requirement.io_items),
+            selectinload(Project.requirement).selectinload(Requirement.logic_rules),
+            selectinload(Project.bom_items),
+            selectinload(Project.schematic),
+            selectinload(Project.code_modules),
+        )
+    )
+    return result.scalars().all()
+
+
 @router.get("/cluster", response_model=ClusterResponse)
 async def cluster_projects(session: AsyncSession = Depends(get_session)):
     """Group projects by shared topic_tag — drives the workspace sidebar.
@@ -130,3 +155,6 @@ async def delete_project(project_id: str, session: AsyncSession = Depends(get_se
         raise HTTPException(status_code=404, detail="Project not found")
     await session.delete(project)
     await session.commit()
+
+
+
