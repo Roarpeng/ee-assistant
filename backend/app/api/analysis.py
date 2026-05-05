@@ -129,7 +129,11 @@ async def save_to_db(
         )
 
     await session.execute(
-        update(Project).where(Project.id == project_id).values(status="ready")
+        update(Project).where(Project.id == project_id).values(
+            status="ready",
+            title=payload.get("title"),
+            topic_tags=payload.get("topic_tags"),
+        )
     )
     await session.commit()
 
