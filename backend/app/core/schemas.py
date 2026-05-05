@@ -136,6 +136,11 @@ class BatchDeleteInput(BaseModel):
     ids: list[str]
 
 
+class KnowledgeRetryInput(BaseModel):
+    llm_config: dict | None = None
+    embedding_config: dict | None = None
+
+
 class KnowledgeChunkOut(BaseModel):
     id: str
     content: str

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../../models/store';
+import { useChatHistory } from '../../hooks/useChatHistory';
 import { api } from '../../services/api';
 import { t } from '../../services/i18n';
 
@@ -11,6 +12,15 @@ export function ChatPanel() {
   const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  useChatHistory();
+
+  const chatContext = useStore((s) => s.chatContext);
+  const setChatContext = useStore((s) => s.setChatContext);
+  const newProject = useStore((s) => s.newProject);
+  const clearChat = useStore((s) => s.clearChat);
+  const topology = useStore((s) => s.topology);
+  const resetUnread = useStore((s) => s.resetUnread);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -19,12 +29,61 @@ export function ChatPanel() {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    resetUnread();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      useStore.getState().saveChatHistory();
+    };
+  }, []);
+
+  // Auto-compose prompt when chatContext is set from canvas
+  useEffect(() => {
+    if (!chatContext) return;
+    const ctxNodes = topology.nodes.filter((n) => chatContext.nodeIds.includes(n.id));
+    if (ctxNodes.length === 0) return;
+    const labels = ctxNodes.map((n) => n.label).join(', ');
+    const prefix = chatContext.mode === 'single'
+      ? `请帮我完善 "${ctxNodes[0].label}" 的规格参数和选型建议。`
+      : `请分析以下拓扑区域内的元器件: ${labels}`;
+    setInputValue(prefix);
+  }, [chatContext?.nodeIds.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSend = async () => {
+    // ... helper inside handleSend scope or component scope
+    const updateLastMessage = (content: string) => {
+      const msgs = [...useStore.getState().messages];
+      const lastIdx = msgs.length - 1;
+      if (lastIdx >= 0 && msgs[lastIdx].role === 'assistant') {
+        msgs[lastIdx] = { ...msgs[lastIdx], content };
+        useStore.setState({ messages: msgs });
+      }
+    };
+
     if (!inputValue.trim() || isProcessing) return;
 
     const userMessage = inputValue.trim();
     setInputValue('');
     store.addMessage({ id: '', role: 'user', content: userMessage, timestamp: 0 });
+
+    // Attach canvas context if present
+    const currentCtx = useStore.getState().chatContext;
+    if (currentCtx) {
+      const ctxNodes = topology.nodes.filter((n) => currentCtx.nodeIds.includes(n.id));
+      const componentSummary = ctxNodes.map((n) => `${n.type} (${n.label})`).join(', ');
+      const msgs = [...useStore.getState().messages];
+      let lastUserMsg = null;
+      for (let i = msgs.length - 1; i >= 0; i--) {
+        if (msgs[i].role === 'user') { lastUserMsg = msgs[i]; break; }
+      }
+      if (lastUserMsg) {
+        lastUserMsg.context = { ...currentCtx, componentSummary };
+        useStore.setState({ messages: msgs });
+      }
+    }
+
     setIsProcessing(true);
 
     let p = project;
@@ -50,50 +109,82 @@ export function ChatPanel() {
       const contentType = response.headers.get('content-type') || '';
 
       if (contentType.includes('text/event-stream')) {
-        // SSE streaming path (when backend supports it)
         if (!response.body) throw new Error('No body in response');
         const reader = response.body.getReader();
         const decoder = new TextDecoder('utf-8');
         let fullText = '';
+        let buffer = '';
 
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
 
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n').filter((line) => line.startsWith('data: '));
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep partial line
 
           for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith('data: ')) continue;
+            
             try {
-              const data = JSON.parse(line.replace('data: ', ''));
+              const data = JSON.parse(trimmed.replace('data: ', ''));
               if (data.done) {
                 setIsProcessing(false);
+                useStore.getState().saveChatHistory();
                 fullText += '\n\n' + tr.chat.completed;
-                const msgs = useStore.getState().messages;
-                const lastIdx = msgs.length - 1;
-                if (lastIdx >= 0) {
-                  msgs[lastIdx] = { ...msgs[lastIdx], content: fullText };
-                  useStore.setState({ messages: [...msgs] });
-                }
+                updateLastMessage(fullText);
+
                 if (data.payload) {
-                  if (data.payload.topology) {
-                    useStore.getState().setTopology(data.payload.topology.nodes, data.payload.topology.edges, 'ai');
+                  const state = data.payload;
+                  console.log('AI Analysis Payload:', state);
+                  
+                  if (state.bom_items) {
+                    console.log('Mapping BOM items...', state.bom_items.length);
+                    useStore.getState().setBOM(state.bom_items.map((b: any, i: number) => ({
+                      id: String(i + 1),
+                      name: `${b.category || ''} ${b.model || ''}`.trim(),
+                      mfg: b.manufacturer || 'Unknown',
+                      pn: b.model || '',
+                      qty: b.quantity || 1,
+                      specs: Object.entries(b.specifications || {}).map(([k, v]) => `${k}: ${v}`).join(', ')
+                    })));
                   }
-                  if (data.payload.bom) useStore.getState().setBOM(data.payload.bom);
-                  if (data.payload.sclCode) useStore.getState().setSCLCode(data.payload.sclCode);
+                  
+                  if (state.topology && state.topology.nodes && state.topology.nodes.length > 0) {
+                    console.log('Mapping Structured Topology...', state.topology.nodes.length, 'nodes');
+                    // Force clear before setting new AI topology to ensure reactivity
+                    useStore.getState().setTopology([], [], 'user');
+                    
+                    setTimeout(() => {
+                      useStore.getState().setTopology(
+                        state.topology.nodes,
+                        state.topology.edges || [],
+                        'ai'
+                      );
+                      useStore.getState().setActiveCanvasTab('topology');
+                      console.log('Topology set in store and switched to tab.');
+                    }, 50);
+                  } else {
+                    console.warn('No structured topology found in payload, or nodes empty.', state.topology);
+                  }
+
+                  if (state.st_modules) {
+                    console.log('Mapping ST modules...', state.st_modules.length);
+                    const codeText = state.st_modules
+                      .map((m: any) => `// ${m.name} (${m.module_type})\n${m.code}`)
+                      .join('\n\n');
+                    useStore.getState().setSCLCode(codeText);
+                  }
                 }
                 break;
               } else if (data.step) {
                 fullText += (fullText ? '\n' : '') + data.step;
-                const msgs = useStore.getState().messages;
-                const lastIdx = msgs.length - 1;
-                if (lastIdx >= 0) {
-                  msgs[lastIdx] = { ...msgs[lastIdx], content: fullText };
-                  useStore.setState({ messages: [...msgs] });
-                }
+                updateLastMessage(fullText);
+                useStore.getState().incrementUnread();
               }
-            } catch {
-              // skip unparseable lines
+            } catch (e) {
+              console.error('Failed to parse SSE line:', line, e);
             }
           }
         }
@@ -105,6 +196,7 @@ export function ChatPanel() {
         }
         const projectData = await response.json();
         setIsProcessing(false);
+        useStore.getState().saveChatHistory();
 
         const msgs = useStore.getState().messages;
         const lastIdx = msgs.length - 1;
@@ -156,16 +248,38 @@ export function ChatPanel() {
     <div className="flex-1 flex flex-col p-6 overflow-hidden min-h-0">
       <div className="flex justify-between items-center mb-6 text-xs text-neutral-500 font-bold uppercase tracking-[0.2em] shrink-0">
         <span>{tr.chat.agent}</span>
-        <div className="flex gap-3">
-          <button className="hover:text-neutral-300">&rarr;</button>
+        <div className="flex gap-3 items-center">
           <button
-            className="hover:text-neutral-300"
-            onClick={() => useStore.setState({ messages: [] })}
+            className="hover:text-indigo-400 transition-colors text-[10px] px-2 py-1 rounded-lg hover:bg-indigo-500/10"
+            onClick={newProject}
+            title={tr.chat.newProject}
           >
-            &times;
+            + {tr.chat.newProject}
+          </button>
+          <button
+            className="hover:text-amber-400 transition-colors text-[10px] px-2 py-1 rounded-lg hover:bg-amber-500/10"
+            onClick={clearChat}
+            title={tr.chat.clearChat}
+          >
+            {tr.chat.clearChat}
           </button>
         </div>
       </div>
+
+      {chatContext && (
+        <div className="mb-3 shrink-0 flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-3 py-2 text-[11px]">
+          <span className="text-indigo-400 font-bold">{tr.chat.linkedContext}</span>
+          <span className="text-neutral-400">
+            {chatContext.nodeIds.length} {tr.chat.components}
+          </span>
+          <button
+            className="ml-auto text-neutral-500 hover:text-neutral-300"
+            onClick={() => setChatContext(null)}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
         {messages.length === 0 && (
@@ -207,6 +321,8 @@ export function ChatPanel() {
 
       <div className="mt-6 relative shrink-0">
         <input
+          id="chat-input"
+          name="chat-input"
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}

@@ -21,6 +21,10 @@ const zh = {
     completed: '任务执行完成。',
     welcome: '描述你的电气控制需求，开始设计。',
     example: '示例："设计一条带 3 台电机、急停按钮和互锁逻辑的传送带控制系统"',
+    newProject: '新建项目',
+    clearChat: '清空聊天',
+    linkedContext: '已关联',
+    components: '个元器件',
   },
   topology: {
     active: '实时拓扑',
@@ -94,6 +98,12 @@ const zh = {
       error: '处理失败，请重试',
     },
   },
+  canvas: {
+    discussSingle: '完善此元器件细节',
+    discussSelection: '讨论框选区域',
+    detailChat: '发起细节对话',
+    selectFirst: '请先框选元器件',
+  },
 };
 
 const en: TranslationDict = {
@@ -116,6 +126,10 @@ const en: TranslationDict = {
     completed: 'Task completed successfully.',
     welcome: 'Describe your electrical control requirements to get started.',
     example: 'Example: "Design a conveyor system with 3 motors, E-Stop, and interlock logic"',
+    newProject: 'New Project',
+    clearChat: 'Clear Chat',
+    linkedContext: 'Linked',
+    components: 'components',
   },
   topology: {
     active: 'Active Topology',
@@ -188,6 +202,12 @@ const en: TranslationDict = {
       ready: 'Processing complete',
       error: 'Processing failed, please retry',
     },
+  },
+  canvas: {
+    discussSingle: 'Refine Component Details',
+    discussSelection: 'Discuss Selected Region',
+    detailChat: 'Start Detail Chat',
+    selectFirst: 'Select components first',
   },
 };
 

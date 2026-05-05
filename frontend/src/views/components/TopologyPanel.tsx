@@ -13,8 +13,11 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useStore } from '../../models/store';
+import type { NodeData } from '../../models/store';
 import { t } from '../../services/i18n';
 import { PLCNode, HMINode, IONode, VFDNode, ServoNode, PowerNode, SwitchNode, SafetyRelayNode, SensorNode, IPCNode, SafetyPLCNode, CircuitBreakerNode, ContactorNode, RelayNode, EStopNode, TransformerNode, FuseNode, DisconnectNode } from './CustomNodes';
+import { CanvasContextMenu } from './CanvasContextMenu';
+import { NodeInfoCard } from './NodeInfoCard';
 import { api } from '../../services/api';
 
 const nodeTypes = {
@@ -47,57 +50,52 @@ export function TopologyPanel() {
   const language = useStore((s) => s.language);
   const tr = t(language);
 
-  const initialNodes = topology.nodes.map((node) => ({
-    id: node.id,
-    type: node.type,
-    position: { x: node.x, y: node.y },
-    data: { label: node.label, status: node.status },
-  }));
+  const [contextMenu, setContextMenu] = useState<{
+    x: number; y: number; nodes: NodeData[]; mode: 'single' | 'selection';
+  } | null>(null);
 
-  const initialEdges = topology.edges.map((edge) => ({
-    id: edge.id,
-    source: edge.source,
-    target: edge.target,
-    label: edge.protocol,
-    type: 'smoothstep' as const,
-    animated: edge.protocol === 'ETHERCAT',
-    reconnectable: true,
-    style: { stroke: '#737373', strokeWidth: 2 },
-    labelStyle: { fill: '#a3a3a3', fontWeight: 700, fontSize: 12 },
-    labelBgStyle: { fill: '#171717', fillOpacity: 0.8 },
-    markerEnd: { type: MarkerType.ArrowClosed, color: '#737373', width: 15, height: 15 },
-  }));
+  const setPreviewNodeId = useStore((s) => s.setPreviewNodeId);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [rfInstance, setRfInstance] = useState<any>(null);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   // Sync from store when AI updates topology
   useEffect(() => {
+    if (!topology.nodes || topology.nodes.length === 0) return;
     if (topology.source !== 'ai') return;
-    setNodes(
-      topology.nodes.map((node) => ({
-        id: node.id,
-        type: node.type,
-        position: { x: node.x, y: node.y },
-        data: { label: node.label, status: node.status },
-      }))
-    );
-    setEdges(
-      topology.edges.map((edge) => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        label: edge.protocol,
-        type: 'smoothstep' as const,
-        animated: edge.protocol === 'ETHERCAT',
-        reconnectable: true,
-        style: { stroke: '#737373', strokeWidth: 2 },
-        labelStyle: { fill: '#a3a3a3', fontWeight: 700, fontSize: 12 },
-        labelBgStyle: { fill: '#171717', fillOpacity: 0.8 },
-        markerEnd: { type: MarkerType.ArrowClosed, color: '#737373' },
-      }))
-    );
-  }, [topology, setNodes, setEdges]);
+
+    console.log('TopologyPanel: AI data detected, updating local state...', topology.nodes.length);
+    
+    const newNodes = topology.nodes.map((node) => ({
+      id: node.id,
+      type: node.type,
+      position: { x: node.x, y: node.y },
+      data: { label: node.label, status: node.status || 'ok' },
+    }));
+
+    const newEdges = topology.edges.map((edge) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      label: edge.protocol,
+      type: 'smoothstep' as const,
+      animated: edge.protocol === 'ETHERCAT',
+      reconnectable: true,
+      style: { stroke: '#737373', strokeWidth: 2 },
+      labelStyle: { fill: '#a3a3a3', fontWeight: 700, fontSize: 12 },
+      labelBgStyle: { fill: '#171717', fillOpacity: 0.8 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#737373' },
+    }));
+
+    setNodes(newNodes);
+    setEdges(newEdges);
+
+    if (rfInstance) {
+      setTimeout(() => rfInstance.fitView({ padding: 0.2 }), 100);
+    }
+  }, [topology, rfInstance, setNodes, setEdges]);
 
   // Refs to escape stale closures
   const nodesRef = useRef(nodes);
@@ -221,6 +219,65 @@ export function TopologyPanel() {
     [setEdges, handleSyncToCode]
   );
 
+  const onNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: any) => {
+      event.preventDefault();
+      const storeData = topology.nodes.find((n) => n.id === node.id);
+      const nodeData: NodeData = storeData || {
+        id: node.id,
+        type: node.type || 'unknown',
+        label: node.data?.label || node.type || '',
+        x: node.position.x,
+        y: node.position.y,
+        status: node.data?.status,
+      };
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        nodes: [nodeData],
+        mode: 'single',
+      });
+    },
+    [topology.nodes]
+  );
+
+  const onPaneContextMenu = useCallback(
+    (event: React.MouseEvent) => {
+      event.preventDefault();
+      const selected = nodes.filter((n) => n.selected);
+      if (selected.length === 0) return;
+      const nodeDataList: NodeData[] = selected.map((n) => {
+        const storeNode = topology.nodes.find((sn) => sn.id === n.id);
+        return storeNode || {
+          id: n.id,
+          type: n.type || 'unknown',
+          label: n.data?.label || n.type || '',
+          x: n.position.x,
+          y: n.position.y,
+        };
+      });
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        nodes: nodeDataList,
+        mode: 'selection',
+      });
+    },
+    [nodes, topology.nodes]
+  );
+
+  const onNodeClick = useCallback(
+    (_event: React.MouseEvent, node: any) => {
+      setPreviewNodeId(node.id);
+    },
+    [setPreviewNodeId]
+  );
+
+  const onPaneClick = useCallback(() => {
+    setPreviewNodeId(null);
+    setContextMenu(null);
+  }, [setPreviewNodeId]);
+
   return (
     <div className="w-full h-full relative overflow-hidden flex flex-col p-8 rounded-[2.5rem]">
       <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-indigo-600/20 rounded-full blur-[100px]" />
@@ -293,12 +350,18 @@ export function TopologyPanel() {
 
       <div className="flex-1 relative z-10 p-0 rounded-3xl overflow-hidden border border-neutral-800/50 bg-[#111111]">
         <ReactFlow
+          key={`rf-${topology.nodes.length}-${topology.edges.length}-${topology.source}`}
           nodes={nodes}
           edges={edges}
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
           onReconnect={onReconnect}
+          onNodeContextMenu={onNodeContextMenu}
+          onPaneContextMenu={onPaneContextMenu}
+          onNodeClick={onNodeClick}
+          onPaneClick={onPaneClick}
+          onInit={setRfInstance}
           nodeTypes={nodeTypes}
           fitView
           deleteKeyCode={['Backspace', 'Delete']}
@@ -315,6 +378,16 @@ export function TopologyPanel() {
           <Background color="#525252" variant={BackgroundVariant.Dots} gap={24} size={2} />
           <Controls className="bg-neutral-800 border-neutral-700 fill-neutral-400 text-neutral-400" />
         </ReactFlow>
+        {contextMenu && (
+          <CanvasContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            nodes={contextMenu.nodes}
+            mode={contextMenu.mode}
+            onDismiss={() => setContextMenu(null)}
+          />
+        )}
+        <NodeInfoCard />
       </div>
     </div>
   );

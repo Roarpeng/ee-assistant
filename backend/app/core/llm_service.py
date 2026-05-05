@@ -146,6 +146,41 @@ Use graph TD syntax. Output Mermaid code only, no markdown wrapping."""
         text = await self.chat(system, user, max_tokens=2048)
         return text.strip().removeprefix("```mermaid").removesuffix("```").strip()
 
+    async def generate_topology_json(self, bom: list, requirement: dict) -> dict:
+        system = """You are a highly precise industrial automation topology architect.
+Your task is to convert a Bill of Materials (BOM) into a structured ReactFlow JSON.
+
+REQUIRED NODE TYPES: [plc, safety_plc, hmi, ipc, io, vfd, servo, power, switch, circuit_breaker, contactor, relay, estop, sensor]
+REQUIRED EDGE PROTOCOLS: [PROFINET, ETHERCAT, MODBUS TCP, ETHERNET/IP, POWER_24V, POWER_220V]
+
+JSON STRUCTURE:
+{
+  "nodes": [
+    {"id": "node_1", "type": "plc", "label": "Main CPU", "x": 400, "y": 200},
+    ...
+  ],
+  "edges": [
+    {"id": "e1-2", "source": "node_1", "target": "node_2", "protocol": "PROFINET"}
+  ]
+}
+
+LAYOUT RULES (IMPORTANT):
+- Origin (0,0) is top-left.
+- Level 1 (Power/Protection): y = 50. Spread Power, Switch, CB.
+- Level 2 (Controllers): y = 250. Main PLC, Safety PLC.
+- Level 3 (Field Devices): y = 500. VFD, Servo, IO, HMI.
+- Horizontal Spacing: Use x intervals of 250 (e.g., 100, 350, 600).
+
+Return ONLY the raw JSON string. Do not include markdown or explanations."""
+        import json
+        user = f"BOM: {json.dumps(bom, ensure_ascii=False)}\nRequirements: {json.dumps(requirement, ensure_ascii=False)}"
+        text = await self.chat(system, user, max_tokens=2048) # Higher tokens for complex topologies
+        try:
+            return self._parse_json(text)
+        except Exception as e:
+            print(f"Topology JSON Parse Error: {e}\nRaw Text: {text[:500]}")
+            return {"nodes": [], "edges": []}
+
     async def generate_st_code(self, requirement: dict, bom: list) -> list[dict]:
         import json
         system = """You are a Siemens TIA Portal ST (Structured Text) programmer.
@@ -163,6 +198,37 @@ Output valid JSON only, no markdown wrapping."""
         except ValueError:
             text = await self.chat(system, user + "\n\nOutput ONLY a valid JSON array. Close all brackets.", max_tokens=8192)
             return self._parse_json(text)
+
+    async def recommend_components(self, categories: list[str], machine_type: str = "") -> list[dict]:
+        """LLM-based component recommendation when RAG knowledge base has no matches."""
+        import json
+        system = f"""You are an industrial automation component selection expert.
+The knowledge base has NO matching components for these categories: {json.dumps(categories)}.
+Machine type context: {machine_type or 'general industrial automation'}.
+
+Recommend suitable real-world components for each category. For each component provide:
+- category: the category name
+- manufacturer: real manufacturer (Siemens, ABB, Schneider, Mitsubishi, Omron, etc.)
+- model: specific model number if possible
+- quantity: 1
+- specifications: relevant specs as a dict (e.g. {{"rated_current": "10A", "voltage": "24VDC"}})
+- note: mention this is an LLM recommendation, not from the knowledge base
+
+Output a JSON array of component objects. Output valid JSON only, no markdown wrapping."""
+        user = f"Categories needing components: {json.dumps(categories, ensure_ascii=False)}"
+        text = await self.chat(system, user, max_tokens=2048)
+        try:
+            return self._parse_json(text)
+        except Exception:
+            # Last-resort fallback
+            return [{
+                "category": cat,
+                "manufacturer": "Check catalog",
+                "model": f"Suitable {cat.lower()} component",
+                "quantity": 1,
+                "specifications": {},
+                "note": "LLM recommendation — please verify against manufacturer catalog"
+            } for cat in categories]
 
 
 llm_service = LLMService()

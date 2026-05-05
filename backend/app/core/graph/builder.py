@@ -2,8 +2,15 @@ from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from app.core.graph.state import AnalysisState
 
+# Build once at module load — the graph topology is static
+_compiled_graph: StateGraph | None = None
+
 
 def build_graph():
+    global _compiled_graph
+    if _compiled_graph is not None:
+        return _compiled_graph
+
     workflow = StateGraph(AnalysisState)
 
     from app.core.graph.agents import (
@@ -43,4 +50,5 @@ def build_graph():
     workflow.add_edge("code_generator", END)
     workflow.add_edge("final_review_agent", END)
 
-    return workflow.compile(checkpointer=MemorySaver())
+    _compiled_graph = workflow.compile(checkpointer=MemorySaver())
+    return _compiled_graph

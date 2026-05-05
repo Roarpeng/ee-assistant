@@ -15,6 +15,9 @@ export function AppLayout() {
   const language = useStore((s) => s.language);
   const tr = t(language);
 
+  const unreadChatCount = useStore((s) => s.unreadChatCount);
+  const resetUnread = useStore((s) => s.resetUnread);
+
   const [rightTab, setRightTab] = useState<'chat' | 'knowledge'>('chat');
   const [sidebarWidth, setSidebarWidth] = useState(380);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -55,9 +58,15 @@ export function AppLayout() {
           onOpenSettings={() => setIsSettingsOpen(true)}
         />
         <main className="flex-1 mt-4 overflow-hidden relative border border-neutral-800 rounded-[2.5rem] bg-neutral-900 shadow-xl">
-          {activeCanvasTab === 'topology' && <TopologyPanel />}
-          {activeCanvasTab === 'bom' && <BOMPanel />}
-          {activeCanvasTab === 'code' && <SCLPanel />}
+          <div className={activeCanvasTab === 'topology' ? 'h-full' : 'hidden h-full'}>
+            <TopologyPanel />
+          </div>
+          <div className={activeCanvasTab === 'bom' ? 'h-full' : 'hidden h-full'}>
+            <BOMPanel />
+          </div>
+          <div className={activeCanvasTab === 'code' ? 'h-full' : 'hidden h-full'}>
+            <SCLPanel />
+          </div>
         </main>
       </div>
 
@@ -79,14 +88,17 @@ export function AppLayout() {
         <div className="w-full flex flex-col bg-neutral-900 border border-neutral-800 rounded-[2.5rem] shrink-0 h-full overflow-hidden shadow-xl">
           <div className="flex border-b border-neutral-800 px-6 pt-6 gap-2 shrink-0">
             <button
-              className={`pb-4 px-2 text-sm font-bold uppercase tracking-wide flex-1 border-b-[3px] transition-colors ${
+              className={`pb-4 px-2 text-sm font-bold uppercase tracking-wide flex-1 border-b-[3px] transition-colors relative ${
                 rightTab === 'chat'
                   ? 'border-indigo-500 text-indigo-400'
                   : 'border-transparent text-neutral-500 hover:text-neutral-300'
               }`}
-              onClick={() => setRightTab('chat')}
+              onClick={() => { setRightTab('chat'); resetUnread(); }}
             >
               {tr.chat.tab}
+              {unreadChatCount > 0 && rightTab !== 'chat' && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-neutral-900" />
+              )}
             </button>
             <button
               className={`pb-4 px-2 text-sm font-bold uppercase tracking-wide flex-1 border-b-[3px] transition-colors ${

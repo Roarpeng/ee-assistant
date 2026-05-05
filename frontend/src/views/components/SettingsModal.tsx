@@ -92,11 +92,13 @@ export function SettingsModal({ isOpen, onClose }: Props) {
             </div>
 
             <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+              <label htmlFor="chat-api-key" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
                 <Key className="w-3 h-3" /> {tr.settings.apiKey}
               </label>
               <div className="relative">
                 <input
+                  id="chat-api-key"
+                  name="chat-api-key"
                   type={showChatKey ? 'text' : 'password'}
                   value={chatApiKey}
                   onChange={(e) => setChatApiKey(e.target.value)}
@@ -114,10 +116,12 @@ export function SettingsModal({ isOpen, onClose }: Props) {
             </div>
 
             <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+              <label htmlFor="chat-base-url" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
                 <Link className="w-3 h-3" /> {tr.settings.baseUrl}
               </label>
               <input
+                id="chat-base-url"
+                name="chat-base-url"
                 type="text"
                 value={chatBaseUrl}
                 onChange={(e) => setChatBaseUrl(e.target.value)}
@@ -128,10 +132,12 @@ export function SettingsModal({ isOpen, onClose }: Props) {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                <label htmlFor="chat-model" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
                   <Box className="w-3 h-3" /> {tr.settings.modelName}
                 </label>
                 <input
+                  id="chat-model"
+                  name="chat-model"
                   type="text"
                   value={chatModel}
                   onChange={(e) => setChatModel(e.target.value)}
@@ -140,10 +146,12 @@ export function SettingsModal({ isOpen, onClose }: Props) {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                <label htmlFor="chat-max-tokens" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
                   <Hash className="w-3 h-3" /> {tr.settings.maxTokens}
                 </label>
                 <input
+                  id="chat-max-tokens"
+                  name="chat-max-tokens"
                   type="number"
                   min={256}
                   max={32768}
@@ -156,11 +164,13 @@ export function SettingsModal({ isOpen, onClose }: Props) {
             </div>
 
             <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+              <label htmlFor="chat-temp" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
                 <Thermometer className="w-3 h-3" /> {tr.settings.temperature}
                 <span className="ml-auto text-indigo-400">{chatTemperature.toFixed(1)}</span>
               </label>
               <input
+                id="chat-temp"
+                name="chat-temp"
                 type="range"
                 min={0}
                 max={2}
@@ -188,11 +198,13 @@ export function SettingsModal({ isOpen, onClose }: Props) {
             </div>
 
             <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+              <label htmlFor="emb-api-key" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
                 <Key className="w-3 h-3" /> {tr.settings.apiKey}
               </label>
               <div className="relative">
                 <input
+                  id="emb-api-key"
+                  name="emb-api-key"
                   type={showEmbKey ? 'text' : 'password'}
                   value={embApiKey}
                   onChange={(e) => setEmbApiKey(e.target.value)}
@@ -211,10 +223,12 @@ export function SettingsModal({ isOpen, onClose }: Props) {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                <label htmlFor="emb-base-url" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
                   <Link className="w-3 h-3" /> {tr.settings.baseUrl}
                 </label>
                 <input
+                  id="emb-base-url"
+                  name="emb-base-url"
                   type="text"
                   value={embBaseUrl}
                   onChange={(e) => setEmbBaseUrl(e.target.value)}
@@ -223,10 +237,12 @@ export function SettingsModal({ isOpen, onClose }: Props) {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                <label htmlFor="emb-dimension" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
                   <Ruler className="w-3 h-3" /> {tr.settings.dimension}
                 </label>
                 <input
+                  id="emb-dimension"
+                  name="emb-dimension"
                   type="number"
                   min={128}
                   max={8192}
@@ -239,10 +255,12 @@ export function SettingsModal({ isOpen, onClose }: Props) {
             </div>
 
             <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+              <label htmlFor="emb-model" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
                 <Box className="w-3 h-3" /> {tr.settings.modelName}
               </label>
               <input
+                id="emb-model"
+                name="emb-model"
                 type="text"
                 value={embModel}
                 onChange={(e) => setEmbModel(e.target.value)}

@@ -56,6 +56,11 @@ export function KnowledgePanel() {
   }, [docs]);
 
   function connectProgress(docId: string) {
+    if (activeSockets.current.has(docId)) {
+      activeSockets.current.get(docId)?.close();
+      activeSockets.current.delete(docId);
+    }
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/knowledge/docs/${docId}`;
     const ws = new WebSocket(wsUrl);
@@ -70,6 +75,9 @@ export function KnowledgePanel() {
         ws.close();
         activeSockets.current.delete(docId);
       }
+    };
+    ws.onclose = () => {
+      activeSockets.current.delete(docId);
     };
     ws.onerror = () => {
       activeSockets.current.delete(docId);
@@ -95,10 +103,13 @@ export function KnowledgePanel() {
     setUploading(true);
     setUploadError('');
     try {
+      const settings = useStore.getState().settings;
       const formData = new FormData();
       formData.append('file', file);
       formData.append('manufacturer', 'Unknown');
       formData.append('category_tags', '[]');
+      formData.append('llm_config', JSON.stringify(settings.chat));
+      formData.append('embedding_config', JSON.stringify(settings.embedding));
       const res = await fetch('/api/knowledge/docs', {
         method: 'POST',
         body: formData,
@@ -170,6 +181,8 @@ export function KnowledgePanel() {
         </div>
         <div className="relative">
           <input
+            id="knowledge-search"
+            name="knowledge-search"
             type="text"
             placeholder={tr.knowledge.search}
             value={searchQuery}
@@ -243,11 +256,23 @@ export function KnowledgePanel() {
                     <button
                       onClick={async (e) => {
                         e.stopPropagation();
+                        console.log(`Retrying document ${doc.id}...`);
                         try {
                           const updated = await api.retryKnowledgeDoc(doc.id);
-                          setDocs(docs.map(d => d.id === doc.id ? { ...d, status: updated.status } : d));
-                          connectProgress(doc.id);
-                        } catch {}
+                          console.log('Retry response:', updated);
+                          if (updated && updated.status) {
+                            setDocs(useStore.getState().knowledgeDocs.map(d => 
+                              d.id === doc.id ? { ...d, status: updated.status } : d
+                            ));
+                            connectProgress(doc.id);
+                          } else {
+                            console.error('Retry failed: Invalid response format', updated);
+                            setUploadError('重试失败：服务器返回格式错误');
+                          }
+                        } catch (err: any) {
+                          console.error('Retry failed:', err);
+                          setUploadError(`重试失败: ${err.message || '未知错误'}`);
+                        }
                       }}
                       className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-colors"
                     >
@@ -303,6 +328,8 @@ export function KnowledgePanel() {
           <div className="mb-3 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{uploadError}</div>
         )}
         <input
+          id="knowledge-file-upload"
+          name="knowledge-file-upload"
           ref={fileInputRef}
           type="file"
           accept=".pdf"

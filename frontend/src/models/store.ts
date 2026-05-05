@@ -58,11 +58,17 @@ export type AnalysisStage =
   | 'generating_code'
   | 'done';
 
+export interface ChatContext {
+  nodeIds: string[];
+  mode: 'single' | 'selection';
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: number;
+  context?: ChatContext & { componentSummary?: string };
 }
 
 // ===== LLM Settings =====
@@ -110,6 +116,9 @@ interface AppState {
   knowledgeSelectionMode: boolean;
   selectedDocIds: Set<string>;
   knowledgeLoading: boolean;
+  chatContext: ChatContext | null;
+  previewNodeId: string | null;
+  unreadChatCount: number;
 
   setTopology: (nodes: NodeData[], edges: EdgeData[], source?: 'ai' | 'user') => void;
   setBOM: (bom: BOMItem[]) => void;
@@ -127,6 +136,15 @@ interface AppState {
   selectAllDocs: () => void;
   clearDocSelection: () => void;
   setKnowledgeLoading: (loading: boolean) => void;
+  setChatContext: (ctx: ChatContext | null) => void;
+  setPreviewNodeId: (id: string | null) => void;
+  newProject: () => Promise<void>;
+  clearChat: () => void;
+  resetCanvasWorkspace: () => void;
+  incrementUnread: () => void;
+  resetUnread: () => void;
+  saveChatHistory: () => void;
+  loadChatHistory: () => void;
 }
 
 let msgCounter = 0;
@@ -150,6 +168,9 @@ export const useStore = create<AppState>((set) => ({
   knowledgeSelectionMode: false,
   selectedDocIds: new Set<string>(),
   knowledgeLoading: false,
+  chatContext: null,
+  previewNodeId: null,
+  unreadChatCount: 0,
 
   setTopology: (nodes, edges, source = 'user') =>
     set({ topology: { nodes, edges, source } }),
@@ -198,4 +219,101 @@ export const useStore = create<AppState>((set) => ({
     })),
   clearDocSelection: () => set({ selectedDocIds: new Set<string>() }),
   setKnowledgeLoading: (knowledgeLoading) => set({ knowledgeLoading }),
+
+  setChatContext: (chatContext) => set({ chatContext }),
+  setPreviewNodeId: (previewNodeId) => set({ previewNodeId }),
+
+  resetCanvasWorkspace: () =>
+    set({
+      topology: { nodes: [], edges: [] },
+      bom: [],
+      sclCode: '',
+      messages: [],
+      chatContext: null,
+      previewNodeId: null,
+      stage: 'idle',
+    }),
+
+  clearChat: () => {
+    const s = useStore.getState();
+    if (s.project) {
+      try {
+        const raw = localStorage.getItem('volta-chat-history');
+        const all: Record<string, ChatMessage[]> = raw ? JSON.parse(raw) : {};
+        all[s.project.id] = s.messages;
+        localStorage.setItem('volta-chat-history', JSON.stringify(all));
+      } catch {}
+    }
+    set({ messages: [], chatContext: null });
+  },
+
+  newProject: async () => {
+    const s = useStore.getState();
+    if (s.project) {
+      try {
+        const raw = localStorage.getItem('volta-chat-history');
+        const all: Record<string, ChatMessage[]> = raw ? JSON.parse(raw) : {};
+        all[s.project.id] = s.messages;
+        localStorage.setItem('volta-chat-history', JSON.stringify(all));
+      } catch {}
+    }
+    try {
+      const { api } = await import('../services/api');
+      const p = await api.createProject('New Project');
+      set({
+        project: p,
+        topology: { nodes: [], edges: [] },
+        bom: [],
+        sclCode: '',
+        messages: [],
+        chatContext: null,
+        previewNodeId: null,
+        stage: 'idle',
+        unreadChatCount: 0,
+      });
+    } catch {
+      const fallbackId = 'proj_' + Date.now();
+      set({
+        project: { id: fallbackId, name: 'New Project' },
+        topology: { nodes: [], edges: [] },
+        bom: [],
+        sclCode: '',
+        messages: [],
+        chatContext: null,
+        previewNodeId: null,
+        stage: 'idle',
+        unreadChatCount: 0,
+      });
+    }
+  },
+
+  incrementUnread: () => set((s) => ({ unreadChatCount: s.unreadChatCount + 1 })),
+  resetUnread: () => set({ unreadChatCount: 0 }),
+
+  saveChatHistory: () => {
+    const s = useStore.getState();
+    if (!s.project) return;
+    try {
+      const raw = localStorage.getItem('volta-chat-history');
+      const all: Record<string, ChatMessage[]> = raw ? JSON.parse(raw) : {};
+      all[s.project.id] = s.messages.slice(-100);
+      localStorage.setItem('volta-chat-history', JSON.stringify(all));
+    } catch {}
+  },
+
+  loadChatHistory: () => {
+    const s = useStore.getState();
+    if (!s.project) return;
+    try {
+      const raw = localStorage.getItem('volta-chat-history');
+      if (!raw) return;
+      const all: Record<string, ChatMessage[]> = JSON.parse(raw);
+      const msgs = all[s.project.id];
+      if (msgs && msgs.length > 0) {
+        set({ messages: msgs });
+        const maxId = msgs.reduce((max, m) => Math.max(max, parseInt(m.id) || 0), 0);
+        msgCounter = maxId;
+      }
+    } catch {}
+  },
 }));

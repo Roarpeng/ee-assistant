@@ -35,6 +35,8 @@ export function BOMPanel() {
         <div className="relative">
           <Search className="w-4 h-4 text-neutral-500 absolute left-4 top-1/2 -translate-y-1/2" />
           <input
+            id="bom-search"
+            name="bom-search"
             type="text"
             placeholder={tr.bom.search}
             className="pl-12 pr-4 py-2.5 bg-neutral-800 border border-neutral-700 text-white text-sm font-medium rounded-2xl focus:outline-none focus:border-indigo-500 w-72"

@@ -13,9 +13,11 @@ class AnalysisState(TypedDict):
     violations: list[dict] | None
     mermaid_code: str | None
     st_modules: list[dict] | None
+    topology: dict | None # { nodes: list, edges: list }
     review_notes: list[str] | None
     graph_traces: Annotated[list[dict], operator.add]
     errors: Annotated[list[str], operator.add]
+    llm_fallback_categories: list[str] | None  # categories where RAG had no results
     stage: str
     llm_config: dict | None
     embedding_config: dict | None

@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
+import json as json_module
 
 from app.db.repository import get_session
 from app.db.models import Project, Requirement, IOItem, LogicRule, BOMItem, Schematic, STModule
@@ -36,89 +38,82 @@ async def analyze_project(project_id: str, body: RequirementInput, session: Asyn
     return project
 
 
-@router.post("/{project_id}/analyze-v2", response_model=ProjectOut)
+@router.post("/{project_id}/analyze-v2")
 async def analyze_project_v2(project_id: str, body: RequirementInput, session: AsyncSession = Depends(get_session)):
     result = await session.execute(
         select(Project).where(Project.id == project_id)
-        .options(selectinload(Project.requirement).selectinload(Requirement.io_items),
-                 selectinload(Project.requirement).selectinload(Requirement.logic_rules),
-                 selectinload(Project.bom_items), selectinload(Project.schematic),
-                 selectinload(Project.code_modules))
     )
     project = result.scalar()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    project.status = "analyzing"
-    await session.commit()
+    async def event_generator():
+        final_state = None
+        try:
+            async for event in orchestrator.stream_graph_analysis(
+                project_id, body.text,
+                llm_config=body.llm_config,
+                embedding_config=body.embedding_config,
+            ):
+                if event.get("done"):
+                    final_state = event.get("payload")
+                yield f"data: {json_module.dumps(event)}\n\n"
+        except Exception as e:
+            yield f"data: {json_module.dumps({'error': str(e)})}\n\n"
+            return
 
-    try:
-        final_state = await orchestrator.run_graph_analysis(
-            project_id, body.text,
-            llm_config=body.llm_config,
-            embedding_config=body.embedding_config,
-        )
-    except Exception as e:
-        project.status = "draft"
-        await session.commit()
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)[:500]}")
+        if final_state:
+            from app.db.repository import async_session
+            async with async_session() as db:
+                req_data = final_state.get("requirement", {})
+                if req_data:
+                    req = Requirement(
+                        project_id=project_id,
+                        machine_type=req_data.get("machine_type"),
+                        safety_level=req_data.get("safety_level"),
+                        environment=req_data.get("environment"),
+                        plc_family=req_data.get("plc_family"),
+                        raw_text=body.text,
+                    )
+                    db.add(req)
+                    await db.flush()
 
-    req_data = final_state.get("requirement", {})
-    req = Requirement(
-        project_id=project_id,
-        machine_type=req_data.get("machine_type"),
-        safety_level=req_data.get("safety_level"),
-        environment=req_data.get("environment"),
-        plc_family=req_data.get("plc_family"),
-        raw_text=body.text,
-    )
-    session.add(req)
-    await session.flush()
+                    for io in req_data.get("io_list", []):
+                        db.add(IOItem(requirement_id=req.id, tag=io["tag"], io_type=io["type"], description=io["description"]))
+                    for rule in req_data.get("control_logic", []):
+                        db.add(LogicRule(requirement_id=req.id, description=rule))
 
-    for io in req_data.get("io_list", []):
-        session.add(IOItem(requirement_id=req.id, tag=io["tag"], io_type=io["type"], description=io["description"]))
-    for rule in req_data.get("control_logic", []):
-        session.add(LogicRule(requirement_id=req.id, description=rule))
+                for item_data in final_state.get("bom_items", []):
+                    db.add(BOMItem(
+                        project_id=project_id,
+                        category=item_data.get("category", ""),
+                        manufacturer=item_data.get("manufacturer", "Unknown"),
+                        model=item_data.get("model", ""),
+                        quantity=item_data.get("quantity", 1),
+                        specifications=item_data.get("specifications", {}),
+                        confidence=item_data.get("confidence", "rag"),
+                        source_chunk_id=item_data.get("source_chunk_id"),
+                        alternatives=item_data.get("alternatives", []),
+                    ))
 
-    for item_data in final_state.get("bom_items", []):
-        bom_kwargs = {
-            "category": item_data.get("category", ""),
-            "manufacturer": item_data.get("manufacturer", "Unknown"),
-            "model": item_data.get("model", ""),
-            "quantity": item_data.get("quantity", 1),
-            "specifications": item_data.get("specifications", {}),
-            "confidence": item_data.get("confidence", "rag"),
-            "source_chunk_id": item_data.get("source_chunk_id"),
-            "alternatives": item_data.get("alternatives", []),
-        }
-        session.add(BOMItem(project_id=project_id, **bom_kwargs))
+                mermaid = final_state.get("mermaid_code")
+                if mermaid:
+                    # If we had a topology column, we'd save it here. 
+                    # For now, ensure it's in the SSE response (already handled by event_generator)
+                    db.add(Schematic(project_id=project_id, mermaid_code=mermaid))
 
-    mermaid = final_state.get("mermaid_code")
-    if mermaid:
-        session.add(Schematic(project_id=project_id, mermaid_code=mermaid))
+                for i, mod in enumerate(final_state.get("st_modules", []) or []):
+                    db.add(STModule(
+                        project_id=project_id,
+                        name=mod.get("name", f"Module_{i}"),
+                        module_type=mod.get("module_type", "FC"),
+                        code=mod.get("code", ""),
+                        sort_order=i
+                    ))
 
-    for i, mod in enumerate(final_state.get("st_modules", [])):
-        session.add(STModule(
-            project_id=project_id,
-            name=mod.get("name", ""),
-            module_type=mod.get("module_type", "FC"),
-            code=mod.get("code", ""),
-            sort_order=mod.get("sort_order", i),
-        ))
+                await db.execute(
+                    update(Project).where(Project.id == project_id).values(status="ready")
+                )
+                await db.commit()
 
-    project.status = "ready"
-    await session.commit()
-
-    # Re-fetch with eager-loaded relationships to avoid MissingGreenlet during serialization
-    result = await session.execute(
-        select(Project)
-        .where(Project.id == project_id)
-        .options(
-            selectinload(Project.requirement).selectinload(Requirement.io_items),
-            selectinload(Project.requirement).selectinload(Requirement.logic_rules),
-            selectinload(Project.bom_items),
-            selectinload(Project.schematic),
-            selectinload(Project.code_modules),
-        )
-    )
-    return result.scalar()
+    return StreamingResponse(event_generator(), media_type="text/event-stream")

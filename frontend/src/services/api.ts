@@ -132,8 +132,27 @@ export const api = {
 
   deleteKnowledgeDoc: (id: string) => request<void>(`/knowledge/docs/${id}`, { method: 'DELETE' }),
 
-  retryKnowledgeDoc: (id: string) =>
-    request<any>(`/knowledge/docs/${id}/retry`, { method: 'POST' }),
+  retryKnowledgeDoc: (id: string) => {
+    const settings = getSettings();
+    return request<any>(`/knowledge/docs/${id}/retry`, {
+      method: 'POST',
+      body: JSON.stringify({
+        llm_config: {
+          api_key: settings.chat.apiKey,
+          base_url: settings.chat.baseUrl,
+          model: settings.chat.model,
+          max_tokens: settings.chat.maxTokens ?? 4096,
+          temperature: settings.chat.temperature ?? 0.1,
+        },
+        embedding_config: {
+          api_key: settings.embedding.apiKey,
+          base_url: settings.embedding.baseUrl,
+          model: settings.embedding.model,
+          dimension: settings.embedding.dimension ?? 4096,
+        },
+      }),
+    });
+  },
 
   deleteKnowledgeDocs: (ids: string[]) =>
     request<{ deleted: number }>(`/knowledge/docs`, {

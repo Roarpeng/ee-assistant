@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException, W
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
-from app.core.schemas import BatchDeleteInput, KnowledgeDocOut, KnowledgeSearch, ProgressEvent
+from app.core.schemas import BatchDeleteInput, KnowledgeDocOut, KnowledgeRetryInput, KnowledgeSearch, ProgressEvent
 from app.db.models import KnowledgeDoc
 from app.db.repository import get_session
 from app.core.rag_engine import rag_engine
@@ -45,9 +45,14 @@ async def upload_doc(
     manufacturer: str = Form(...),
     category_tags: str = Form("[]"),
     file: UploadFile = File(...),
+    llm_config: str = Form("{}"),
+    embedding_config: str = Form("{}"),
     session: AsyncSession = Depends(get_session),
 ):
     tags = json_module.loads(category_tags)
+    llm_cfg = json_module.loads(llm_config) or None
+    embed_cfg = json_module.loads(embedding_config) or None
+
     doc = KnowledgeDoc(
         filename=file.filename or "unknown.pdf",
         manufacturer=manufacturer,
@@ -60,9 +65,8 @@ async def upload_doc(
     await session.refresh(doc)
 
     content = await file.read()
-    # Store original PDF in MinIO for potential retry
     _store_in_minio(doc.id, content, file.filename)
-    asyncio.create_task(_process_document(content, doc.id, manufacturer, tags))
+    asyncio.create_task(_process_document(content, doc.id, manufacturer, tags, llm_cfg, embed_cfg))
 
     return doc
 
@@ -101,8 +105,8 @@ async def batch_delete_docs(body: BatchDeleteInput, session: AsyncSession = Depe
     return {"deleted": deleted}
 
 
-@router.post("/docs/{doc_id}/retry")
-async def retry_doc(doc_id: str, session: AsyncSession = Depends(get_session)):
+@router.post("/docs/{doc_id}/retry", response_model=KnowledgeDocOut)
+async def retry_doc(doc_id: str, body: KnowledgeRetryInput, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(KnowledgeDoc).where(KnowledgeDoc.id == doc_id))
     doc = result.scalar()
     if not doc:
@@ -114,11 +118,24 @@ async def retry_doc(doc_id: str, session: AsyncSession = Depends(get_session)):
     if not content:
         raise HTTPException(status_code=400, detail="Original file not found in storage. Please re-upload.")
 
+    if body.llm_config or body.embedding_config:
+        from app.core.llm_service import llm_service
+        llm_service.configure(chat_config=body.llm_config, embed_config=body.embedding_config)
+    if body.embedding_config:
+        rag_engine.configure(
+            api_key=body.embedding_config.get("api_key", ""),
+            base_url=body.embedding_config.get("base_url", ""),
+            model=body.embedding_config.get("model", ""),
+            dimensions=body.embedding_config.get("dimension", 0),
+        )
+
     doc.status = "uploading"
     await session.commit()
-    asyncio.create_task(_process_document(content, doc.id, doc.manufacturer, doc.category_tags))
-
     await session.refresh(doc)
+
+    asyncio.create_task(_process_document(content, doc.id, doc.manufacturer, doc.category_tags,
+                                          body.llm_config, body.embedding_config))
+
     return doc
 
 
@@ -144,10 +161,25 @@ async def _delete_single_doc(doc_id: str, session: AsyncSession):
     await session.commit()
 
 
-async def _process_document(content: bytes, doc_id: str, manufacturer: str, tags: list[str]):
+async def _process_document(content: bytes, doc_id: str, manufacturer: str, tags: list[str],
+                            llm_config: dict | None = None, embedding_config: dict | None = None):
     """Background task: extract text → chunk → embed → graph extract with phase updates."""
     from app.db.repository import engine
     from sqlalchemy.ext.asyncio import async_sessionmaker
+    from app.core.llm_service import llm_service
+    import traceback
+
+    # Apply frontend-provided config at the start so all subsequent calls use it
+    if llm_config or embedding_config:
+        llm_service.configure(chat_config=llm_config, embed_config=embedding_config)
+    if embedding_config:
+        rag_engine.configure(
+            api_key=embedding_config.get("api_key", ""),
+            base_url=embedding_config.get("base_url", ""),
+            model=embedding_config.get("model", ""),
+            dimensions=embedding_config.get("dimension", 0),
+        )
+
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
     async with session_factory() as session:
@@ -157,8 +189,16 @@ async def _process_document(content: bytes, doc_id: str, manufacturer: str, tags
                 stage="chunking", message="正在提取 PDF 文本并分块..."
             ))
 
-            text = extract_pdf_text(content)
+            # Run synchronous PDF extraction in a thread pool to avoid blocking
+            loop = asyncio.get_running_loop()
+            text = await loop.run_in_executor(None, extract_pdf_text, content)
+
+            if not text.strip():
+                raise ValueError("PDF 文本提取为空，可能是扫描件（暂不支持 OCR）或加密文档。")
+
             chunks = chunk_text(text, doc_id, manufacturer, tags)
+            if not chunks:
+                raise ValueError("文档内容过短，无法生成有效的文本块。")
 
             await _update_status(session, doc_id, "embedding")
             await knowledge_progress.push(doc_id, ProgressEvent(
@@ -169,19 +209,22 @@ async def _process_document(content: bytes, doc_id: str, manufacturer: str, tags
             await session.execute(
                 update(KnowledgeDoc).where(KnowledgeDoc.id == doc_id).values(chunk_count=len(chunks))
             )
+            await session.commit()
 
             await _update_status(session, doc_id, "graph_extracting")
             await knowledge_progress.push(doc_id, ProgressEvent(
                 stage="graph_extracting", message="正在提取实体与关系图谱..."
             ))
 
-            await _extract_graph_knowledge(text, doc_id, session)
+            await _extract_graph_knowledge(text[:20000], doc_id, session)
 
             await _update_status(session, doc_id, "ready")
             await knowledge_progress.push(doc_id, ProgressEvent(
                 stage="ready", message="文档处理完成"
             ))
         except Exception as e:
+            error_detail = f"{str(e)}\n{traceback.format_exc()}"
+            print(f"Error processing doc {doc_id}: {error_detail}")
             await _update_status(session, doc_id, "error")
             await knowledge_progress.push(doc_id, ProgressEvent(
                 stage="error", message=f"处理失败: {str(e)}"
@@ -243,12 +286,20 @@ async def _extract_graph_knowledge(text: str, doc_id: str, session: AsyncSession
 
 def extract_pdf_text(content: bytes) -> str:
     import fitz
-    doc = fitz.open(stream=content, filetype="pdf")
-    text = ""
-    for page in doc:
-        text += page.get_text()
-    doc.close()
-    return text
+    try:
+        doc = fitz.open(stream=content, filetype="pdf")
+        text = ""
+        # Limit to first 200 pages for 20MB+ documents to avoid OOM
+        max_pages = 200
+        for i, page in enumerate(doc):
+            if i >= max_pages:
+                break
+            text += page.get_text()
+        doc.close()
+        return text
+    except Exception as e:
+        print(f"PyMuPDF error: {e}")
+        return ""
 
 
 def _store_in_minio(doc_id: str, content: bytes, filename: str):
@@ -291,15 +342,39 @@ def _fetch_from_minio(doc_id: str) -> bytes | None:
 
 def chunk_text(text: str, doc_id: str, manufacturer: str, tags: list[str]) -> list[dict]:
     chunks = []
+    # Larger chunk size (1500 chars) to reduce total request count for large PDFs
+    chunk_size = 1500
     paragraphs = text.split("\n\n")
     current = ""
     for para in paragraphs:
-        if len(current) + len(para) < 500:
+        if len(current) + len(para) < chunk_size:
             current += para + "\n\n"
         else:
             if current.strip():
-                chunks.append({"content": current.strip(), "doc_id": doc_id, "manufacturer": manufacturer, "category_tags": tags})
+                chunks.append({
+                    "content": current.strip(),
+                    "doc_id": doc_id,
+                    "manufacturer": manufacturer,
+                    "category_tags": tags
+                })
             current = para + "\n\n"
+            
+            # If a single paragraph is larger than chunk_size, split it forcefully
+            if len(current) > chunk_size:
+                while len(current) > chunk_size:
+                    chunks.append({
+                        "content": current[:chunk_size].strip(),
+                        "doc_id": doc_id,
+                        "manufacturer": manufacturer,
+                        "category_tags": tags
+                    })
+                    current = current[chunk_size:]
+
     if current.strip():
-        chunks.append({"content": current.strip(), "doc_id": doc_id, "manufacturer": manufacturer, "category_tags": tags})
+        chunks.append({
+            "content": current.strip(),
+            "doc_id": doc_id,
+            "manufacturer": manufacturer,
+            "category_tags": tags
+        })
     return chunks
