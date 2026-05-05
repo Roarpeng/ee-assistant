@@ -245,6 +245,10 @@ class ClusterResponse(BaseModel):
     unclustered: list[ClusterProjectItem] = Field(default_factory=list)
 
 
+class ClusterRequest(BaseModel):
+    embedding_config: dict | None = None
+
+
 class ConnectivityTestInput(BaseModel):
     # chat:      {api_key, base_url, model, provider?}
     # embedding: {api_key, base_url, model, dimension, provider?}

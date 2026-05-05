@@ -26,6 +26,8 @@ class AnalysisState(TypedDict):
     errors: Annotated[list[str], operator.add]
     messages: Annotated[list[dict], add_messages]
     llm_fallback_categories: list[str] | None  # categories where RAG had no results
+    title: str | None
+    topic_tags: list[str] | None
     stage: str
     llm_config: dict | None
     embedding_config: dict | None
