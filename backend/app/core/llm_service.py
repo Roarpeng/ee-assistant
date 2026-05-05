@@ -186,30 +186,30 @@ Use graph TD syntax. Output Mermaid code only, no markdown wrapping."""
 
     async def generate_topology_json(self, bom: list, requirement: dict) -> dict:
         system = """You are a highly precise industrial automation topology architect.
-Your task is to convert a Bill of Materials (BOM) into a structured ReactFlow JSON.
+Convert a Bill of Materials (BOM) into a structured ReactFlow JSON with strict 5-level hierarchy.
 
-REQUIRED NODE TYPES: [plc, safety_plc, hmi, ipc, io, vfd, servo, power, switch, circuit_breaker, contactor, relay, estop, sensor]
-REQUIRED EDGE PROTOCOLS: [PROFINET, ETHERCAT, MODBUS TCP, ETHERNET/IP, POWER_24V, POWER_220V]
+INDUSTRIAL HIERARCHY (Mandatory):
+  L0 (y=60):  Power — AC Infeed, Power Supply, Transformer
+  L1 (y=160): Protection — Circuit Breaker, Fuse, Disconnect, E-Stop, Safety Relay
+  L2 (y=300): Control — PLC CPU, Safety PLC, IPC, HMI, Network Switch
+  L3 (y=460): Execution — VFD, Servo Drive, Contactor, Relay, IO Module
+  L4 (y=600): Feedback — Sensor, Encoder
 
-JSON STRUCTURE:
-{
-  "nodes": [
-    {"id": "node_1", "type": "plc", "label": "Main CPU", "x": 400, "y": 200},
-    ...
-  ],
-  "edges": [
-    {"id": "e1-2", "source": "node_1", "target": "node_2", "protocol": "PROFINET"}
-  ]
-}
+NODE TYPES: [plc, safety_plc, hmi, ipc, io, vfd, servo, power, switch, circuit_breaker, contactor, relay, estop, sensor, safety_relay, fuse, disconnect, transformer]
+PROTOCOLS: [PROFINET, ETHERCAT, POWER_24V, POWER_220V, SAFETY_CIRCUIT, ETHERNET, SIGNAL]
 
-LAYOUT RULES (IMPORTANT):
-- Origin (0,0) is top-left.
-- Level 1 (Power/Protection): y = 50. Spread Power, Switch, CB.
-- Level 2 (Controllers): y = 250. Main PLC, Safety PLC.
-- Level 3 (Field Devices): y = 500. VFD, Servo, IO, HMI.
-- Horizontal Spacing: Use x intervals of 250 (e.g., 100, 350, 600).
+BUS-STYLE EDGES (critical — avoid duplicate edges):
+- Power flows L0→L1 via POWER_220V
+- 24VDC flows L1→L2 via POWER_24V
+- Control signals flow L2→L3 via PROFINET (default) or ETHERCAT (if servo present)
+- Safety circuit: E-Stop → Safety Relay → Safety PLC via SAFETY_CIRCUIT
+- HMI connects to PLC only via ETHERNET
+- Sensors feed back to nearest controller L4→L3 via SIGNAL
+- Each pair of nodes should have AT MOST ONE edge
+- Group nodes by level, distribute x evenly (spacing ~220)
 
-Return ONLY the raw JSON string. Do not include markdown or explanations."""
+Horizontal layout: within each level, distribute nodes with x = 120 + (position * 220).
+Return ONLY valid raw JSON. No markdown, no explanations."""
         import json
         user = f"BOM: {json.dumps(bom, ensure_ascii=False)}\nRequirements: {json.dumps(requirement, ensure_ascii=False)}"
         text = await self.chat(system, user, max_tokens=2048) # Higher tokens for complex topologies

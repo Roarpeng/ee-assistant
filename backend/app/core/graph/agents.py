@@ -310,45 +310,133 @@ async def rule_validator(state: AnalysisState) -> dict:
 
 
 def _build_fallback_topology(bom_list: list[dict]) -> dict:
-    """Generate basic topology from BOM when LLM topology generation yields empty."""
-    category_to_type = {
+    """Generate hierarchical topology: Power→Protection→Control→Execution→Feedback.
+
+    Five-level industrial layout:
+      L0 (y=60):   Power — AC Infeed, Power Supply, Transformer
+      L1 (y=160):  Protection — Circuit Breaker, Fuse, Disconnect, E-Stop
+      L2 (y=300):  Control — PLC CPU, Safety PLC, IPC, Switch, HMI
+      L3 (y=460):  Execution — VFD, Servo Drive, Contactor, Relay, IO Module
+      L4 (y=600):  Feedback — Sensor, Encoder, Terminal Block
+
+    Edges use bus-style grouping: same-protocol connections share a logical bus.
+    """
+    category_to_type: dict[str, str] = {
         "PLC_CPU": "plc", "Safety_PLC": "safety_plc", "Power_Supply": "power",
         "Circuit_Breaker": "circuit_breaker", "HMI": "hmi", "IPC": "ipc",
-        "IO_Module": "io", "VFD": "vfd", "Servo": "servo", "Switch": "switch",
-        "Contactor": "contactor", "Relay": "relay", "Safety_Relay": "safety_relay",
-        "E_Stop": "estop", "Transformer": "transformer", "Fuse": "fuse",
+        "IO_Module": "io", "VFD": "vfd", "Servo_Drive": "servo", "Servo": "servo",
+        "Switch": "switch", "Contactor": "contactor", "Relay": "relay",
+        "Safety_Relay": "safety_relay", "E_Stop": "estop",
+        "Transformer": "transformer", "Fuse": "fuse",
         "Sensor": "sensor", "Disconnect": "disconnect",
+        "Communication_Module": "switch", "Terminal_Block": "io",
     }
-    y_levels = {
-        "power": 50, "circuit_breaker": 50, "disconnect": 50, "switch": 50,
-        "transformer": 50, "fuse": 50,
-        "plc": 250, "safety_plc": 250,
-        "hmi": 450, "ipc": 450, "io": 450, "vfd": 450, "servo": 450,
-        "contactor": 450, "relay": 450, "safety_relay": 450, "estop": 450, "sensor": 450,
+
+    # Hierarchical level assignment
+    level_map: dict[str, int] = {
+        "power": 0, "transformer": 0,                      # L0: Power
+        "circuit_breaker": 1, "fuse": 1, "disconnect": 1,   # L1: Protection
+        "estop": 1, "safety_relay": 1,
+        "plc": 2, "safety_plc": 2, "ipc": 2, "switch": 2,   # L2: Control
+        "hmi": 2, "contactor": 3, "relay": 3,                # L3: Execution
+        "vfd": 3, "servo": 3, "io": 3,
+        "sensor": 4,                                          # L4: Feedback
     }
-    nodes = []
-    for i, item in enumerate(bom_list):
+    y_positions = [60, 160, 300, 460, 600]
+    level_spacing = 220
+
+    # ── Build nodes, grouping by level ──
+    level_groups: dict[int, list[dict]] = {0: [], 1: [], 2: [], 3: [], 4: []}
+    node_counters: dict[str, int] = {}
+
+    for item in bom_list:
         cat = item.get("category", "")
         node_type = category_to_type.get(cat, "io")
+        level = level_map.get(node_type, 3)
         label = f"{item.get('manufacturer', '')} {item.get('model', cat)}".strip()
-        nodes.append({
-            "id": f"node_{i+1}",
+
+        # Deduplicate labels within same type
+        key = node_type
+        idx = node_counters.get(key, 0)
+        node_counters[key] = idx + 1
+
+        node_id = f"n_{node_type}_{idx}"
+        level_groups[level].append({
+            "id": node_id,
             "type": node_type,
             "label": label,
-            "x": 100 + (i % 4) * 250,
-            "y": y_levels.get(node_type, 300),
+            "x": 0,  # will compute below
+            "y": y_positions[level],
         })
-    edges = []
-    plc_ids = [n["id"] for n in nodes if n["type"] in ("plc", "safety_plc")]
-    power_ids = [n["id"] for n in nodes if n["type"] in ("power", "circuit_breaker", "disconnect")]
-    field_ids = [n["id"] for n in nodes if n["type"] not in ("plc", "safety_plc", "power", "circuit_breaker", "disconnect")]
-    for p_id in power_ids:
-        for plc_id in plc_ids:
-            edges.append({"id": f"e_p_{len(edges)}", "source": p_id, "target": plc_id, "protocol": "POWER_24V"})
-    for plc_id in plc_ids:
-        for f_id in field_ids[:8]:
-            edges.append({"id": f"e_f_{len(edges)}", "source": plc_id, "target": f_id, "protocol": "PROFINET"})
-    return {"nodes": nodes, "edges": edges}
+
+    # Compute x positions within each level (evenly spaced)
+    nodes: list[dict] = []
+    start_x = 120
+    for level, group in level_groups.items():
+        for j, node in enumerate(group):
+            node["x"] = start_x + j * level_spacing
+            nodes.append(node)
+
+    # ── Build edges: bus-style connections following power/signal flow ──
+    edges: list[dict] = []
+    edge_idx = 0
+
+    def add_edge(src: str, tgt: str, proto: str):
+        nonlocal edge_idx
+        eid = f"e_{edge_idx}"
+        edge_idx += 1
+        edges.append({"id": eid, "source": src, "target": tgt, "protocol": proto})
+
+    # L0→L1: Power → Protection
+    for n0 in level_groups[0]:
+        for n1 in level_groups[1]:
+            add_edge(n0["id"], n1["id"], "POWER_220V")
+
+    # L1→L2: Protection → Control (24VDC power bus)
+    for n1 in level_groups[1]:
+        for n2 in level_groups[2]:
+            if n1["type"] not in ("estop",):  # E-stop doesn't power PLC directly
+                add_edge(n1["id"], n2["id"], "POWER_24V")
+
+    # Safety wiring: E-Stop ↔ Safety Relay ↔ Safety PLC
+    estops = [n for n in level_groups[1] if n["type"] == "estop"]
+    safety_relays = [n for n in level_groups[1] if n["type"] == "safety_relay"]
+    safety_plcs = [n for n in level_groups[2] if n["type"] == "safety_plc"]
+    for e in estops:
+        for sr in safety_relays:
+            add_edge(e["id"], sr["id"], "SAFETY_CIRCUIT")
+    for sr in safety_relays:
+        for sp in safety_plcs:
+            add_edge(sr["id"], sp["id"], "SAFETY_CIRCUIT")
+
+    # L2→L3: Control → Execution (PROFINET/EtherCAT bus)
+    controllers = level_groups[2]
+    executors = level_groups[3]
+    # Determine protocol based on servo presence
+    has_servo = any(n["type"] == "servo" for n in executors)
+    field_proto = "ETHERCAT" if has_servo else "PROFINET"
+
+    for ctrl in controllers:
+        if ctrl["type"] in ("plc", "safety_plc", "ipc"):
+            for exe in executors:
+                if exe["type"] in ("vfd", "servo", "io"):
+                    add_edge(ctrl["id"], exe["id"], field_proto)
+
+    # Control → HMI (Ethernet)
+    for ctrl in controllers:
+        if ctrl["type"] == "plc":
+            hmi_nodes = [n for n in level_groups[2] if n["type"] == "hmi"]
+            for hmi in hmi_nodes:
+                add_edge(ctrl["id"], hmi["id"], "ETHERNET")
+
+    # L3→L4: Execution → Feedback (sensor signals back to IO/PLC)
+    for exe in executors:
+        for fb in level_groups[4]:
+            if exe["type"] in ("vfd", "servo"):
+                add_edge(fb["id"], exe["id"], "SIGNAL")
+
+    # Limit to reasonable edge count
+    return {"nodes": nodes, "edges": edges[:25]}
 
 
 async def schematic_generator(state: AnalysisState) -> dict:

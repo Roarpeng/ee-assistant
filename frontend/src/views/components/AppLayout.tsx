@@ -8,6 +8,7 @@ import { BOMPanel } from './BOMPanel';
 import { SCLPanel } from './SCLPanel';
 import { SettingsModal } from './SettingsModal';
 import { KnowledgePanel } from './KnowledgePanel';
+import { ConversationSidebar } from './ConversationSidebar';
 
 export function AppLayout() {
   const activeCanvasTab = useStore((s) => s.activeCanvasTab);
@@ -50,6 +51,9 @@ export function AppLayout() {
 
   return (
     <div className="flex h-screen bg-neutral-950 text-neutral-50 font-sans p-4 gap-4 overflow-hidden relative">
+      {/* Conversation Sidebar */}
+      <ConversationSidebar />
+
       {/* Left: Main Workspace (Canvas) */}
       <div className="flex-1 flex flex-col min-w-0">
         <Header
