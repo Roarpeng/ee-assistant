@@ -169,8 +169,9 @@ export function ChatPanel() {
           if (data.done) {
             if (mode === 'chat' && data.payload?.answer) {
               updateLastMessage(data.payload.answer);
-              if (project && data.payload.title) {
-                store.setProject({ id: project.id, name: data.payload.title });
+              const currentProject = useStore.getState().project;
+              if (currentProject && data.payload.title) {
+                store.setProject({ id: currentProject.id, name: data.payload.title });
               }
             } else {
               updateLastMessage(`${fullText}\n\n${tr.chat.completed}`.trim());
