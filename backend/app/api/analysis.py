@@ -7,7 +7,8 @@ import json as json_module
 
 from app.db.repository import get_session
 from app.db.models import Project, Requirement, IOItem, LogicRule, BOMItem, Schematic, STModule
-from app.core.schemas import RequirementInput, ProjectOut, ResumeRequest
+from app.core.schemas import ChatInput, RequirementInput, ProjectOut, ResumeRequest
+from app.core.chat_orchestrator import chat_orchestrator
 from app.core.orchestrator import orchestrator
 
 router = APIRouter(prefix="/api/projects", tags=["analysis"])
@@ -124,6 +125,31 @@ async def analyze_project_v2(project_id: str, body: RequirementInput, session: A
             except Exception as e:
                 # DB save failed but SSE already completed — log only, don't break connection
                 print(f"DB save error (non-fatal, SSE already sent): {e}")
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@router.post("/{project_id}/chat")
+async def chat_with_project(project_id: str, body: ChatInput, session: AsyncSession = Depends(get_session)):
+    result = await session.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = result.scalar()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    async def event_generator():
+        try:
+            async for event in chat_orchestrator.stream_chat(
+                project_id=project_id,
+                user_input=body.text,
+                history=body.history,
+                canvas_context=body.canvas_context,
+                llm_config=body.llm_config,
+            ):
+                yield f"data: {json_module.dumps(event, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json_module.dumps({'error': str(e)}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 

@@ -41,6 +41,14 @@ class RequirementInput(BaseModel):
     llm_config: dict | None = None
     embedding_config: dict | None = None
     history: list[dict] | None = None
+    canvas_context: dict | None = None
+
+
+class ChatInput(BaseModel):
+    text: str = Field("", validation_alias=AliasChoices("text", "message"))
+    history: list[dict] = Field(default_factory=list)
+    canvas_context: dict = Field(default_factory=dict)
+    llm_config: dict | None = None
 
 
 class SelectionInput(BaseModel):
