@@ -1,7 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useStore } from '../models/store';
-
-const HISTORY_KEY = 'volta-chat-history';
+import { CHAT_HISTORY_KEY, CONVERSATIONS_KEY } from '../services/conversations';
 
 export function useChatHistory() {
   const project = useStore((s) => s.project);
@@ -30,7 +29,8 @@ export function useChatHistory() {
 
   const clearAllHistory = useCallback(() => {
     try {
-      localStorage.removeItem(HISTORY_KEY);
+      localStorage.removeItem(CHAT_HISTORY_KEY);
+      localStorage.removeItem(CONVERSATIONS_KEY);
     } catch {}
   }, []);
 

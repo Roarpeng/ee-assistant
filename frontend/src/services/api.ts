@@ -62,7 +62,7 @@ export const api = {
   },
 
   // Analysis v2 (LangGraph via SSE)
-  analyzeV2SSE: (projectId: string, message: string, history: any[] = []) => {
+  analyzeV2SSE: (projectId: string, message: string, history: any[] = [], canvasContext: any = {}) => {
     const settings = getSettings();
     return fetch(`${BASE}/projects/${projectId}/analyze-v2`, {
       method: 'POST',
@@ -70,6 +70,7 @@ export const api = {
       body: JSON.stringify({
         text: message,
         history,
+        canvas_context: canvasContext,
         llm_config: {
           api_key: settings.chat.apiKey,
           base_url: settings.chat.baseUrl,
@@ -82,6 +83,32 @@ export const api = {
           base_url: settings.embedding.baseUrl,
           model: settings.embedding.model,
           dimension: settings.embedding.dimension ?? 4096,
+        },
+      }),
+    });
+  },
+
+  // Fast validated conversation agent (keeps current canvas context)
+  chatSSE: (
+    projectId: string,
+    message: string,
+    history: any[] = [],
+    canvasContext: any = {}
+  ) => {
+    const settings = getSettings();
+    return fetch(`${BASE}/projects/${projectId}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: message,
+        history,
+        canvas_context: canvasContext,
+        llm_config: {
+          api_key: settings.chat.apiKey,
+          base_url: settings.chat.baseUrl,
+          model: settings.chat.model,
+          max_tokens: settings.chat.maxTokens ?? 4096,
+          temperature: settings.chat.temperature ?? 0.1,
         },
       }),
     });

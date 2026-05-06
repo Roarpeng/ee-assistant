@@ -1,68 +1,72 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useStore } from '../../models/store';
+import {
+  deleteConversationHistory,
+  deriveConversationTitle,
+  loadConversationMetas,
+  saveConversationMessages,
+  saveConversationMetas,
+  type ConversationMeta,
+} from '../../services/conversations';
 
-interface ConversationMeta {
-  id: string;
-  name: string;
-  lastMessage: string;
-  updatedAt: number;
-}
-
-const STORAGE_KEY = 'volta-conversations';
-
-function loadConversations(): ConversationMeta[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-function saveConversations(list: ConversationMeta[]) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch {}
+function formatRelativeTime(timestamp: number) {
+  const diff = Date.now() - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return '刚刚';
+  if (minutes < 60) return `${minutes} 分钟前`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} 小时前`;
+  return new Date(timestamp).toLocaleDateString();
 }
 
 export function ConversationSidebar() {
   const project = useStore((s) => s.project);
   const setProject = useStore((s) => s.setProject);
   const messages = useStore((s) => s.messages);
-  const [conversations, setConversations] = useState<ConversationMeta[]>(loadConversations);
+  const [conversations, setConversations] = useState<ConversationMeta[]>(loadConversationMetas);
   const [collapsed, setCollapsed] = useState(false);
+  const [search, setSearch] = useState('');
+  const [showNewMenu, setShowNewMenu] = useState(false);
 
   // Update conversation list when messages change
   useEffect(() => {
     if (!project) return;
     const lastMsg = messages.length > 0 ? messages[messages.length - 1] : null;
     const preview = lastMsg ? lastMsg.content.slice(0, 60) : '';
+    const autoTitle = deriveConversationTitle(messages, project.name || '新对话');
     setConversations((prev) => {
       const updated = prev.filter((c) => c.id !== project.id);
       updated.unshift({
         id: project.id,
-        name: project.name,
+        name: autoTitle,
         lastMessage: preview,
         updatedAt: Date.now(),
       });
       // Keep max 30 conversations
       const trimmed = updated.slice(0, 30);
-      saveConversations(trimmed);
+      saveConversationMetas(trimmed);
       return trimmed;
     });
   }, [messages.length, project?.id, project?.name]);
 
-  const handleNewConversation = useCallback(async () => {
-    // newProject() saves old chat + resets all state + creates new project
-    await useStore.getState().newProject();
+  const filteredConversations = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return conversations;
+    return conversations.filter((conv) =>
+      [conv.name, conv.lastMessage].some((value) => value.toLowerCase().includes(keyword))
+    );
+  }, [conversations, search]);
+
+  const handleNewConversation = useCallback(async (preserveCanvas: boolean) => {
+    setShowNewMenu(false);
+    await useStore.getState().newProject({ preserveCanvas });
   }, []);
 
   const handleSwitchConversation = useCallback(async (conv: ConversationMeta) => {
     const s = useStore.getState();
     // Save current conversation before switching
     if (s.project && s.project.id !== conv.id) {
-      try {
-        const raw = localStorage.getItem('volta-chat-history');
-        const all: Record<string, any[]> = raw ? JSON.parse(raw) : {};
-        all[s.project.id] = s.messages;
-        localStorage.setItem('volta-chat-history', JSON.stringify(all));
-      } catch {}
+      saveConversationMessages(s.project.id, s.messages);
     }
     setProject({ id: conv.id, name: conv.name });
     useStore.getState().loadChatHistory();
@@ -72,17 +76,10 @@ export function ConversationSidebar() {
     e.stopPropagation();
     setConversations((prev) => {
       const next = prev.filter((c) => c.id !== id);
-      saveConversations(next);
+      saveConversationMetas(next);
       return next;
     });
-    try {
-      const raw = localStorage.getItem('volta-chat-history');
-      if (raw) {
-        const all = JSON.parse(raw);
-        delete all[id];
-        localStorage.setItem('volta-chat-history', JSON.stringify(all));
-      }
-    } catch {}
+    deleteConversationHistory(id);
   }, []);
 
   if (collapsed) {
@@ -96,7 +93,7 @@ export function ConversationSidebar() {
           &gt;
         </button>
         <button
-          onClick={handleNewConversation}
+          onClick={() => handleNewConversation(false)}
           className="w-7 h-7 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold"
           title="新对话"
         >
@@ -107,10 +104,13 @@ export function ConversationSidebar() {
   }
 
   return (
-    <div className="w-56 flex-shrink-0 flex flex-col bg-neutral-900 border-r border-neutral-800 overflow-hidden">
+    <div className="w-64 flex-shrink-0 flex flex-col bg-neutral-900 border-r border-neutral-800 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-3 border-b border-neutral-800 shrink-0">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">历史对话</span>
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">历史对话</span>
+          <div className="text-[10px] text-neutral-600 mt-0.5">可搜索、自动命名、继续上下文</div>
+        </div>
         <button
           onClick={() => setCollapsed(true)}
           className="text-neutral-500 hover:text-neutral-300 text-xs"
@@ -121,18 +121,47 @@ export function ConversationSidebar() {
       </div>
 
       {/* New Conversation Button */}
-      <div className="p-2 shrink-0">
-        <button
-          onClick={handleNewConversation}
-          className="w-full py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-colors"
-        >
-          + 新对话
-        </button>
+      <div className="p-2 shrink-0 border-b border-neutral-800/70">
+        <div className="relative">
+          <button
+            onClick={() => setShowNewMenu((v) => !v)}
+            className="w-full py-2.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-colors shadow-lg shadow-indigo-950/30"
+          >
+            + 新对话
+          </button>
+          {showNewMenu && (
+            <div className="absolute z-20 top-11 left-0 right-0 rounded-2xl border border-neutral-700 bg-neutral-950 shadow-2xl p-1.5">
+              <button
+                onClick={() => handleNewConversation(false)}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-800 transition-colors"
+              >
+                <div className="text-xs font-bold text-neutral-200">清空画布开始</div>
+                <div className="text-[10px] text-neutral-500 mt-0.5">新需求、新拓扑和新 BOM</div>
+              </button>
+              <button
+                onClick={() => handleNewConversation(true)}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-800 transition-colors"
+              >
+                <div className="text-xs font-bold text-neutral-200">沿用当前画布继续</div>
+                <div className="text-[10px] text-neutral-500 mt-0.5">保留拓扑、BOM 和代码，仅开启新对话</div>
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="mt-2 relative">
+          <span className="absolute left-3 top-2.5 text-neutral-600 text-xs">⌕</span>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="搜索对话..."
+            className="w-full rounded-xl bg-neutral-950 border border-neutral-800 py-2 pl-7 pr-3 text-xs text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-indigo-500"
+          />
+        </div>
       </div>
 
       {/* Conversation List */}
       <div className="flex-1 overflow-y-auto px-2 space-y-1 custom-scrollbar">
-        {conversations.map((conv) => (
+        {filteredConversations.map((conv) => (
           <div
             key={conv.id}
             onClick={() => handleSwitchConversation(conv)}
@@ -158,13 +187,13 @@ export function ConversationSidebar() {
               {conv.lastMessage || '新对话'}
             </div>
             <div className="text-[9px] text-neutral-600 mt-0.5">
-              {new Date(conv.updatedAt).toLocaleDateString()}
+              {formatRelativeTime(conv.updatedAt)}
             </div>
           </div>
         ))}
-        {conversations.length === 0 && (
+        {filteredConversations.length === 0 && (
           <div className="text-[10px] text-neutral-600 text-center py-8 px-2">
-            暂无历史对话。<br/>点击"+ 新对话"开始
+            {search ? '没有匹配的历史对话。' : <>暂无历史对话。<br/>点击"+ 新对话"开始</>}
           </div>
         )}
       </div>

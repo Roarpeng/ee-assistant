@@ -76,6 +76,8 @@ export interface ChatMessage {
   context?: ChatContext & { componentSummary?: string };
 }
 
+export type NewConversationMode = 'clear-canvas' | 'keep-canvas';
+
 // ===== LLM Settings =====
 export interface LLMSettings {
   apiKey: string;
@@ -145,7 +147,7 @@ interface AppState {
   setKnowledgeLoading: (loading: boolean) => void;
   setChatContext: (ctx: ChatContext | null) => void;
   setPreviewNodeId: (id: string | null) => void;
-  newProject: () => Promise<void>;
+  newProject: (options?: { preserveCanvas?: boolean }) => Promise<void>;
   clearChat: () => void;
   resetCanvasWorkspace: () => void;
   incrementUnread: () => void;
@@ -281,8 +283,16 @@ export const useStore = create<AppState>((set) => ({
     set({ messages: [], chatContext: null });
   },
 
-  newProject: async () => {
+  newProject: async (options) => {
     const s = useStore.getState();
+    const preserveCanvas = options?.preserveCanvas ?? false;
+    const preservedCanvas = {
+      topology: s.topology,
+      yTopologyVersion: s.yTopologyVersion,
+      bom: s.bom,
+      sclCode: s.sclCode,
+      activeCanvasTab: s.activeCanvasTab,
+    };
     if (s.project) {
       try {
         const raw = localStorage.getItem('volta-chat-history');
@@ -293,34 +303,40 @@ export const useStore = create<AppState>((set) => ({
     }
     try {
       const { api } = await import('../services/api');
-      const p = await api.createProject('New Project');
-      resetYjsDoc();
+      const { deriveConversationTitle } = await import('../services/conversations');
+      const projectName = preserveCanvas
+        ? `继续：${deriveConversationTitle(s.messages, '当前画布')}`
+        : 'New Project';
+      const p = await api.createProject(projectName);
+      if (!preserveCanvas) resetYjsDoc();
       set({
         project: p,
-        topology: { nodes: [], edges: [] },
-        yTopologyVersion: 0,
-        bom: [],
-        sclCode: '',
+        topology: preserveCanvas ? preservedCanvas.topology : { nodes: [], edges: [] },
+        yTopologyVersion: preserveCanvas ? preservedCanvas.yTopologyVersion : 0,
+        bom: preserveCanvas ? preservedCanvas.bom : [],
+        sclCode: preserveCanvas ? preservedCanvas.sclCode : '',
         messages: [],
         chatContext: null,
         previewNodeId: null,
         stage: 'idle',
         unreadChatCount: 0,
+        activeCanvasTab: preserveCanvas ? preservedCanvas.activeCanvasTab : 'topology',
       });
     } catch {
-      resetYjsDoc();
+      if (!preserveCanvas) resetYjsDoc();
       const fallbackId = 'proj_' + Date.now();
       set({
-        project: { id: fallbackId, name: 'New Project' },
-        topology: { nodes: [], edges: [] },
-        yTopologyVersion: 0,
-        bom: [],
-        sclCode: '',
+        project: { id: fallbackId, name: preserveCanvas ? '继续当前画布' : 'New Project' },
+        topology: preserveCanvas ? preservedCanvas.topology : { nodes: [], edges: [] },
+        yTopologyVersion: preserveCanvas ? preservedCanvas.yTopologyVersion : 0,
+        bom: preserveCanvas ? preservedCanvas.bom : [],
+        sclCode: preserveCanvas ? preservedCanvas.sclCode : '',
         messages: [],
         chatContext: null,
         previewNodeId: null,
         stage: 'idle',
         unreadChatCount: 0,
+        activeCanvasTab: preserveCanvas ? preservedCanvas.activeCanvasTab : 'topology',
       });
     }
   },
