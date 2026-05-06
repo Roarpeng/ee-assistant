@@ -63,6 +63,27 @@ class CodegenInput(BaseModel):
     project_id: str
 
 
+class TopologySnapshotInput(BaseModel):
+    snapshot: dict = Field(default_factory=lambda: {"nodes": [], "edges": []})
+    source: str = "user"
+
+
+class TopologyConfirmInput(BaseModel):
+    topology_id: str | None = None
+
+
+class TopologyOut(BaseModel):
+    id: str
+    project_id: str
+    version: int
+    status: str
+    source: str
+    snapshot: dict
+    created_at: datetime
+    confirmed_at: datetime | None = None
+    model_config = {"from_attributes": True}
+
+
 class KnowledgeDocUpload(BaseModel):
     manufacturer: str
     category_tags: list[str] = Field(default_factory=list)

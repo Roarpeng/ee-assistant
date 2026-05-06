@@ -23,6 +23,7 @@ class Project(Base):
     bom_items: Mapped[list["BOMItem"]] = relationship(back_populates="project", cascade="all, delete-orphan")
     schematic: Mapped["Schematic | None"] = relationship(back_populates="project", uselist=False, cascade="all, delete-orphan")
     code_modules: Mapped[list["STModule"]] = relationship(back_populates="project", cascade="all, delete-orphan")
+    topologies: Mapped[list["ProjectTopology"]] = relationship(back_populates="project", cascade="all, delete-orphan")
 
 
 class Requirement(Base):
@@ -102,6 +103,21 @@ class STModule(Base):
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
     project: Mapped["Project"] = relationship(back_populates="code_modules")
+
+
+class ProjectTopology(Base):
+    __tablename__ = "project_topologies"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[str] = mapped_column(String(32), default="draft")
+    source: Mapped[str] = mapped_column(String(32), default="user")
+    snapshot: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    project: Mapped["Project"] = relationship(back_populates="topologies")
 
 
 class KnowledgeDoc(Base):
