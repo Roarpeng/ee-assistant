@@ -28,7 +28,7 @@ import {
   removeUserEdges,
   getTopologySnapshot,
 } from '../../models/yjsStore';
-import { toPng } from 'html-to-image';
+import { toSvg } from 'html-to-image';
 
 const nodeTypes = {
   plc: PLCNode,
@@ -51,8 +51,17 @@ const nodeTypes = {
   disconnect: DisconnectNode,
 };
 
+const NODE_TYPE_TO_BOM: Record<string, string> = {
+  plc: 'PLC', safety_plc: '安全PLC', hmi: 'HMI', ipc: 'IPC',
+  io: 'IO模块', vfd: '变频器', servo: '伺服驱动器', power: '电源模块',
+  switch: '交换机', disconnect: '隔离开关', circuit_breaker: '断路器',
+  contactor: '接触器', relay: '继电器', safety_relay: '安全继电器',
+  estop: '急停按钮', transformer: '变压器', fuse: '熔断器', sensor: '传感器',
+};
+
 export function TopologyPanel() {
   const topology = useStore((s) => s.topology);
+  const setBOM = useStore((s) => s.setBOM);
   const setSCLCode = useStore((s) => s.setSCLCode);
   const project = useStore((s) => s.project);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -190,12 +199,26 @@ export function TopologyPanel() {
       await api.saveTopology(project.id, snapshot, 'user');
       await api.confirmTopology(project.id);
       setTopologyStatus('confirmed');
+
+      // Generate BOM from topology nodes
+      const bomItems = snapshot.nodes.map((node, idx) => ({
+        id: String(idx + 1),
+        name: node.label || `${NODE_TYPE_TO_BOM[node.type] || node.type} ${node.id.slice(-4)}`,
+        mfg: node.details?.manufacturer || '待选型',
+        pn: node.details?.partNumber || '',
+        qty: 1,
+        specs: [
+          node.type ? `类型: ${NODE_TYPE_TO_BOM[node.type] || node.type}` : '',
+          node.details?.specifications || '',
+        ].filter(Boolean).join(', '),
+      }));
+      setBOM(bomItems);
     } catch (err) {
       console.error('Failed to confirm topology', err);
     } finally {
       setIsSavingTopology(false);
     }
-  }, [project, isSavingTopology]);
+  }, [project, isSavingTopology, setBOM]);
 
   const addNode = (type: string) => {
     const id = `${type}_${Date.now()}`;
@@ -307,10 +330,10 @@ export function TopologyPanel() {
     const el = document.querySelector('.react-flow__renderer') as HTMLElement | null;
     if (!el) return;
     try {
-      const dataUrl = await toPng(el, { backgroundColor: '#111111', pixelRatio: 2 });
+      const dataUrl = await toSvg(el, { backgroundColor: '#111111' });
       const a = document.createElement('a');
       a.href = dataUrl;
-      a.download = `topology-${project?.id?.slice(0, 8) || 'export'}.png`;
+      a.download = `topology-${project?.id?.slice(0, 8) || 'export'}.svg`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -402,138 +425,158 @@ export function TopologyPanel() {
     setContextMenu(null);
   }, [setPreviewNodeId]);
 
+  const hasTopology = topology.nodes.length > 0;
+
   return (
     <div className="w-full h-full relative overflow-hidden flex flex-col p-8 rounded-[2.5rem]">
-      <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-indigo-600/20 rounded-full blur-[100px]" />
+      <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-app-accent/20 rounded-full blur-[100px]" />
 
-      <div className="flex justify-between items-center relative z-10 shrink-0 mb-4">
-        <div className="flex items-center gap-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
-            <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
-            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
-              {tr.topology.active}
-            </span>
+      {!hasTopology ? (
+        /* Empty state: direct users to start from chat */
+        <div className="flex-1 flex flex-col items-center justify-center relative z-10">
+          <div className="w-24 h-24 mb-6 rounded-3xl bg-app-accent/10 border border-indigo-500/20 flex items-center justify-center">
+            <svg className="w-10 h-10 text-app-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v2.25A2.25 2.25 0 006 10.5zm0 9.75h2.25A2.25 2.25 0 0010.5 18v-2.25a2.25 2.25 0 00-2.25-2.25H6a2.25 2.25 0 00-2.25 2.25V18A2.25 2.25 0 006 20.25zm9.75-9.75H18a2.25 2.25 0 002.25-2.25V6A2.25 2.25 0 0018 3.75h-2.25A2.25 2.25 0 0013.5 6v2.25a2.25 2.25 0 002.25 2.25z" />
+            </svg>
           </div>
-          <div className="flex bg-neutral-800 rounded-xl p-1 gap-1 flex-wrap max-w-[600px]">
-            {[
-              ['plc', 'PLC'],
-              ['safety_plc', 'SafePLC'],
-              ['hmi', 'HMI'],
-              ['ipc', 'IPC'],
-              ['io', 'IO'],
-              ['vfd', 'VFD'],
-              ['servo', 'Servo'],
-              ['power', 'Power'],
-              ['switch', 'Switch'],
-              ['disconnect', 'Disc.'],
-              ['circuit_breaker', 'CB'],
-              ['contactor', 'Cont.'],
-              ['relay', 'Relay'],
-              ['safety_relay', 'SafeRel'],
-              ['estop', 'E-Stop'],
-              ['transformer', 'Trans.'],
-              ['fuse', 'Fuse'],
-              ['sensor', 'Sensor'],
-            ].map(([type, label]) => (
+          <h3 className="text-lg font-bold text-app-text-secondary mb-2">{tr.topology.empty}</h3>
+          <p className="text-sm text-app-text-tertiary text-center max-w-xs leading-relaxed">
+            {tr.topology.emptyHint}
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Toolbar: only visible when topology exists */}
+          <div className="flex justify-between items-center relative z-10 shrink-0 mb-4">
+            <div className="flex items-center gap-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-app-accent/10 border border-indigo-500/20 rounded-full">
+                <span className="w-1.5 h-1.5 bg-app-accent rounded-full animate-pulse" />
+                <span className="text-[10px] font-bold text-app-accent uppercase tracking-widest">
+                  {tr.topology.active}
+                </span>
+              </div>
+              <div className="flex bg-app-bg-tertiary rounded-xl p-1 gap-1 flex-wrap max-w-[600px]">
+                {[
+                  ['plc', 'PLC'],
+                  ['safety_plc', 'SafePLC'],
+                  ['hmi', 'HMI'],
+                  ['ipc', 'IPC'],
+                  ['io', 'IO'],
+                  ['vfd', 'VFD'],
+                  ['servo', 'Servo'],
+                  ['power', 'Power'],
+                  ['switch', 'Switch'],
+                  ['disconnect', 'Disc.'],
+                  ['circuit_breaker', 'CB'],
+                  ['contactor', 'Cont.'],
+                  ['relay', 'Relay'],
+                  ['safety_relay', 'SafeRel'],
+                  ['estop', 'E-Stop'],
+                  ['transformer', 'Trans.'],
+                  ['fuse', 'Fuse'],
+                  ['sensor', 'Sensor'],
+                ].map(([type, label]) => (
+                  <button
+                    key={type}
+                    onClick={() => addNode(type)}
+                    className="px-2 py-1.5 text-[11px] font-bold text-app-text-secondary hover:text-app-text-primary hover:bg-app-bg-tertiary rounded-lg transition-colors"
+                  >
+                    + {label}
+                  </button>
+                ))}
+                <div className="w-px bg-app-bg-tertiary my-1 mx-1" />
+                <button
+                  onClick={() => {
+                    const nodeRemovals = nodes.filter((n) => n.selected).map((n) => ({ type: 'remove' as const, id: n.id }));
+                    const edgeRemovals = edges.filter((e) => e.selected).map((e) => ({ type: 'remove' as const, id: e.id }));
+                    if (nodeRemovals.length > 0) handleNodesChange(nodeRemovals);
+                    if (edgeRemovals.length > 0) handleEdgesChange(edgeRemovals);
+                  }}
+                  disabled={!nodes.some((n) => n.selected) && !edges.some((e) => e.selected)}
+                  className="px-3 py-1.5 text-xs font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg transition-colors"
+                >
+                  {tr.topology.delete}
+                </button>
+              </div>
+            </div>
+            <div className="flex gap-3">
               <button
-                key={type}
-                onClick={() => addNode(type)}
-                className="px-2 py-1.5 text-[11px] font-bold text-neutral-300 hover:text-white hover:bg-neutral-700 rounded-lg transition-colors"
+                onClick={handleSaveTopologyDraft}
+                disabled={isSavingTopology || !project}
+                className="px-4 py-2.5 bg-app-bg-tertiary border border-app-border rounded-2xl text-sm font-bold hover:bg-app-bg-tertiary disabled:opacity-50 transition-colors"
               >
-                + {label}
+                {isSavingTopology ? '保存中...' : topologyStatus === 'draft' ? '已保存草稿' : '保存草稿'}
               </button>
-            ))}
-            <div className="w-px bg-neutral-700 my-1 mx-1" />
-            <button
-              onClick={() => {
-                const nodeRemovals = nodes.filter((n) => n.selected).map((n) => ({ type: 'remove' as const, id: n.id }));
-                const edgeRemovals = edges.filter((e) => e.selected).map((e) => ({ type: 'remove' as const, id: e.id }));
-                if (nodeRemovals.length > 0) handleNodesChange(nodeRemovals);
-                if (edgeRemovals.length > 0) handleEdgesChange(edgeRemovals);
-              }}
-              disabled={!nodes.some((n) => n.selected) && !edges.some((e) => e.selected)}
-              className="px-3 py-1.5 text-xs font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg transition-colors"
-            >
-              {tr.topology.delete}
-            </button>
+              <button
+                onClick={handleConfirmTopology}
+                disabled={isSavingTopology || !project}
+                className={`px-4 py-2.5 border rounded-2xl text-sm font-bold disabled:opacity-50 transition-colors ${
+                  topologyStatus === 'confirmed'
+                    ? 'bg-emerald-600 border-emerald-500 text-app-text-primary'
+                    : 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/20'
+                }`}
+              >
+                {topologyStatus === 'confirmed' ? '拓扑已确认' : '确认拓扑'}
+              </button>
+              <button
+                onClick={handleSyncToCode}
+                disabled={isSyncing || !project}
+                className="px-6 py-2.5 bg-app-accent border border-indigo-500 rounded-2xl text-sm font-bold text-app-text-primary hover:bg-app-accent-hover disabled:opacity-50 transition-colors shadow-lg shadow-indigo-500/20"
+              >
+                {isSyncing ? tr.topology.syncing : tr.topology.sync}
+              </button>
+              <button
+                onClick={handleExportSvg}
+                className="px-6 py-2.5 bg-app-bg-tertiary border border-app-border rounded-2xl text-sm font-bold hover:bg-app-bg-tertiary transition-colors"
+              >
+                {tr.topology.exportSvg}
+              </button>
+            </div>
           </div>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={handleSaveTopologyDraft}
-            disabled={isSavingTopology || !project}
-            className="px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-2xl text-sm font-bold hover:bg-neutral-700 disabled:opacity-50 transition-colors"
-          >
-            {isSavingTopology ? '保存中...' : topologyStatus === 'draft' ? '已保存草稿' : '保存草稿'}
-          </button>
-          <button
-            onClick={handleConfirmTopology}
-            disabled={isSavingTopology || !project}
-            className={`px-4 py-2.5 border rounded-2xl text-sm font-bold disabled:opacity-50 transition-colors ${
-              topologyStatus === 'confirmed'
-                ? 'bg-emerald-600 border-emerald-500 text-white'
-                : 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/20'
-            }`}
-          >
-            {topologyStatus === 'confirmed' ? '拓扑已确认' : '确认拓扑'}
-          </button>
-          <button
-            onClick={handleSyncToCode}
-            disabled={isSyncing || !project}
-            className="px-6 py-2.5 bg-indigo-600 border border-indigo-500 rounded-2xl text-sm font-bold text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors shadow-lg shadow-indigo-500/20"
-          >
-            {isSyncing ? tr.topology.syncing : tr.topology.sync}
-          </button>
-          <button
-            onClick={handleExportSvg}
-            className="px-6 py-2.5 bg-neutral-800 border border-neutral-700 rounded-2xl text-sm font-bold hover:bg-neutral-700 transition-colors"
-          >
-            {tr.topology.exportSvg}
-          </button>
-        </div>
-      </div>
 
-      <div className="flex-1 relative z-10 p-0 rounded-3xl overflow-hidden border border-neutral-800/50 bg-[#111111]">
-        <ReactFlow
-          key={`rf-${project?.id || 'default'}`}
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={handleNodesChange}
-          onEdgesChange={handleEdgesChange}
-          onConnect={onConnect}
-          onReconnect={onReconnect}
-          onNodeContextMenu={onNodeContextMenu}
-          onPaneContextMenu={onPaneContextMenu}
-          onNodeClick={onNodeClick}
-          onPaneClick={onPaneClick}
-          onInit={setRfInstance}
-          nodeTypes={nodeTypes}
-          fitView
-          deleteKeyCode={['Backspace', 'Delete']}
-          selectNodesOnDrag={false}
-          connectionLineStyle={{ stroke: '#818cf8', strokeWidth: 2, strokeDasharray: '6 3' }}
-          defaultEdgeOptions={{
-            type: 'smoothstep',
-            style: { stroke: '#737373', strokeWidth: 2 },
-            markerEnd: { type: MarkerType.ArrowClosed, color: '#737373' },
-          }}
-          attributionPosition="bottom-right"
-          className="react-flow-dark"
-        >
-          <Background color="#525252" variant={BackgroundVariant.Dots} gap={24} size={2} />
-          <Controls className="bg-neutral-800 border-neutral-700 fill-neutral-400 text-neutral-400" />
-        </ReactFlow>
-        {contextMenu && (
-          <CanvasContextMenu
-            x={contextMenu.x}
-            y={contextMenu.y}
-            nodes={contextMenu.nodes}
-            mode={contextMenu.mode}
-            onDismiss={() => setContextMenu(null)}
-          />
-        )}
-        <NodeInfoCard />
-      </div>
+          <div className="flex-1 relative z-10 p-0 rounded-3xl overflow-hidden border border-app-border/50 bg-app-bg-primary">
+            <ReactFlow
+              key={`rf-${project?.id || 'default'}`}
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={handleNodesChange}
+              onEdgesChange={handleEdgesChange}
+              onConnect={onConnect}
+              onReconnect={onReconnect}
+              onNodeContextMenu={onNodeContextMenu}
+              onPaneContextMenu={onPaneContextMenu}
+              onNodeClick={onNodeClick}
+              onPaneClick={onPaneClick}
+              onInit={setRfInstance}
+              nodeTypes={nodeTypes}
+              fitView
+              deleteKeyCode={['Backspace', 'Delete']}
+              selectNodesOnDrag={false}
+              connectionLineStyle={{ stroke: '#818cf8', strokeWidth: 2, strokeDasharray: '6 3' }}
+              defaultEdgeOptions={{
+                type: 'smoothstep',
+                style: { stroke: '#737373', strokeWidth: 2 },
+                markerEnd: { type: MarkerType.ArrowClosed, color: '#737373' },
+              }}
+              attributionPosition="bottom-right"
+              className="react-flow-dark"
+            >
+              <Background color="#525252" variant={BackgroundVariant.Dots} gap={24} size={2} />
+              <Controls className="bg-app-bg-tertiary border-app-border fill-app-text-secondary text-app-text-secondary" />
+            </ReactFlow>
+            {contextMenu && (
+              <CanvasContextMenu
+                x={contextMenu.x}
+                y={contextMenu.y}
+                nodes={contextMenu.nodes}
+                mode={contextMenu.mode}
+                onDismiss={() => setContextMenu(null)}
+              />
+            )}
+            <NodeInfoCard />
+          </div>
+        </>
+      )}
     </div>
   );
 }

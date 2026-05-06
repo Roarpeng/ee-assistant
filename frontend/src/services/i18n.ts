@@ -32,6 +32,8 @@ const zh = {
     syncing: '同步中...',
     exportSvg: '导出 SVG',
     delete: '删除选中',
+    empty: '暂无拓扑图',
+    emptyHint: '在对话中输入工程需求，AI 将自动生成拓扑图。生成后您可在此编辑调整。',
   },
   bom: {
     title: '物料清单',
@@ -137,6 +139,8 @@ const en: TranslationDict = {
     syncing: 'Syncing...',
     exportSvg: 'Export SVG',
     delete: 'Delete Selected',
+    empty: 'No Topology Yet',
+    emptyHint: 'Enter engineering requirements in the chat and AI will auto-generate the topology. You can then edit and refine it here.',
   },
   bom: {
     title: 'Bill of Materials',

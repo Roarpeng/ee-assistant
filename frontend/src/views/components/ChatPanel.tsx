@@ -173,6 +173,7 @@ export function ChatPanel() {
               if (currentProject && data.payload.title) {
                 store.setProject({ id: currentProject.id, name: data.payload.title });
               }
+              applyAnalysisPayload(data.payload);
             } else {
               updateLastMessage(`${fullText}\n\n${tr.chat.completed}`.trim());
               applyAnalysisPayload(data.payload);
@@ -307,19 +308,19 @@ export function ChatPanel() {
     <div className="flex-1 flex flex-col p-5 overflow-hidden min-h-0">
       <div className="flex justify-between items-start mb-4 shrink-0">
         <div>
-          <div className="text-xs text-neutral-500 font-bold uppercase tracking-[0.2em]">{tr.chat.agent}</div>
+          <div className="text-xs text-app-text-tertiary font-bold uppercase tracking-[0.2em]">{tr.chat.agent}</div>
           <div className="flex items-center gap-2 mt-2">
             <span className="px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
               快速对话
             </span>
-            <span className="px-2 py-1 rounded-full bg-indigo-500/10 text-indigo-300 text-[10px] font-bold border border-indigo-500/20">
+            <span className="px-2 py-1 rounded-full bg-app-accent/10 text-app-accent text-[10px] font-bold border border-indigo-500/20">
               LangGraph 生成
             </span>
           </div>
         </div>
         <div className="flex gap-3 items-center">
           <button
-            className="hover:text-indigo-400 transition-colors text-[10px] px-2 py-1 rounded-lg hover:bg-indigo-500/10"
+            className="hover:text-app-accent transition-colors text-[10px] px-2 py-1 rounded-lg hover:bg-app-accent-light"
             onClick={() => { interruptedRef.current = false; interruptedRef2.current = null; newProject({ preserveCanvas: false }); }}
             title={tr.chat.newProject}
           >
@@ -343,13 +344,13 @@ export function ChatPanel() {
       </div>
 
       {chatContext && (
-        <div className="mb-3 shrink-0 flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-3 py-2 text-[11px]">
-          <span className="text-indigo-400 font-bold">{tr.chat.linkedContext}</span>
-          <span className="text-neutral-400">
+        <div className="mb-3 shrink-0 flex items-center gap-2 bg-app-accent/10 border border-indigo-500/20 rounded-xl px-3 py-2 text-[11px]">
+          <span className="text-app-accent font-bold">{tr.chat.linkedContext}</span>
+          <span className="text-app-text-secondary">
             {chatContext.nodeIds.length} {tr.chat.components}
           </span>
           <button
-            className="ml-auto text-neutral-500 hover:text-neutral-300"
+            className="ml-auto text-app-text-tertiary hover:text-app-text-secondary"
             onClick={() => setChatContext(null)}
           >
             ×
@@ -360,8 +361,8 @@ export function ChatPanel() {
       <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
         {messages.length === 0 && (
           <div className="mt-8 px-2">
-            <div className="text-center text-neutral-300 text-lg font-bold">{tr.chat.welcome}</div>
-            <div className="text-center text-neutral-600 text-xs mt-3">{tr.chat.example}</div>
+            <div className="text-center text-app-text-secondary text-lg font-bold">{tr.chat.welcome}</div>
+            <div className="text-center text-app-text-tertiary text-xs mt-3">{tr.chat.example}</div>
             <div className="grid grid-cols-1 gap-2 mt-6">
               {[
                 '基于当前画布检查供电与安全回路',
@@ -371,7 +372,7 @@ export function ChatPanel() {
                 <button
                   key={prompt}
                   onClick={() => setInputValue(prompt)}
-                  className="text-left rounded-2xl border border-neutral-800 bg-neutral-950/60 hover:bg-neutral-800 px-4 py-3 text-xs text-neutral-300 transition-colors"
+                  className="text-left rounded-2xl border border-app-border bg-app-bg-primary/60 hover:bg-app-bg-tertiary px-4 py-3 text-xs text-app-text-secondary transition-colors"
                 >
                   {prompt}
                 </button>
@@ -388,8 +389,8 @@ export function ChatPanel() {
               <div
                 className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 mt-1 ${
                   isProcessing && msg.role === 'assistant'
-                    ? 'bg-indigo-500 text-white animate-pulse shadow-[0_0_15px_rgba(99,102,241,0.5)]'
-                    : 'bg-indigo-500/20 text-indigo-400'
+                    ? 'bg-app-accent text-app-text-primary animate-pulse shadow-[0_0_15px_rgba(99,102,241,0.5)]'
+                    : 'bg-app-accent/20 text-app-accent'
                 }`}
               >
                 V
@@ -398,14 +399,14 @@ export function ChatPanel() {
             <div
               className={`max-w-[92%] p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                 msg.role === 'user'
-                  ? 'bg-indigo-600 text-white rounded-tr-sm font-medium ml-8 shadow-lg shadow-indigo-950/30'
+                  ? 'bg-app-accent text-app-text-primary rounded-tr-sm font-medium ml-8 shadow-lg shadow-indigo-950/30'
                   : msg.role === 'system'
                     ? 'bg-amber-500/10 text-amber-200 rounded-tl-sm text-xs mr-8 border border-amber-500/20'
-                    : 'bg-neutral-800 text-neutral-200 rounded-tl-sm text-sm mr-8 shadow-inner border border-neutral-700/50'
+                    : 'bg-app-bg-tertiary text-app-text-primary rounded-tl-sm text-sm mr-8 shadow-inner border border-app-border/50'
               }`}
             >
               {msg.context?.componentSummary && (
-                <div className="mb-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 px-2 py-1 text-[10px] text-indigo-200">
+                <div className="mb-2 rounded-lg bg-app-accent/10 border border-indigo-500/20 px-2 py-1 text-[10px] text-app-accent">
                   关联画布: {msg.context.componentSummary}
                 </div>
               )}
@@ -416,7 +417,7 @@ export function ChatPanel() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="mt-5 shrink-0 rounded-3xl bg-neutral-950 border border-neutral-800 p-2 shadow-2xl">
+      <div className="mt-5 shrink-0 rounded-3xl bg-app-bg-primary border border-app-border p-2 shadow-2xl">
         <textarea
           id="chat-input"
           name="chat-input"
@@ -431,16 +432,16 @@ export function ChatPanel() {
           }}
           placeholder={isProcessing ? tr.chat.processing : tr.chat.placeholder}
           disabled={isProcessing}
-          className="w-full resize-none bg-transparent px-3 py-2 text-sm text-white focus:outline-none font-medium placeholder:text-neutral-500 disabled:opacity-50"
+          className="w-full resize-none bg-transparent px-3 py-2 text-sm text-app-text-primary focus:outline-none font-medium placeholder:text-app-text-tertiary disabled:opacity-50"
         />
-        <div className="flex items-center justify-between border-t border-neutral-800 pt-2 px-1">
-          <div className="text-[10px] text-neutral-600">
+        <div className="flex items-center justify-between border-t border-app-border pt-2 px-1">
+          <div className="text-[10px] text-app-text-tertiary">
             Enter 发送 · Shift+Enter 换行 · 输出前自动核准
           </div>
           <button
             onClick={handleSend}
             disabled={isProcessing || !inputValue.trim()}
-            className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-neutral-800 disabled:text-neutral-600 text-white font-bold text-xs px-5 py-2 rounded-xl transition-colors"
+            className="bg-app-accent hover:bg-app-accent-hover disabled:bg-app-bg-tertiary disabled:text-app-text-tertiary text-app-text-primary font-bold text-xs px-5 py-2 rounded-xl transition-colors"
           >
             {isProcessing ? '处理中' : tr.chat.send}
           </button>

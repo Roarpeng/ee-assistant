@@ -83,43 +83,62 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-text-tertiary); }
 
-/* React Flow Dark Overrides */
-.react-flow-dark .react-flow__controls button {
+/* ReactFlow Theme Overrides */
+[data-theme="dark"] .react-flow-dark .react-flow__controls button {
   background: #262626;
   border-bottom: 1px solid #404040;
   fill: #a3a3a3;
 }
-.react-flow-dark .react-flow__controls button:hover {
+[data-theme="dark"] .react-flow-dark .react-flow__controls button:hover {
   background: #404040;
   fill: #fafafa;
 }
 
-.react-flow-dark .react-flow__edge.selected path.react-flow__edge-path {
+[data-theme="dark"] .react-flow-dark .react-flow__edge.selected path.react-flow__edge-path {
   stroke: #818cf8 !important;
   stroke-width: 3 !important;
 }
 
-.react-flow-dark .react-flow__edge.selected text {
+[data-theme="dark"] .react-flow-dark .react-flow__edge.selected text {
   fill: #c7d2fe !important;
 }
 
-.react-flow-dark .react-flow__edge.selected rect {
+[data-theme="dark"] .react-flow-dark .react-flow__edge.selected rect {
   fill: #3730a3 !important;
 }
 
-.react-flow-dark .react-flow__edge.selected polygon {
+[data-theme="dark"] .react-flow-dark .react-flow__edge.selected polygon {
   fill: #818cf8 !important;
   stroke: #818cf8 !important;
 }
 
-.react-flow-dark .react-flow__minimap {
+[data-theme="dark"] .react-flow-dark .react-flow__minimap {
   background-color: #171717 !important;
 }
 
-.react-flow-dark .react-flow__minimap-mask {
+[data-theme="dark"] .react-flow-dark .react-flow__minimap-mask {
   fill: #262626 !important;
 }
 
-.react-flow-dark .react-flow__background pattern circle {
+[data-theme="dark"] .react-flow-dark .react-flow__background pattern circle {
   fill: #525252 !important;
+}
+
+[data-theme="light"] .react-flow-dark .react-flow__controls button {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  fill: #6b7280;
+}
+[data-theme="light"] .react-flow-dark .react-flow__controls button:hover {
+  background: #f5f5f4;
+  fill: #1a1a2e;
+}
+[data-theme="light"] .react-flow-dark .react-flow__minimap {
+  background-color: #ffffff !important;
+}
+[data-theme="light"] .react-flow-dark .react-flow__minimap-mask {
+  fill: #f0f0f0 !important;
+}
+[data-theme="light"] .react-flow-dark .react-flow__background pattern circle {
+  fill: #d1d5db !important;
 }
