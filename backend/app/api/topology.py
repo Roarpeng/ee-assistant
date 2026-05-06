@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -54,7 +54,7 @@ async def confirm_project_topology(
         raise HTTPException(status_code=404, detail="Topology not found")
 
     topology.status = "confirmed"
-    topology.confirmed_at = datetime.utcnow()
+    topology.confirmed_at = datetime.now(UTC).replace(tzinfo=None)
     project.status = "ready"
     await session.commit()
     await session.refresh(topology)
