@@ -56,6 +56,8 @@ export function TopologyPanel() {
   const setSCLCode = useStore((s) => s.setSCLCode);
   const project = useStore((s) => s.project);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isSavingTopology, setIsSavingTopology] = useState(false);
+  const [topologyStatus, setTopologyStatus] = useState<'idle' | 'draft' | 'confirmed'>('idle');
   const language = useStore((s) => s.language);
   const tr = t(language);
 
@@ -165,6 +167,35 @@ export function TopologyPanel() {
       setIsSyncing(false);
     }
   }, [isSyncing, project, setSCLCode]);
+
+  const handleSaveTopologyDraft = useCallback(async () => {
+    if (!project || isSavingTopology) return;
+    setIsSavingTopology(true);
+    try {
+      const snapshot = getTopologySnapshot();
+      await api.saveTopology(project.id, snapshot, 'user');
+      setTopologyStatus('draft');
+    } catch (err) {
+      console.error('Failed to save topology draft', err);
+    } finally {
+      setIsSavingTopology(false);
+    }
+  }, [project, isSavingTopology]);
+
+  const handleConfirmTopology = useCallback(async () => {
+    if (!project || isSavingTopology) return;
+    setIsSavingTopology(true);
+    try {
+      const snapshot = getTopologySnapshot();
+      await api.saveTopology(project.id, snapshot, 'user');
+      await api.confirmTopology(project.id);
+      setTopologyStatus('confirmed');
+    } catch (err) {
+      console.error('Failed to confirm topology', err);
+    } finally {
+      setIsSavingTopology(false);
+    }
+  }, [project, isSavingTopology]);
 
   const addNode = (type: string) => {
     const id = `${type}_${Date.now()}`;
@@ -428,6 +459,24 @@ export function TopologyPanel() {
           </div>
         </div>
         <div className="flex gap-3">
+          <button
+            onClick={handleSaveTopologyDraft}
+            disabled={isSavingTopology || !project}
+            className="px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-2xl text-sm font-bold hover:bg-neutral-700 disabled:opacity-50 transition-colors"
+          >
+            {isSavingTopology ? '保存中...' : topologyStatus === 'draft' ? '已保存草稿' : '保存草稿'}
+          </button>
+          <button
+            onClick={handleConfirmTopology}
+            disabled={isSavingTopology || !project}
+            className={`px-4 py-2.5 border rounded-2xl text-sm font-bold disabled:opacity-50 transition-colors ${
+              topologyStatus === 'confirmed'
+                ? 'bg-emerald-600 border-emerald-500 text-white'
+                : 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/20'
+            }`}
+          >
+            {topologyStatus === 'confirmed' ? '拓扑已确认' : '确认拓扑'}
+          </button>
           <button
             onClick={handleSyncToCode}
             disabled={isSyncing || !project}

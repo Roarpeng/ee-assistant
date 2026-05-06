@@ -37,6 +37,18 @@ export const api = {
 
   deleteProject: (id: string) => request<void>(`/projects/${id}`, { method: 'DELETE' }),
 
+  saveTopology: (projectId: string, snapshot: { nodes: any[]; edges: any[] }, source = 'user') =>
+    request<any>(`/projects/${projectId}/topology`, {
+      method: 'POST',
+      body: JSON.stringify({ snapshot, source }),
+    }),
+
+  confirmTopology: (projectId: string, topologyId?: string) =>
+    request<any>(`/projects/${projectId}/topology/confirm`, {
+      method: 'POST',
+      body: JSON.stringify(topologyId ? { topology_id: topologyId } : {}),
+    }),
+
   // Analysis v1 (fallback)
   analyze: (projectId: string, text: string) => {
     const settings = getSettings();
