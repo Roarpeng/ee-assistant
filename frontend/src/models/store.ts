@@ -17,11 +17,23 @@ export type NodeData = {
   details?: Record<string, string>;
 };
 
+// Electrical-circuit category — drives handle pair selection + edge color.
+// 'power'   = main + control voltages (top↓bottom, orange)
+// 'safety'  = STO/E-stop/safety bus    (left→right, red)
+// 'network' = field network protocols  (left→right, blue)
+// 'feedback'= sensor/IO/encoder return (bottom↑top, green)
+export type EdgeCategory = 'power' | 'safety' | 'network' | 'feedback';
+
 export type EdgeData = {
   id: string;
   source: string;
   target: string;
   protocol: string;
+  // Optional handle IDs from CustomNodes.tsx (8 named handles per node).
+  // When absent, TopologyPanel falls back to a protocol→side classifier.
+  sourceHandle?: string;
+  targetHandle?: string;
+  category?: EdgeCategory;
 };
 
 // ===== BOM Types =====
@@ -44,6 +56,8 @@ export type KnowledgeDocStatus =
   | 'ready'
   | 'error';
 
+export type KnowledgeSourceType = 'pdf' | 'txt' | 'md' | 'html' | 'docx' | 'url';
+
 export interface KnowledgeDoc {
   id: string;
   filename: string;
@@ -51,6 +65,8 @@ export interface KnowledgeDoc {
   category_tags: string[];
   chunk_count: number;
   status: KnowledgeDocStatus;
+  source_type?: KnowledgeSourceType;
+  source_url?: string | null;
   uploaded_at: string;
 }
 

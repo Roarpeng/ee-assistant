@@ -55,15 +55,24 @@ function edgeToYMap(edge: EdgeData): Y.Map<any> {
   m.set('source', edge.source);
   m.set('target', edge.target);
   m.set('protocol', edge.protocol);
+  if (edge.sourceHandle) m.set('sourceHandle', edge.sourceHandle);
+  if (edge.targetHandle) m.set('targetHandle', edge.targetHandle);
+  if (edge.category) m.set('category', edge.category);
   return m;
 }
 
 function yMapToEdge(m: Y.Map<any>): EdgeData {
+  const sh = m.get('sourceHandle');
+  const th = m.get('targetHandle');
+  const cat = m.get('category');
   return {
     id: m.get('id'),
     source: m.get('source'),
     target: m.get('target'),
     protocol: m.get('protocol'),
+    ...(sh ? { sourceHandle: sh } : {}),
+    ...(th ? { targetHandle: th } : {}),
+    ...(cat ? { category: cat } : {}),
   };
 }
 
@@ -96,6 +105,9 @@ export function mergeAITopology(aiNodes: NodeData[], aiEdges: EdgeData[]): void 
         existing.set('source', aiEdge.source);
         existing.set('target', aiEdge.target);
         existing.set('protocol', aiEdge.protocol);
+        if (aiEdge.sourceHandle) existing.set('sourceHandle', aiEdge.sourceHandle);
+        if (aiEdge.targetHandle) existing.set('targetHandle', aiEdge.targetHandle);
+        if (aiEdge.category) existing.set('category', aiEdge.category);
       } else {
         yEdges.push([edgeToYMap(aiEdge)]);
       }

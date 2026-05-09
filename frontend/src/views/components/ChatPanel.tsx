@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../../models/store';
+import type { NodeData, EdgeData } from '../../models/store';
 import { useChatHistory } from '../../hooks/useChatHistory';
 import { api } from '../../services/api';
 import { t } from '../../services/i18n';
@@ -69,6 +70,71 @@ export function ChatPanel() {
     }
   };
 
+  // Normalize topology coming from any source (LangGraph, chat orchestrator, LLM)
+  // into the flat shape that our yjsStore + ReactFlow expects. Backend should
+  // already do this, but we keep a defensive fallback so a misbehaving LLM
+  // can never collapse the canvas to (0,0) or strip edge labels.
+  const normalizeTopologyPayload = (raw: any): { nodes: NodeData[]; edges: EdgeData[] } => {
+    const nodesIn: any[] = Array.isArray(raw?.nodes) ? raw.nodes : [];
+    const nodes: NodeData[] = [];
+    nodesIn.forEach((n, i) => {
+      if (!n || typeof n !== 'object') return;
+      const id = String(n.id ?? `node_${i}`).trim();
+      if (!id) return;
+      const data = n.data && typeof n.data === 'object' ? n.data : {};
+      const pos = n.position && typeof n.position === 'object' ? n.position : {};
+      const labelRaw =
+        n.label ??
+        data.label ??
+        [data.manufacturer, data.model].filter(Boolean).join(' ').trim() ??
+        '';
+      const label = String(labelRaw || (n.type ?? 'NODE')).slice(0, 60);
+      const x = Number.isFinite(+n.x) ? +n.x : Number.isFinite(+pos.x) ? +pos.x : 120 + (i % 6) * 220;
+      const y = Number.isFinite(+n.y) ? +n.y : Number.isFinite(+pos.y) ? +pos.y : 60 + Math.floor(i / 6) * 140;
+      nodes.push({
+        id,
+        type: String(n.type ?? 'io').toLowerCase(),
+        label,
+        x,
+        y,
+        status: (n.status ?? data.status ?? 'ok') as NodeData['status'],
+      });
+    });
+
+    const validIds = new Set(nodes.map((n) => n.id));
+    const edgesIn: any[] = Array.isArray(raw?.edges) ? raw.edges : [];
+    const edges: EdgeData[] = [];
+    edgesIn.forEach((e, i) => {
+      if (!e || typeof e !== 'object') return;
+      const source = String(e.source ?? '').trim();
+      const target = String(e.target ?? '').trim();
+      if (!source || !target || !validIds.has(source) || !validIds.has(target)) return;
+      const data = e.data && typeof e.data === 'object' ? e.data : {};
+      const protocol = String(e.protocol ?? e.label ?? data.protocol ?? data.label ?? 'PROFINET').slice(0, 32);
+      // Backend `_normalize_topology` already attaches sourceHandle/targetHandle/category
+      // — pass them through so ReactFlow renders the right port + color.
+      // If absent (older runs / manually authored), TopologyPanel.observeTopology
+      // falls back to a protocol→side classifier.
+      const sourceHandle = typeof e.sourceHandle === 'string' ? e.sourceHandle : undefined;
+      const targetHandle = typeof e.targetHandle === 'string' ? e.targetHandle : undefined;
+      const category =
+        e.category === 'power' || e.category === 'network' ||
+        e.category === 'safety' || e.category === 'feedback'
+          ? e.category
+          : undefined;
+      edges.push({
+        id: String(e.id ?? `e_${i}_${source}_${target}`),
+        source,
+        target,
+        protocol,
+        ...(sourceHandle ? { sourceHandle } : {}),
+        ...(targetHandle ? { targetHandle } : {}),
+        ...(category ? { category } : {}),
+      });
+    });
+    return { nodes, edges };
+  };
+
   const applyAnalysisPayload = (state: any) => {
     if (!state) return;
     if (state.bom_items) {
@@ -82,8 +148,11 @@ export function ChatPanel() {
       })));
     }
     if (state.topology && Array.isArray(state.topology.nodes) && state.topology.nodes.length > 0) {
-      useStore.getState().setTopology(state.topology.nodes, state.topology.edges || [], 'ai');
-      useStore.getState().setActiveCanvasTab('topology');
+      const { nodes, edges } = normalizeTopologyPayload(state.topology);
+      if (nodes.length > 0) {
+        useStore.getState().setTopology(nodes, edges, 'ai');
+        useStore.getState().setActiveCanvasTab('topology');
+      }
     }
     if (state.st_modules) {
       const codeText = state.st_modules
@@ -186,6 +255,14 @@ export function ChatPanel() {
             fullText += `${fullText ? '\n' : ''}• ${data.step}`;
             updateLastMessage(fullText);
             useStore.getState().incrementUnread();
+          }
+
+          // Progressive rendering: every node may carry a `partial` slice
+          // (BOM, topology, code) that we can render *immediately* — the user
+          // sees each artifact appear as it's generated instead of waiting for
+          // the whole graph to finish.
+          if (data.partial) {
+            applyAnalysisPayload(data.partial);
           }
         } catch (e) {
           console.error('Failed to parse SSE line:', line, e);

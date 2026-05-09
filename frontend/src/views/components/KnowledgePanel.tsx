@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useStore, type KnowledgeDoc, type KnowledgeDocStatus } from '../../models/store';
+import { useStore, type KnowledgeDoc, type KnowledgeDocStatus, type KnowledgeSourceType } from '../../models/store';
 import { t } from '../../services/i18n';
 import { api } from '../../services/api';
 
@@ -12,10 +12,79 @@ const STATUS_COLORS: Record<KnowledgeDocStatus, string> = {
   error: 'bg-red-500/20 text-red-400',
 };
 
+// Per-source-type badge styles — kept distinct so users can scan a long
+// list and instantly tell URL-imported pages from a binary PDF.
+const SOURCE_BADGE: Record<KnowledgeSourceType, { label: string; cls: string }> = {
+  pdf:  { label: 'PDF',  cls: 'bg-rose-500/20 text-rose-400' },
+  txt:  { label: 'TXT',  cls: 'bg-slate-500/20 text-slate-300' },
+  md:   { label: 'MD',   cls: 'bg-amber-500/20 text-amber-300' },
+  html: { label: 'HTML', cls: 'bg-orange-500/20 text-orange-300' },
+  docx: { label: 'DOCX', cls: 'bg-sky-500/20 text-sky-300' },
+  url:  { label: 'URL',  cls: 'bg-emerald-500/20 text-emerald-300' },
+};
+
 const TERMINAL_STATUSES: KnowledgeDocStatus[] = ['ready', 'error'];
 
 function isTerminal(status: KnowledgeDocStatus): boolean {
   return TERMINAL_STATUSES.includes(status);
+}
+
+// Bounded-concurrency runner — preserves order of dispatch but lets `limit`
+// workers progress in parallel. `cancelled()` is polled before pulling the
+// next item so callers can short-circuit a queue.
+async function runWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  worker: (item: T, idx: number) => Promise<void>,
+  cancelled: () => boolean = () => false,
+): Promise<void> {
+  let cursor = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      if (cancelled()) return;
+      const i = cursor++;
+      await worker(items[i], i);
+    }
+  });
+  await Promise.all(runners);
+}
+
+// Hard cap — single-file POST drives a long-lived LLM embedding loop on
+// the backend, so 2 in parallel is a healthy compromise between wall-clock
+// time and SiliconFlow rate-limit risk.
+const UPLOAD_CONCURRENCY = 2;
+
+// Must match the `client_max_body_size` configured for /api/ in
+// frontend/nginx.conf. Bump both together if you ever raise the cap.
+const MAX_UPLOAD_BYTES = 800 * 1024 * 1024;
+
+// Whitelist must mirror the backend's SUPPORTED_SUFFIXES tuple in
+// app/core/extractors.py. Adding a new format means updating both.
+const SUPPORTED_EXT_RE = /\.(pdf|txt|md|markdown|html|htm|docx)$/i;
+const SUPPORTED_MIMES = new Set([
+  'application/pdf',
+  'text/plain',
+  'text/markdown',
+  'text/html',
+  'application/xhtml+xml',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]);
+
+function isSupportedFile(f: File): boolean {
+  if (f.size === 0) return false;
+  if (SUPPORTED_EXT_RE.test(f.name)) return true;
+  return SUPPORTED_MIMES.has(f.type);
+}
+
+function isWithinSizeLimit(f: File): boolean {
+  return f.size <= MAX_UPLOAD_BYTES;
+}
+
+interface UploadQueueState {
+  total: number;
+  done: number;
+  success: number;
+  failed: number;
 }
 
 export function KnowledgePanel() {
@@ -35,9 +104,16 @@ export function KnowledgePanel() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [deleting, setDeleting] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [queueState, setQueueState] = useState<UploadQueueState | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const [urlSubmitting, setUrlSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cancelledRef = useRef<boolean>(false);
+  // True while at least one file in the queue is in-flight; drives button
+  // spinner state. Distinct from queueState which tracks counts.
+  const uploading = queueState !== null;
 
   // Track live WS connections for active docs
   const activeSockets = useRef<Map<string, WebSocket>>(new Map());
@@ -97,36 +173,117 @@ export function KnowledgePanel() {
     }
   }
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
+  // Upload a single file via the existing per-doc endpoint. Returns the
+  // created KnowledgeDoc on success, throws on failure (so the queue
+  // worker can count it as failed without aborting siblings).
+  async function uploadOneFile(file: File): Promise<KnowledgeDoc> {
+    const settings = useStore.getState().settings;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('manufacturer', 'Unknown');
+    formData.append('category_tags', '[]');
+    formData.append('llm_config', JSON.stringify(settings.chat));
+    formData.append('embedding_config', JSON.stringify(settings.embedding));
+    const res = await fetch('/api/knowledge/docs', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(`[${res.status}] ${errText || file.name}`);
+    }
+    return (await res.json()) as KnowledgeDoc;
+  }
+
+  async function handleFiles(rawFiles: FileList | File[]) {
+    const all = Array.from(rawFiles);
+    const supported = all.filter(isSupportedFile);
+    const skippedUnsupported = all.length - supported.length;
+
+    // Size pre-check happens after the type filter so unsupported garbage
+    // doesn't poison the size message. Files over the nginx cap are dropped
+    // here with a dedicated error to avoid the opaque 413 round-trip.
+    const acceptable = supported.filter(isWithinSizeLimit);
+    const oversized = supported.length - acceptable.length;
+
+    const errs: string[] = [];
+    if (skippedUnsupported > 0) errs.push(tr.knowledge.skippedUnsupported(skippedUnsupported));
+    if (oversized > 0) errs.push(tr.knowledge.oversizedFiles(oversized, MAX_UPLOAD_BYTES));
+    setUploadError(errs.join(' · '));
+
+    if (acceptable.length === 0) return;
+    const pdfsToUpload = acceptable;
+
+    cancelledRef.current = false;
+    setQueueState({ total: pdfsToUpload.length, done: 0, success: 0, failed: 0 });
+
+    await runWithConcurrency(
+      pdfsToUpload,
+      UPLOAD_CONCURRENCY,
+      async (file) => {
+        try {
+          const newDoc = await uploadOneFile(file);
+          // Prepend immediately so the doc appears in the list with its
+          // own status badge; the existing useEffect will spin up its WS
+          // connection automatically.
+          setDocs([newDoc, ...useStore.getState().knowledgeDocs]);
+          setQueueState((q) =>
+            q ? { ...q, done: q.done + 1, success: q.success + 1 } : q
+          );
+        } catch (err: any) {
+          setQueueState((q) =>
+            q ? { ...q, done: q.done + 1, failed: q.failed + 1 } : q
+          );
+          setUploadError(`Upload failed: ${err?.message ?? file.name}`);
+        }
+      },
+      () => cancelledRef.current,
+    );
+
+    // Brief settle so the user sees the final counts before the widget
+    // disappears, then clear queue state and the file input.
+    setTimeout(() => setQueueState(null), 1500);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      void handleFiles(files);
+    }
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      void handleFiles(files);
+    }
+  }
+
+  function cancelQueue() {
+    cancelledRef.current = true;
+  }
+
+  async function handleUrlSubmit() {
+    const url = urlInput.trim();
+    if (!url) return;
+    // Cheap shape validation — server still does the real work.
+    if (!/^https?:\/\//i.test(url)) {
+      setUploadError(tr.knowledge.urlInvalid);
+      return;
+    }
     setUploadError('');
+    setUrlSubmitting(true);
     try {
-      const settings = useStore.getState().settings;
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('manufacturer', 'Unknown');
-      formData.append('category_tags', '[]');
-      formData.append('llm_config', JSON.stringify(settings.chat));
-      formData.append('embedding_config', JSON.stringify(settings.embedding));
-      const res = await fetch('/api/knowledge/docs', {
-        method: 'POST',
-        body: formData,
-      });
-      if (res.ok) {
-        const newDoc: KnowledgeDoc = await res.json();
-        setDocs([newDoc, ...docs]);
-        connectProgress(newDoc.id);
-      } else {
-        const errText = await res.text();
-        setUploadError(`Upload failed: ${res.status} ${errText}`);
-      }
-    } catch (e: any) {
-      setUploadError(e.message || 'Upload failed');
+      const newDoc = await api.ingestUrl(url);
+      setDocs([newDoc as KnowledgeDoc, ...useStore.getState().knowledgeDocs]);
+      setUrlInput('');
+    } catch (err: any) {
+      setUploadError(`URL ${tr.knowledge.uploadFailed}: ${err?.message ?? url}`);
     } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setUrlSubmitting(false);
     }
   }
 
@@ -241,10 +398,17 @@ export function KnowledgePanel() {
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 shrink-0">
-                    PDF
-                  </span>
-                  <h4 className="text-sm font-medium text-neutral-200 truncate">{doc.filename}</h4>
+                  {(() => {
+                    const badge = SOURCE_BADGE[doc.source_type ?? 'pdf'] ?? SOURCE_BADGE.pdf;
+                    return (
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${badge.cls}`}>
+                        {badge.label}
+                      </span>
+                    );
+                  })()}
+                  <h4 className="text-sm font-medium text-neutral-200 truncate" title={doc.source_url ?? doc.filename}>
+                    {doc.filename}
+                  </h4>
                 </div>
                 <div className="flex items-center gap-3 mt-2 flex-wrap">
                   <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${STATUS_COLORS[doc.status] || STATUS_COLORS.error}`}>
@@ -323,36 +487,127 @@ export function KnowledgePanel() {
       )}
 
       {/* Upload */}
-      <div className="p-6 border-t border-neutral-800 shrink-0">
+      <div className="p-6 border-t border-neutral-800 shrink-0 space-y-3">
         {uploadError && (
-          <div className="mb-3 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{uploadError}</div>
+          <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+            {uploadError}
+          </div>
         )}
+
+        {/* Queue progress widget — only visible while a queue is active */}
+        {queueState && (
+          <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-3 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-indigo-300">
+                {tr.knowledge.queueProgress(queueState.done, queueState.total)}
+              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-neutral-400">
+                  {tr.knowledge.queueSummary(queueState.success, queueState.failed)}
+                </span>
+                {queueState.done < queueState.total && !cancelledRef.current && (
+                  <button
+                    onClick={cancelQueue}
+                    className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors"
+                    title="Skip remaining; in-flight uploads still finish"
+                  >
+                    {tr.knowledge.cancel}
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-indigo-500 transition-all duration-300"
+                style={{
+                  width: `${queueState.total === 0 ? 0 : (queueState.done / queueState.total) * 100}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Hidden native input — the dropzone & button trigger it.
+            `accept` lists every supported file type. The browser still
+            allows "All files" so we re-check on the JS side too. */}
         <input
           id="knowledge-file-upload"
           name="knowledge-file-upload"
           ref={fileInputRef}
           type="file"
-          accept=".pdf"
-          onChange={handleUpload}
+          accept=".pdf,.txt,.md,.markdown,.html,.htm,.docx,application/pdf,text/plain,text/markdown,text/html,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          multiple
+          onChange={handleInputChange}
           className="hidden"
         />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="w-full py-3 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 hover:border-neutral-600 rounded-xl text-sm font-bold text-neutral-300 transition-all border-dashed flex justify-center items-center gap-2 disabled:opacity-50"
+
+        {/* URL ingestion — single-page fetch on the server. We render this
+            above the dropzone so users discover the alternative without
+            it competing for the dominant click target. */}
+        <div className="mb-3 flex items-stretch gap-2">
+          <input
+            type="url"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void handleUrlSubmit();
+            }}
+            placeholder={tr.knowledge.urlPlaceholder}
+            disabled={urlSubmitting}
+            className="flex-1 min-w-0 px-3 py-2 text-xs rounded-lg bg-neutral-800/60 border border-neutral-700 focus:border-indigo-500/60 focus:outline-none text-neutral-200 placeholder-neutral-500 disabled:opacity-50"
+          />
+          <button
+            onClick={() => void handleUrlSubmit()}
+            disabled={urlSubmitting || !urlInput.trim()}
+            className="text-xs font-bold px-3 py-2 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+          >
+            {urlSubmitting ? '…' : tr.knowledge.addUrl}
+          </button>
+        </div>
+
+        {/* Dropzone — also serves as the upload button. Drag events on the
+            outer div allow drops anywhere in the zone, not just on text. */}
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (!isDragOver) setIsDragOver(true);
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            setIsDragOver(false);
+          }}
+          onDrop={handleDrop}
+          onClick={() => !uploading && fileInputRef.current?.click()}
+          className={`w-full px-4 py-5 rounded-xl border-2 border-dashed cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
+            isDragOver
+              ? 'border-indigo-400 bg-indigo-500/15 text-indigo-200'
+              : uploading
+              ? 'border-neutral-700 bg-neutral-800/30 text-neutral-500 cursor-wait'
+              : 'border-neutral-700 hover:border-indigo-500/60 bg-neutral-800/40 hover:bg-neutral-800 text-neutral-300'
+          }`}
         >
           {uploading ? (
-            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
           ) : (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                d="M7 16a4 4 0 01-.88-7.9A5 5 0 0119.96 9.5a4 4 0 01-.96 7.5H7zm5-9v9m0 0l-3-3m3 3l3-3" />
             </svg>
           )}
-          {uploading ? tr.knowledge.status.uploading : tr.knowledge.upload}
-        </button>
+          <span className="text-xs font-bold">
+            {isDragOver
+              ? tr.knowledge.dropActive
+              : uploading
+              ? tr.knowledge.status.uploading
+              : tr.knowledge.uploadMulti}
+          </span>
+          {!uploading && !isDragOver && (
+            <span className="text-[10px] text-neutral-500">{tr.knowledge.dropHint}</span>
+          )}
+        </div>
       </div>
     </div>
   );

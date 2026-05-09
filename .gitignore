@@ -10,3 +10,10 @@ dist/
 postgres_data/
 minio_data/
 *.db
+
+# Knowledge bundles — distribute via Releases assets, not git
+bundles/
+
+# Local SSE/HTTP response captures from manual debugging
+test-resp.txt
+

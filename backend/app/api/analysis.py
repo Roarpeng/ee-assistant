@@ -1,3 +1,5 @@
+import asyncio
+import traceback
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +14,52 @@ from app.core.chat_orchestrator import chat_orchestrator
 from app.core.orchestrator import orchestrator
 
 router = APIRouter(prefix="/api/projects", tags=["analysis"])
+
+# SSE 通用响应头: 关闭 nginx 与浏览器缓冲, 保持长连接 chunk 实时下发
+_SSE_HEADERS = {
+    "Cache-Control": "no-cache, no-transform",
+    "X-Accel-Buffering": "no",
+    "Connection": "keep-alive",
+}
+
+# 心跳间隔 — 每 15s 注释行 (SSE 标准: 以 ":" 开头的行被客户端忽略)
+# 防止 cntlm/nginx/浏览器在长时间无数据时断开 SSE 连接
+_SSE_HEARTBEAT_SECONDS = 15.0
+
+
+async def _sse_with_heartbeat(source):
+    """Wrap an async generator yielding SSE strings with periodic heartbeats.
+
+    Keeps the connection alive across long LLM calls (which can run > 60s with
+    no intermediate yields), preventing intermediate proxies / browser fetch
+    layers from declaring the stream dead.
+    """
+    queue: asyncio.Queue[str | None] = asyncio.Queue()
+
+    async def producer():
+        try:
+            async for msg in source:
+                await queue.put(msg)
+        finally:
+            await queue.put(None)
+
+    task = asyncio.create_task(producer())
+    try:
+        while True:
+            try:
+                msg = await asyncio.wait_for(queue.get(), timeout=_SSE_HEARTBEAT_SECONDS)
+            except asyncio.TimeoutError:
+                yield ": keepalive\n\n"
+                continue
+            if msg is None:
+                return
+            yield msg
+    finally:
+        task.cancel()
+        try:
+            await task
+        except (asyncio.CancelledError, Exception):
+            pass
 
 
 @router.post("/{project_id}/analyze", response_model=ProjectOut)
@@ -61,7 +109,9 @@ async def analyze_project_v2(project_id: str, body: RequirementInput, session: A
                     final_state = event.get("payload")
                 yield f"data: {json_module.dumps(event)}\n\n"
         except Exception as e:
-            yield f"data: {json_module.dumps({'error': str(e)})}\n\n"
+            print(f"[analyze-v2] stream error for project {project_id}: {e!r}", flush=True)
+            traceback.print_exc()
+            yield f"data: {json_module.dumps({'error': str(e) or type(e).__name__})}\n\n"
             return
 
         # DB save runs AFTER SSE stream ends — must not crash the connection
@@ -124,9 +174,14 @@ async def analyze_project_v2(project_id: str, body: RequirementInput, session: A
                     await db.commit()
             except Exception as e:
                 # DB save failed but SSE already completed — log only, don't break connection
-                print(f"DB save error (non-fatal, SSE already sent): {e}")
+                print(f"DB save error (non-fatal, SSE already sent): {e!r}", flush=True)
+                traceback.print_exc()
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        _sse_with_heartbeat(event_generator()),
+        media_type="text/event-stream",
+        headers=_SSE_HEADERS,
+    )
 
 
 @router.post("/{project_id}/chat")
@@ -149,9 +204,15 @@ async def chat_with_project(project_id: str, body: ChatInput, session: AsyncSess
             ):
                 yield f"data: {json_module.dumps(event, ensure_ascii=False)}\n\n"
         except Exception as e:
-            yield f"data: {json_module.dumps({'error': str(e)}, ensure_ascii=False)}\n\n"
+            print(f"[chat] stream error for project {project_id}: {e!r}", flush=True)
+            traceback.print_exc()
+            yield f"data: {json_module.dumps({'error': str(e) or type(e).__name__}, ensure_ascii=False)}\n\n"
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        _sse_with_heartbeat(event_generator()),
+        media_type="text/event-stream",
+        headers=_SSE_HEADERS,
+    )
 
 
 @router.post("/{project_id}/resume")
@@ -179,7 +240,9 @@ async def resume_project_analysis(project_id: str, body: ResumeRequest, session:
                     final_state = event.get("payload")
                 yield f"data: {json_module.dumps(event)}\n\n"
         except Exception as e:
-            yield f"data: {json_module.dumps({'error': str(e)})}\n\n"
+            print(f"[resume] stream error for project {project_id}: {e!r}", flush=True)
+            traceback.print_exc()
+            yield f"data: {json_module.dumps({'error': str(e) or type(e).__name__})}\n\n"
             return
 
         if final_state:
@@ -240,6 +303,11 @@ async def resume_project_analysis(project_id: str, body: ResumeRequest, session:
                     )
                     await db.commit()
             except Exception as e:
-                print(f"DB save error in resume (non-fatal, SSE already sent): {e}")
+                print(f"DB save error in resume (non-fatal, SSE already sent): {e!r}", flush=True)
+                traceback.print_exc()
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        _sse_with_heartbeat(event_generator()),
+        media_type="text/event-stream",
+        headers=_SSE_HEADERS,
+    )

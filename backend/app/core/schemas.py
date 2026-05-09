@@ -158,8 +158,19 @@ class KnowledgeDocOut(BaseModel):
     category_tags: list[str]
     chunk_count: int
     status: str
+    source_type: str = "pdf"
+    source_url: str | None = None
     uploaded_at: datetime
     model_config = {"from_attributes": True}
+
+
+class KnowledgeURLIngest(BaseModel):
+    """Body for POST /api/knowledge/urls — single-page web ingestion."""
+    url: str
+    manufacturer: str = "Unknown"
+    category_tags: list[str] = Field(default_factory=list)
+    llm_config: dict | None = None
+    embedding_config: dict | None = None
 
 
 class BatchDeleteInput(BaseModel):

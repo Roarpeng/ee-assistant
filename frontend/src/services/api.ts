@@ -209,6 +209,33 @@ export const api = {
       body: JSON.stringify({ ids }),
     }),
 
+  // Single-page URL ingestion. Server fetches the URL, dispatches by
+  // Content-Type to the same extractor pipeline as file uploads.
+  ingestUrl: (url: string, manufacturer: string = 'Unknown', categoryTags: string[] = []) => {
+    const settings = getSettings();
+    return request<any>(`/knowledge/urls`, {
+      method: 'POST',
+      body: JSON.stringify({
+        url,
+        manufacturer,
+        category_tags: categoryTags,
+        llm_config: {
+          api_key: settings.chat.apiKey,
+          base_url: settings.chat.baseUrl,
+          model: settings.chat.model,
+          max_tokens: settings.chat.maxTokens ?? 4096,
+          temperature: settings.chat.temperature ?? 0.1,
+        },
+        embedding_config: {
+          api_key: settings.embedding.apiKey,
+          base_url: settings.embedding.baseUrl,
+          model: settings.embedding.model,
+          dimension: settings.embedding.dimension ?? 4096,
+        },
+      }),
+    });
+  },
+
   testConnectivity: (chat: any, embedding: any) =>
     request<{ chat: { ok: boolean; error?: string; model?: string }; embedding: { ok: boolean; error?: string; dimension?: number } }>(
       `/test-connectivity`,

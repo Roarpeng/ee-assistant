@@ -129,6 +129,12 @@ class KnowledgeDoc(Base):
     category_tags: Mapped[list] = mapped_column(JSON, default=list)
     chunk_count: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(String(32), default="uploading")
+    # Canonical short tag: pdf|txt|md|html|docx|url. Set by the extractor
+    # dispatch (or by the URL endpoint). Defaults to 'pdf' so old rows
+    # migrated in place keep their original semantics.
+    source_type: Mapped[str] = mapped_column(String(16), default="pdf", server_default="pdf")
+    # Populated only when the doc originated from /api/knowledge/urls.
+    source_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 

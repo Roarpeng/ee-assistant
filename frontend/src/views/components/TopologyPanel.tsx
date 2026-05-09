@@ -13,7 +13,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useStore } from '../../models/store';
-import type { NodeData } from '../../models/store';
+import type { NodeData, EdgeData } from '../../models/store';
 import { t } from '../../services/i18n';
 import { PLCNode, HMINode, IONode, VFDNode, ServoNode, PowerNode, SwitchNode, SafetyRelayNode, SensorNode, IPCNode, SafetyPLCNode, CircuitBreakerNode, ContactorNode, RelayNode, EStopNode, TransformerNode, FuseNode, DisconnectNode } from './CustomNodes';
 import { CanvasContextMenu } from './CanvasContextMenu';
@@ -29,6 +29,51 @@ import {
   getTopologySnapshot,
 } from '../../models/yjsStore';
 import { toSvg } from 'html-to-image';
+
+// ── Electrical-circuit category helpers ─────────────────────────────────
+// Color tokens MUST stay in sync with HANDLE_COLOR in CustomNodes.tsx so
+// edges visually match the handles they enter/exit.
+const CATEGORY_COLORS = {
+  power: '#f59e0b',     // amber  — 220V/24V/main supply
+  network: '#3b82f6',   // blue   — PROFINET/EtherCAT/Modbus/etc.
+  safety: '#ef4444',    // red    — STO/E-stop/safety bus
+  feedback: '#10b981',  // green  — sensor/encoder/IO return
+  default: '#737373',   // neutral — unknown / mixed
+} as const;
+type EdgeCategoryKey = keyof typeof CATEGORY_COLORS;
+
+// Mirror of backend `_classify_protocol` so legacy edges (without
+// category) still render with the right color.
+function classifyProtocol(p?: string): EdgeCategoryKey {
+  const s = (p || '').toUpperCase().trim();
+  if (!s) return 'default';
+  if (/POWER|VOLT|220V|230V|380V|400V|480V|24V|12V|VAC|VDC|MAINS|AC_LINE|DC_LINE/.test(s)) return 'power';
+  if (/SAFETY|E-?STOP|EMERGENCY|STO|GUARD|SS1|SS2/.test(s)) return 'safety';
+  if (/PROFINET|ETHERCAT|ETHERNET|MODBUS|PROFIBUS|CANOPEN|CAN_BUS|RS485|RS232|OPC|TCP|MQTT|DEVICENET|IO_?LINK/.test(s)) return 'network';
+  if (/SIGNAL|FEEDBACK|SENSOR|PULSE|ENCODER|PT100|PT1000|4-20|0-10V|ANALOG|DIGITAL_IO|^DI$|^DO$|^AI$|^AO$/.test(s)) return 'feedback';
+  return 'default';
+}
+
+// Reverse lookup: which category does a handle ID belong to. Used when the
+// user drags an edge — we infer protocol & color from the handle they used.
+function handleToCategory(handleId?: string | null): EdgeCategoryKey {
+  if (!handleId) return 'default';
+  if (handleId.startsWith('pwr-')) return 'power';
+  if (handleId.startsWith('net-')) return 'network';
+  if (handleId.startsWith('safe-')) return 'safety';
+  if (handleId.startsWith('fb-')) return 'feedback';
+  return 'default';
+}
+
+// Reasonable default protocol label per category — used when the user
+// draws an edge themselves.
+const CATEGORY_DEFAULT_PROTOCOL: Record<EdgeCategoryKey, string> = {
+  power: 'POWER_24V',
+  network: 'PROFINET',
+  safety: 'SAFETY_CIRCUIT',
+  feedback: 'SIGNAL',
+  default: 'PROFINET',
+};
 
 const nodeTypes = {
   plc: PLCNode,
@@ -88,16 +133,37 @@ export function TopologyPanel() {
   // Unlike the old Zustand effect, this does NOT replace all nodes — it diffs
   // and preserves user drag positions via the draggingNodeIdsRef guard.
   useEffect(() => {
-    const edgeStyle = (protocol: string) => ({
-      id: '', source: '', target: '',
-      type: 'smoothstep' as const,
-      animated: protocol === 'ETHERCAT',
-      reconnectable: true,
-      style: { stroke: '#737373', strokeWidth: 2 },
-      labelStyle: { fill: '#a3a3a3', fontWeight: 700, fontSize: 12 },
-      labelBgStyle: { fill: '#171717', fillOpacity: 0.8 },
-      markerEnd: { type: MarkerType.ArrowClosed, color: '#737373' },
-    });
+    // Build a fully-styled ReactFlow edge from a normalized topology edge.
+    // - Resolves category from the explicit field, falling back to handle
+    //   prefix and finally protocol regex
+    // - Picks stroke + marker color from CATEGORY_COLORS
+    // - Animates only network edges (rotating dash makes packet flow obvious;
+    //   power/safety stay solid because they should look "always on")
+    const buildStyledEdge = (snap: EdgeData) => {
+      const category: EdgeCategoryKey =
+        (snap.category as EdgeCategoryKey | undefined) ||
+        handleToCategory(snap.sourceHandle) ||
+        classifyProtocol(snap.protocol);
+      const color = CATEGORY_COLORS[category] ?? CATEGORY_COLORS.default;
+      const isNetwork = category === 'network';
+      return {
+        id: snap.id,
+        source: snap.source,
+        target: snap.target,
+        sourceHandle: snap.sourceHandle,
+        targetHandle: snap.targetHandle,
+        type: 'smoothstep' as const,
+        animated: isNetwork,
+        reconnectable: true,
+        label: snap.protocol,
+        style: { stroke: color, strokeWidth: 2 },
+        labelStyle: { fill: color, fontWeight: 700, fontSize: 11 },
+        labelBgStyle: { fill: '#171717', fillOpacity: 0.85 },
+        labelBgPadding: [4, 2] as [number, number],
+        labelBgBorderRadius: 4,
+        markerEnd: { type: MarkerType.ArrowClosed, color },
+      };
+    };
 
     const unsub = observeTopology((snapshot) => {
       const draggingIds = draggingNodeIdsRef.current;
@@ -132,18 +198,28 @@ export function TopologyPanel() {
 
       setEdges((current) => {
         const snapEdgeIds = new Set(snapshot.edges.map((e) => e.id));
+        const snapById = new Map(snapshot.edges.map((e) => [e.id, e] as const));
+        // Drop deleted edges
         let next = current.filter((e) => snapEdgeIds.has(e.id));
-
+        // Update existing — handle/category may have been re-classified
+        next = next.map((e) => {
+          const snap = snapById.get(e.id);
+          if (!snap) return e;
+          // If the existing edge already has matching handles, keep ReactFlow's
+          // own selection state; otherwise re-build to apply new styling.
+          if (
+            e.sourceHandle === snap.sourceHandle &&
+            e.targetHandle === snap.targetHandle &&
+            e.label === snap.protocol
+          ) {
+            return e;
+          }
+          return { ...e, ...buildStyledEdge(snap) };
+        });
+        // Append new edges
         for (const snap of snapshot.edges) {
-          const exists = next.some((e) => e.id === snap.id);
-          if (!exists) {
-            next.push({
-              ...edgeStyle(snap.protocol),
-              id: snap.id,
-              source: snap.source,
-              target: snap.target,
-              label: snap.protocol,
-            });
+          if (!next.some((e) => e.id === snap.id)) {
+            next.push(buildStyledEdge(snap));
           }
         }
         return next;
@@ -300,25 +376,52 @@ export function TopologyPanel() {
       const target = params.target;
       if (!source || !target) return;
 
+      // Infer category from whichever handle the user grabbed; fall back to
+      // network if both handles are unspecified (rare — usually means
+      // user dropped on the node body, not a handle).
+      const sourceHandle = params.sourceHandle ?? undefined;
+      const targetHandle = params.targetHandle ?? undefined;
+      const category =
+        handleToCategory(sourceHandle) !== 'default'
+          ? handleToCategory(sourceHandle)
+          : handleToCategory(targetHandle) !== 'default'
+          ? handleToCategory(targetHandle)
+          : 'network';
+      const protocol = CATEGORY_DEFAULT_PROTOCOL[category];
+      const color = CATEGORY_COLORS[category];
       const id = `e_${source}_${target}_${Date.now()}`;
-      const protocol = 'PROFINET';
+
       const newEdge = {
         ...params,
         id,
         source,
         target,
+        sourceHandle,
+        targetHandle,
         type: 'smoothstep' as const,
         label: protocol,
-        animated: false,
+        animated: category === 'network',
         reconnectable: true,
-        style: { stroke: '#737373', strokeWidth: 2 },
-        labelStyle: { fill: '#a3a3a3', fontWeight: 700, fontSize: 12 },
-        labelBgStyle: { fill: '#171717', fillOpacity: 0.8 },
-        markerEnd: { type: MarkerType.ArrowClosed, color: '#737373' },
+        style: { stroke: color, strokeWidth: 2 },
+        labelStyle: { fill: color, fontWeight: 700, fontSize: 11 },
+        labelBgStyle: { fill: '#171717', fillOpacity: 0.85 },
+        labelBgPadding: [4, 2] as [number, number],
+        labelBgBorderRadius: 4,
+        markerEnd: { type: MarkerType.ArrowClosed, color },
       };
 
-      // Write to Yjs (CRDT source of truth)
-      addUserEdge({ id, source, target, protocol });
+      // Write to Yjs (CRDT source of truth) with the inferred handle/category.
+      // EdgeData.category is the strict 4-value union (no 'default'), so we
+      // only persist a category when classification produced a real one.
+      addUserEdge({
+        id,
+        source,
+        target,
+        protocol,
+        sourceHandle,
+        targetHandle,
+        ...(category !== 'default' ? { category } : {}),
+      });
 
       setEdges((eds) => addEdge(newEdge, eds));
       setTimeout(handleSyncToCode, 500);
@@ -344,6 +447,12 @@ export function TopologyPanel() {
 
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
+      // Re-classify based on the new handle the user dropped on, so the
+      // edge keeps matching its electrical category.
+      const newCategory = handleToCategory(newConnection.sourceHandle ?? undefined) !== 'default'
+        ? handleToCategory(newConnection.sourceHandle ?? undefined)
+        : handleToCategory(newConnection.targetHandle ?? undefined);
+      const color = newCategory !== 'default' ? CATEGORY_COLORS[newCategory] : undefined;
       setEdges((els) =>
         els.map((e) => {
           if (e.id !== oldEdge.id) return e;
@@ -353,11 +462,14 @@ export function TopologyPanel() {
             target: newConnection.target || e.target,
             sourceHandle: newConnection.sourceHandle,
             targetHandle: newConnection.targetHandle,
-            style: {
-              ...(typeof e.style === 'object' ? e.style : {}),
-              stroke: '#818cf8',
-              strokeWidth: 3,
-            },
+            ...(color
+              ? {
+                  animated: newCategory === 'network',
+                  style: { stroke: color, strokeWidth: 2 },
+                  labelStyle: { fill: color, fontWeight: 700, fontSize: 11 },
+                  markerEnd: { type: MarkerType.ArrowClosed, color },
+                }
+              : {}),
           };
         })
       );

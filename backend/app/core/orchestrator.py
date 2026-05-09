@@ -120,11 +120,42 @@ class Orchestrator:
                 state["messages"] = history
             return state
 
-    async def _stream_events(self, graph, input_state_or_command, config: dict):
-        """Core event loop: yield step/interrupt/done events from graph.astream.
+    # 把节点产出的字段映射到前端可直接 applyAnalysisPayload() 消费的 payload。
+    # 让用户在工作流跑到一半就能看到 BOM、画布、代码 ── 渐进式呈现, 不再等终点。
+    _NODE_PARTIAL_KEYS: dict[str, tuple[str, ...]] = {
+        "requirements_agent":   ("requirement",),
+        "category_mapper":      ("categories",),
+        "selection_supervisor": ("bom_items",),
+        "rule_validator":       ("violations",),
+        "schematic_generator":  ("mermaid_code", "topology"),
+        "code_generator":       ("st_modules",),
+        "final_review_agent":   ("review_notes",),
+    }
 
-        Handles three event types:
-          - Normal node completion → {"step": ..., "node": ...}
+    @classmethod
+    def _build_partial_payload(cls, node_name: str, state_update: dict | None) -> dict | None:
+        """Extract the just-produced fields for a node into a frontend-shaped payload.
+
+        Returns None if there's nothing meaningful to push (e.g. node skipped).
+        """
+        if not isinstance(state_update, dict):
+            return None
+        keys = cls._NODE_PARTIAL_KEYS.get(node_name)
+        if not keys:
+            return None
+        partial: dict = {}
+        for key in keys:
+            if key in state_update and state_update[key] is not None:
+                partial[key] = state_update[key]
+        return partial or None
+
+    async def _stream_events(self, graph, input_state_or_command, config: dict):
+        """Core event loop: yield step/partial/interrupt/done events from graph.astream.
+
+        Handles four event types:
+          - Normal node completion → {"step": ..., "node": ..., "partial": {...}}
+            `partial` carries the node's just-produced fields (BOM, topology, etc.)
+            so the frontend can render them progressively without waiting for `done`.
           - Interrupt (NOT_FOUND)   → {"event": "interrupt", "data": ...}
           - Graph done              → {"done": True, "payload": ...}
         """
@@ -146,7 +177,11 @@ class Orchestrator:
                 return  # Stop streaming — wait for resume
 
             for node_name, state_update in event.items():
-                yield {"step": _node_message(node_name), "node": node_name}
+                evt: dict = {"step": _node_message(node_name), "node": node_name}
+                partial = self._build_partial_payload(node_name, state_update)
+                if partial:
+                    evt["partial"] = partial
+                yield evt
 
         # Stream complete — read full final state from checkpoint
         final_state = graph.get_state(config).values
