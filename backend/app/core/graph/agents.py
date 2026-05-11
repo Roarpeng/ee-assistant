@@ -5,6 +5,8 @@ from langgraph.types import interrupt
 from app.core.graph.state import AnalysisState
 from app.core.llm_service import llm_service
 from app.core.rule_engine import validate_all
+from app.core.component_normalizer import normalize_component_type, normalize_protocol
+from app.core.topology_lint import lint_topology
 
 
 # ── Topology format normalizer ────────────────────────────────────────────
@@ -28,7 +30,7 @@ def _normalize_node(raw: dict, fallback_idx: int) -> dict | None:
     if not node_id:
         return None
 
-    node_type = str(raw.get("type") or "io").strip().lower() or "io"
+    node_type = normalize_component_type(str(raw.get("type") or "io"))
 
     # label may live at top level OR inside `data`
     data = raw.get("data") if isinstance(raw.get("data"), dict) else {}
@@ -158,7 +160,7 @@ def _normalize_edge(raw: dict, fallback_idx: int) -> dict | None:
         "id": edge_id,
         "source": src,
         "target": tgt,
-        "protocol": str(protocol)[:32],
+        "protocol": normalize_protocol(str(protocol)[:32]),
     }
 
 
@@ -189,7 +191,11 @@ def _normalize_topology(topology: dict | None) -> dict:
         norm["targetHandle"] = th
         edges.append(norm)
 
-    return {"nodes": nodes, "edges": edges}
+    normalized = {"nodes": nodes, "edges": edges}
+    violations = lint_topology(normalized)
+    if violations:
+        normalized["lint"] = violations
+    return normalized
 
 
 async def requirements_agent(state: AnalysisState) -> dict:

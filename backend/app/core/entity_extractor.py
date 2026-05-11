@@ -1,6 +1,7 @@
 """LLM-powered entity and relation extraction from PDF text for component knowledge graph."""
 import json
 from app.core.llm_service import llm_service
+from app.core.component_normalizer import normalize_component_type, normalize_property_map, normalize_protocol
 
 
 ENTITY_EXTRACTION_PROMPT = """You are an electrical component cataloger. From the following technical document text, extract all electrical/automation components mentioned.
@@ -8,7 +9,7 @@ ENTITY_EXTRACTION_PROMPT = """You are an electrical component cataloger. From th
 For each component, return:
 - name: exact model name/number (e.g. "SITOP PSU100C", "SM 1231 AI 8x13bit")
 - component_type: one of [Sensor, PLC_CPU, PLC_DI, PLC_DO, PLC_AI, PLC_AO, Power_Supply, Circuit_Breaker, Contactor, Thermal_Overload, VFD, Safety_Relay, Terminal_Block, Actuator, Communication_Module, HMI, Motor, Other]
-- properties: all technical specs found (rated_voltage, rated_current, power, output_signal, input_signal, protocol, resolution, channels, mounting, dimensions, etc.)
+- properties: all technical specs found plus normalized keys: voltage_level, signal_type, io_direction, network_protocol, safety_class
 
 Output valid JSON array only, no markdown wrapping. Example:
 [{"name": "SITOP PSU100C", "component_type": "Power_Supply", "properties": {"output_voltage": "24VDC", "rated_current": "2.5A", "power": "60W"}}]
@@ -57,6 +58,8 @@ class EntityExtractor:
                     name = e.get("name", "")
                     if name and name not in seen_names:
                         seen_names.add(name)
+                        e["component_type"] = normalize_component_type(e.get("component_type"))
+                        e["properties"] = normalize_property_map(e.get("properties"))
                         all_entities.append(e)
             except json.JSONDecodeError:
                 continue
@@ -69,7 +72,13 @@ class EntityExtractor:
         raw = await llm_service.chat("You extract electrical component relationships as JSON.", prompt)
         raw = raw.strip().removeprefix("```json").removesuffix("```").strip()
         try:
-            return json.loads(raw)
+            rows = json.loads(raw)
+            for row in rows:
+                if isinstance(row, dict):
+                    row["properties"] = normalize_property_map(row.get("properties"))
+                    if row.get("relation") == "USES_PROTOCOL":
+                        row["properties"]["protocol"] = normalize_protocol(row.get("properties", {}).get("protocol"))
+            return rows
         except json.JSONDecodeError:
             return []
 
