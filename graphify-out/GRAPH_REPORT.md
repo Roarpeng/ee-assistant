@@ -1,16 +1,16 @@
 # Graph Report - ee-assistant  (2026-05-14)
 
 ## Corpus Check
-- 140 files · ~95,786 words
+- 148 files · ~103,144 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1711 nodes · 2174 edges · 147 communities (134 shown, 13 thin omitted)
-- Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 195 edges (avg confidence: 0.73)
+- 1854 nodes · 2333 edges · 158 communities (143 shown, 15 thin omitted)
+- Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 206 edges (avg confidence: 0.73)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8ffbd85e`
+- Built from commit: `81c55cb3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -143,6 +143,17 @@
 - [[_COMMUNITY_Community 144|Community 144]]
 - [[_COMMUNITY_Community 145|Community 145]]
 - [[_COMMUNITY_Community 146|Community 146]]
+- [[_COMMUNITY_Community 147|Community 147]]
+- [[_COMMUNITY_Community 148|Community 148]]
+- [[_COMMUNITY_Community 149|Community 149]]
+- [[_COMMUNITY_Community 150|Community 150]]
+- [[_COMMUNITY_Community 151|Community 151]]
+- [[_COMMUNITY_Community 152|Community 152]]
+- [[_COMMUNITY_Community 153|Community 153]]
+- [[_COMMUNITY_Community 154|Community 154]]
+- [[_COMMUNITY_Community 155|Community 155]]
+- [[_COMMUNITY_Community 156|Community 156]]
+- [[_COMMUNITY_Community 157|Community 157]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `useStore` - 33 edges
@@ -157,30 +168,30 @@
 10. `ComponentNode` - 16 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `requirements_agent()` --calls--> `detect_clarification()`  [INFERRED]
+  backend/app/core/graph/agents.py → backend/app/core/clarification_detector.py
 - `test_delete_doc_keeps_graph_nodes()` --calls--> `ComponentNode`  [INFERRED]
   backend/tests/test_api_knowledge.py → backend/app/db/models.py
-- `generate_code()` --calls--> `STModule`  [INFERRED]
-  backend/app/api/codegen.py → backend/app/db/models.py
-- `KnowledgeProgressManager` --uses--> `KnowledgeDoc`  [INFERRED]
-  backend/app/api/knowledge.py → backend/app/db/models.py
-- `KnowledgeProgressManager` --uses--> `ComponentGraph`  [INFERRED]
-  backend/app/api/knowledge.py → backend/app/core/knowledge_graph.py
-- `KnowledgeProgressManager` --uses--> `CommunityDetector`  [INFERRED]
-  backend/app/api/knowledge.py → backend/app/core/community_detector.py
+- `test_save_twice_no_unique_violation()` --calls--> `save_to_db()`  [INFERRED]
+  backend/tests/test_analyze_idempotent.py → backend/app/api/analysis.py
+- `test_save_twice_no_duplicate_bom_or_st()` --calls--> `save_to_db()`  [INFERRED]
+  backend/tests/test_analyze_idempotent.py → backend/app/api/analysis.py
+- `test_save_updates_requirement_fields()` --calls--> `save_to_db()`  [INFERRED]
+  backend/tests/test_analyze_idempotent.py → backend/app/api/analysis.py
 
-## Communities (147 total, 13 thin omitted)
+## Communities (158 total, 15 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.05
-Nodes (55): generate_code(), KnowledgeProgressManager, Manages WebSocket connections for knowledge document processing progress., generate_schematic(), BaseModel, AccessoryRequirementOut, BatchDeleteInput, BOMItemOut (+47 more)
+Nodes (57): generate_code(), KnowledgeProgressManager, Manages WebSocket connections for knowledge document processing progress., generate_schematic(), BaseModel, AccessoryRequirementOut, BatchDeleteInput, BOMItemOut (+49 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.05
-Nodes (53): CircuitBreakerNode(), ContactorNode(), DisconnectNode(), EStopNode(), FuseNode(), HANDLE_COLOR, HandleCategory, handleStyle() (+45 more)
+Cohesion: 0.11
+Nodes (27): CircuitBreakerNode(), ContactorNode(), DisconnectNode(), EStopNode(), FuseNode(), HANDLE_COLOR, HandleCategory, handleStyle() (+19 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.05
-Nodes (45): normalize_component_type(), normalize_property_map(), normalize_protocol(), Normalization helpers for component and protocol names., EntityExtractor, LLM-powered entity and relation extraction from PDF text for component knowledge, lint_topology(), Topology lint checks for electrical graph validity. (+37 more)
+Nodes (46): normalize_component_type(), normalize_property_map(), normalize_protocol(), Normalization helpers for component and protocol names., EntityExtractor, LLM-powered entity and relation extraction from PDF text for component knowledge, lint_topology(), Topology lint checks for electrical graph validity. (+38 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.05
@@ -219,8 +230,8 @@ Cohesion: 0.08
 Nodes (24): API 端点一览, code:bash (# 全 Docker 一键部署（推荐）), code:bash (# 本地开发模式（不使用 Docker）), code:bash (# 测试), code:block4 (ele/), code:block5 (START → RequirementsAgent (自然语言→结构化需求)), code:block6 (component_nodes:  id | name | component_type | properties(JS), code:bash (./scripts/backup_knowledge.sh                           # → ) (+16 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.09
-Nodes (23): code:dockerfile (FROM python:3.12-slim), code:python (from pydantic_settings import BaseSettings), code:python (from fastapi import FastAPI), code:bash (git add backend/), code:python (import uuid), code:python (from sqlalchemy.ext.asyncio import create_async_engine, Asyn), code:bash (cd backend), code:python (import asyncio) (+15 more)
+Cohesion: 0.18
+Nodes (11): code:python (from __future__ import annotations), code:python (import pytest), code:bash (cd backend && pip install pytest pytest-asyncio && python -m), code:bash (git add backend/app/core/schemas.py backend/tests/test_schem), code:python (from fastapi import APIRouter, Depends, HTTPException), code:python (from app.db.models import Project, Requirement), code:python (from app.api.projects import router as projects_router), code:bash (git add backend/app/api/ backend/app/main.py) (+3 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.09
@@ -228,7 +239,7 @@ Nodes (21): 1. Background, 2. Goals & Non-Goals, 3. Scope Tiers, 4.1 Test runner
 
 ### Community 14 - "Community 14"
 Cohesion: 0.11
-Nodes (14): _build_partial_payload(), _node_message(), Orchestrator, Core event loop: yield step/partial/interrupt/done events from graph.astream., Core event loop: yield step/partial/interrupt/done events from graph.astream., Start (or continue) a LangGraph analysis, streaming SSE events., Start (or continue) a LangGraph analysis, streaming SSE events., Resume a paused LangGraph analysis after human provides manual selection. (+6 more)
+Nodes (15): _build_partial_payload(), _node_message(), Orchestrator, Core event loop: yield step/partial/interrupt/done events from graph.astream., Core event loop: yield step/partial/interrupt/done events from graph.astream., Start (or continue) a LangGraph analysis, streaming SSE events., Start (or continue) a LangGraph analysis, streaming SSE events., Resume a paused LangGraph analysis after human provides manual selection. (+7 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.1
@@ -236,15 +247,15 @@ Nodes (20): 1. 在源端打包, 2. 分发, 3. 在目标端还原, 4. 验证, Bun
 
 ### Community 16 - "Community 16"
 Cohesion: 0.09
-Nodes (22): CanvasContextMenu(), CanvasContextMenuProps, Header(), NodeInfoCard(), STATUS_COLORS, AnalysisStage, AppState, BOMItem (+14 more)
+Nodes (20): CanvasContextMenu(), CanvasContextMenuProps, NodeInfoCard(), STATUS_COLORS, AnalysisStage, AppSettings, AppState, BOMItem (+12 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.1
 Nodes (20): code:python (import pytest), code:bash (python3 -m pytest backend/tests/test_api_topology.py -q), code:text (GET  /api/projects/{project_id}/topology), code:bash (python3 -m pytest backend/tests/test_api_topology.py -q), code:bash (git add backend/app/db/models.py backend/app/core/schemas.py), code:typescript (saveTopology: (projectId: string, topology: { nodes: any[]; ), code:text (保存草稿), code:bash (cd frontend && npm run build) (+12 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.11
-Nodes (11): SOURCE_BADGE, STATUS_COLORS, SUPPORTED_MIMES, TERMINAL_STATUSES, UploadQueueState, Props, AppSettings, KnowledgeDoc (+3 more)
+Cohesion: 0.12
+Nodes (10): SOURCE_BADGE, STATUS_COLORS, SUPPORTED_MIMES, TERMINAL_STATUSES, UploadQueueState, KnowledgeDoc, KnowledgeDocStatus, KnowledgeSourceType (+2 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.1
@@ -259,16 +270,16 @@ Cohesion: 0.17
 Nodes (16): batch_delete_docs(), chunk_text(), delete_doc(), _delete_single_doc(), _extract_graph_knowledge(), _fetch_from_minio(), ingest_url(), _process_document() (+8 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.47
+Cohesion: 0.5
 Nodes (3): buildProcurementUrl(), ProcurementItem, url
 
 ### Community 23 - "Community 23"
-Cohesion: 0.16
-Nodes (13): ChatMessage, ConversationMeta, deleteConversationHistory(), deriveConversationTitle(), loadConversationMetas(), saveConversationMessages(), saveConversationMetas(), listTemplates() (+5 more)
+Cohesion: 0.29
+Nodes (7): ChatMessage, ConversationMeta, deleteConversationHistory(), deriveConversationTitle(), loadConversationMetas(), saveConversationMessages(), saveConversationMetas()
 
 ### Community 24 - "Community 24"
-Cohesion: 0.25
-Nodes (8): code:python (import json), code:python (from fastapi import APIRouter, Depends, HTTPException), code:python (from app.api.analysis import router as analysis_router), code:python (@app.websocket("/ws/projects/{project_id}")), code:python (import pytest), code:bash (cd backend && python -m pytest tests/test_api_analysis.py -v), code:bash (git add backend/app/core/orchestrator.py backend/app/api/ana), Task 3.2: Analysis API & Orchestrator
+Cohesion: 0.11
+Nodes (19): code:python (from anthropic import AsyncAnthropic), code:python (import pytest), code:bash (git add backend/app/core/llm_service.py backend/tests/confte), code:python (import json), code:python (from fastapi import APIRouter, Depends, HTTPException), code:python (from app.api.analysis import router as analysis_router), code:python (@app.websocket("/ws/projects/{project_id}")), code:python (import pytest) (+11 more)
 
 ### Community 25 - "Community 25"
 Cohesion: 0.11
@@ -303,8 +314,8 @@ Cohesion: 0.12
 Nodes (16): API 端点, code:block1 (浏览器 :80 → nginx ──────────────────────→ 静态文件 (React SPA)), code:bash (docker compose up -d --build), code:bash (docker compose up -d postgres qdrant minio), code:bash (cd backend && python -m pytest tests/ -v), code:block5 (ele/), Volta — 电气工程师助手 (LangGraph Multi-Agent), 全 Docker 一键部署 (+8 more)
 
 ### Community 33 - "Community 33"
-Cohesion: 0.19
-Nodes (16): AppLayout(), CabinetPanelMount(), GuidePanelMount(), InfoPanelMount(), WiringPanelMount(), BOMPanel(), ChatPanel(), ConversationSidebar() (+8 more)
+Cohesion: 0.16
+Nodes (19): AppLayout(), CabinetPanelMount(), GuidePanelMount(), InfoPanelMount(), WiringPanelMount(), BOMPanel(), ChatPanel(), ConversationSidebar() (+11 more)
 
 ### Community 34 - "Community 34"
 Cohesion: 0.12
@@ -323,12 +334,12 @@ Cohesion: 0.13
 Nodes (14): Architecture, code:block1 (App → AppLayout), code:block2 (User Input → ChatPanel → POST /analyze-v2 (SSE) → stream ste), code:ts (interface AppState {), Component Tree, Data Flow, In scope, Key Design Decisions (+6 more)
 
 ### Community 38 - "Community 38"
-Cohesion: 0.26
-Nodes (12): AsyncAttrs, Base, BOMItem, IOItem, KnowledgeDoc, LogicRule, Project, ProjectTopology (+4 more)
+Cohesion: 0.24
+Nodes (15): Idempotent project persistence for analyze-v2 / resume.      Re-running analys, save_to_db(), AsyncAttrs, Base, BOMItem, ChatMessage, IOItem, KnowledgeDoc (+7 more)
 
 ### Community 39 - "Community 39"
-Cohesion: 0.16
-Nodes (20): AccessoryRequirement, CategoryNode, CompatibilityConstraint, ComponentNodeSchema, GraphRelation, GraphRetrievalRequest, GraphRetrievalResult, HybridSearchResult (+12 more)
+Cohesion: 0.11
+Nodes (22): AccessoryRequirement, CategoryNode, CompatibilityConstraint, ComponentNodeSchema, GraphRelation, GraphRetrievalRequest, GraphRetrievalResult, HybridSearchResult (+14 more)
 
 ### Community 40 - "Community 40"
 Cohesion: 0.15
@@ -358,6 +369,10 @@ Nodes (10): code:typescript (import { useChatHistory } from '../../hooks/useChat
 Cohesion: 0.18
 Nodes (11): 11. API Design, BOM/code from topology, code:text (POST /api/projects/{project_id}/requirement-docs), code:text (GET  /api/projects/{project_id}/topology), code:text (POST /api/projects/{project_id}/bom/from-topology), code:text (POST /api/projects/{project_id}/exports), code:text (POST /api/projects/{project_id}/memory/commit), Export (+3 more)
 
+### Community 47 - "Community 47"
+Cohesion: 0.06
+Nodes (28): 10. Next step, 1. Why this exists, 2. Market positioning（设计参考）, 3.1 身份模型决策, 3.2 L0 工作记忆（替换 MemorySaver）, 3.3 L1 项目记忆（扩充）, 3.4 L2 组织偏好（全新）, 3.5 L3 工程经验 Episodic Memory（飞轮核心） (+20 more)
+
 ### Community 48 - "Community 48"
 Cohesion: 0.2
 Nodes (9): code:python (async def search_with_graph(self, query: str, component_type), code:bash (git add backend/app/core/rag_engine.py), code:bash (git commit -m "chore: verify all tests pass, app loads, and ), code:bash (git add graphify-out/), LangGraph Multi-Agent + Component Knowledge Graph + Frontend Style — Implementation Plan, Summary, Task 15: Final integration test and verification, Task 16: Run graphify update per CLAUDE.md (+1 more)
@@ -379,12 +394,12 @@ Cohesion: 0.22
 Nodes (8): Blueprint-Inspired UI Refresh Implementation Plan, code:bash (cd frontend && npx tsc --noEmit && npx vite build), code:bash (git add frontend/src/views/components/CustomNodes.tsx fronte), code:tsx (import { describe, it, expect } from 'vitest';), code:bash (git add frontend/src/views/components/GuidePanel.tsx fronten), Self-review, Task P0c: Wireframe topology nodes, Task P1c: GuidePanel
 
 ### Community 54 - "Community 54"
-Cohesion: 0.33
-Nodes (6): code:bash (cd backend && pip install -r requirements.txt), code:bash (cd backend && python -m pytest tests/ -v), code:bash (cd frontend && npm run build), code:bash (git add -A), Final Integration & Verification, Task 7.1: Docker Compose Verification
+Cohesion: 0.22
+Nodes (8): code:bash (cd backend && pip install -r requirements.txt), code:bash (cd backend && python -m pytest tests/ -v), code:bash (cd frontend && npm run build), code:bash (git add -A), EE Assistant Implementation Plan, Final Integration & Verification, Spec Coverage Check, Task 7.1: Docker Compose Verification
 
 ### Community 55 - "Community 55"
-Cohesion: 0.1
-Nodes (31): _channel_label(), _channel_of(), _find_plc_spec(), generate_wiring(), I/O terminal wiring generator (WiringPanel data source).  Deterministic — assi, Channel id -> display label in tag (DI/DO/AI/AO)., Return the first PLC's catalog spec, or None if no PLC in BOM., Produce the wiring table for WiringPanel.      Returns [] when no PLC in BOM o (+23 more)
+Cohesion: 0.05
+Nodes (56): _build_terminals(), _Capacity, _entry(), list_known_models(), lookup_plc(), _normalize(), PLCSpec, PLC capacity & terminal catalog — single source of truth for IO budgeting and w (+48 more)
 
 ### Community 56 - "Community 56"
 Cohesion: 0.22
@@ -395,8 +410,8 @@ Cohesion: 0.22
 Nodes (9): 6. Backend Module Design, code:json ({), code:text (collect_source_context), code:text (backend/app/core/memory/), `extractor.py`, `flywheel.py`, `merger.py`, `retriever.py` (+1 more)
 
 ### Community 58 - "Community 58"
-Cohesion: 0.36
-Nodes (6): analyze_project_v2(), chat_with_project(), Resume a paused LangGraph workflow with human-provided component selections., Wrap an async generator yielding SSE strings with periodic heartbeats.      Ke, resume_project_analysis(), _sse_with_heartbeat()
+Cohesion: 0.27
+Nodes (8): analyze_project_v2(), chat_with_project(), Wrap an async generator yielding SSE strings with periodic heartbeats.      Ke, Resume a paused LangGraph workflow with human-provided component selections., Resume a paused LangGraph workflow with human-provided component selections., Wrap an async generator yielding SSE strings with periodic heartbeats.      Ke, resume_project_analysis(), _sse_with_heartbeat()
 
 ### Community 59 - "Community 59"
 Cohesion: 0.29
@@ -511,8 +526,8 @@ Cohesion: 0.5
 Nodes (3): Props, WiringItem, WiringPanel()
 
 ### Community 91 - "Community 91"
-Cohesion: 0.12
-Nodes (21): detect_clarification(), _is_missing(), Detect when the analyzed requirement is missing critical engineering parameters, Treat None, empty string, and the literal 'None' / 'null'     strings (which LL, Return a `{needed: True, groups: [...]}` block when the requirement     is miss, requirements_agent(), Tests for the deterministic clarification-needs detector.  Pure function — no, Schema contract — `needed: True` so the frontend can branch     cleanly without (+13 more)
+Cohesion: 0.13
+Nodes (20): detect_clarification(), _is_missing(), Detect when the analyzed requirement is missing critical engineering parameters, Treat None, empty string, and the literal 'None' / 'null'     strings (which LL, Return a `{needed: True, groups: [...]}` block when the requirement     is miss, Tests for the deterministic clarification-needs detector.  Pure function — no, Schema contract — `needed: True` so the frontend can branch     cleanly without, When all four critical params are present, no clarification     needed — the ag (+12 more)
 
 ### Community 92 - "Community 92"
 Cohesion: 0.4
@@ -587,36 +602,36 @@ Cohesion: 0.67
 Nodes (3): code:bash (cd frontend && npx tsc --noEmit && npx vite build), code:bash (git add frontend/src/views/components/ConversationSidebar.ts), Task P2b: Template entry in ConversationSidebar
 
 ### Community 114 - "Community 114"
-Cohesion: 0.27
-Nodes (8): _build_terminals(), _Capacity, _entry(), PLCSpec, PLC capacity & terminal catalog — single source of truth for IO budgeting and w, _Terminals, AnalysisState, TypedDict
+Cohesion: 0.1
+Nodes (17): EdgeData, addUserEdge(), addUserNode(), edgeToYMap(), getTopologySnapshot(), mergeAITopology(), nodeToYMap(), observeTopology() (+9 more)
 
 ### Community 115 - "Community 115"
 Cohesion: 0.67
 Nodes (3): code:typescript (import { useEffect, useRef } from 'react';), code:bash (git add frontend/src/views/components/CanvasContextMenu.tsx), Task 3: Create CanvasContextMenu Component
 
 ### Community 137 - "Community 137"
-Cohesion: 0.14
-Nodes (17): list_known_models(), lookup_plc(), _normalize(), Return the catalog entry for an MLFB, or None if unknown.      Callers that ne, All known MLFBs, in registration order. Stable for tests., Tests for the PLC capacity & terminal catalog.  The catalog is the single sour, Canonical Siemens CPU 1212C DC/DC/DC: 8 DI / 6 DO / 2 AI., Real-world BOM rows have inconsistent casing/whitespace — catalog     must norm (+9 more)
+Cohesion: 0.12
+Nodes (16): code:python (class ChatMessage(Base):), code:python ("""chat_messages table), code:python (class ChatMessageIn(BaseModel):), code:python ("""API tests for chat_messages persistence."""), code:bash (docker cp backend/tests/test_api_messages.py ee-assistant-ba), code:python ("""Chat message persistence endpoints.), code:python (from app.api import messages), code:bash (docker cp backend/app/db/models.py ee-assistant-backend-1:/a) (+8 more)
 
 ### Community 138 - "Community 138"
-Cohesion: 0.15
-Nodes (17): compute_project_meta(), Aggregate the InfoPanel stats from the final-state BOM., final_review_agent(), Tests for the project meta aggregator (InfoPanel data source).  `compute_proje, The InfoPanel expects exactly these two fields. Shape is the     contract — nev, A relay × 5 should cost ~5× a relay × 1., For a known MLFB (CPU 1212C DC/DC/DC), catalog price is     authoritative — mus, Unknown MLFB → use the category × brand baseline. Honest, not zero. (+9 more)
+Cohesion: 0.07
+Nodes (34): _brand_factor(), estimate_price(), Indicative BOM prices in CNY for the project cost estimator.  This is intentio, Return an indicative CNY price for a BOM row.      Returns 0 (honest) when the, compute_project_meta(), Project-level metadata aggregator for the InfoPanel.  Computes the two top-lin, Best-effort indicative price for one BOM row, in CNY., Aggregate the InfoPanel stats from the final-state BOM. (+26 more)
 
 ### Community 139 - "Community 139"
-Cohesion: 0.17
-Nodes (14): _brand_factor(), estimate_price(), Indicative BOM prices in CNY for the project cost estimator.  This is intentio, Return an indicative CNY price for a BOM row.      Returns 0 (honest) when the, Tests for the indicative BOM price estimator.  `estimate_price` is best-effort, Each common category should have at least a baseline price so     InfoPanel's b, Honest 0 — better than a fake number for unrecognized items., Premium brands (Siemens / Beckhoff / Schneider) cost more than     generic bran (+6 more)
+Cohesion: 0.13
+Nodes (15): code:block1 (langgraph-checkpoint-postgres>=2.0.0), code:python ("""langgraph checkpoint tables (managed by PostgresSaver.set), code:python ("""Verify the LangGraph checkpointer is durable across build), code:bash (docker cp backend/tests/test_postgres_checkpointer.py ee-ass), code:python ("""LangGraph graph builder.), code:block6 (- from app.core.graph.builder import build_graph), code:bash (docker cp backend/app/core/graph/builder.py ee-assistant-bac), code:bash (docker compose exec -T backend python -m pytest tests/ -q --) (+7 more)
 
 ### Community 140 - "Community 140"
 Cohesion: 0.12
 Nodes (15): 1. Context, 2. Goals, 3. Non-Goals, 4.1 Shared infrastructure (Phase 1), 4.2 Five data channels (Phase 2), 4. Architecture, 5. Testing strategy, 6. Risks & Mitigations (+7 more)
 
 ### Community 141 - "Community 141"
-Cohesion: 0.25
-Nodes (7): code:python (from anthropic import AsyncAnthropic), code:python (import pytest), code:bash (git add backend/app/core/llm_service.py backend/tests/confte), EE Assistant Implementation Plan, M3: Requirements Analysis, Spec Coverage Check, Task 3.1: LLM Service
+Cohesion: 0.18
+Nodes (10): IOBudgetBar(), LABELS, Props, BudgetEntry, BudgetItem, BudgetResult, Channel, CHANNELS (+2 more)
 
 ### Community 142 - "Community 142"
-Cohesion: 0.33
-Nodes (6): code:typescript (import type { ChatMessage as ChatMessageType } from '../../m), code:typescript (import { useState } from 'react';), code:typescript (import { useRef, useEffect } from 'react';), code:bash (cd frontend && npx tsc --noEmit), code:bash (git add frontend/src/views/components/ChatMessage.tsx fronte), Task 3.3: Frontend Chat Panel
+Cohesion: 0.26
+Nodes (11): _make_project(), _payload(), Re-running analysis on the same project must not crash on the 1:1 unique constr, BOM and ST modules are append-only by schema but logically     'latest run wins, Edits to requirement-level fields on a re-run must land —     the canonical cas, Insert a fresh Project row and return its id.      conftest.setup_database (au, A minimal LangGraph final_state shaped payload. `model_label`     flows into th, Two consecutive save_to_db calls on the same project_id must     not raise Inte (+3 more)
 
 ### Community 143 - "Community 143"
 Cohesion: 0.4
@@ -627,28 +642,60 @@ Cohesion: 0.4
 Nodes (5): code:python ("""Selection validation rules for electrical components."""), code:python (from app.core.rule_engine import validate_all, check_breaker), code:bash (cd backend && python -m pytest tests/test_rule_engine.py -v), code:bash (git add backend/app/core/rule_engine.py backend/tests/test_r), Task 4.2: Rule Engine
 
 ### Community 145 - "Community 145"
-Cohesion: 0.5
-Nodes (3): Project-level metadata aggregator for the InfoPanel.  Computes the two top-lin, Best-effort indicative price for one BOM row, in CNY., _row_price()
+Cohesion: 0.17
+Nodes (12): code:bash (docker compose exec -T backend python -m pytest tests/ -q --), code:bash (cd frontend && npx tsc --noEmit && npx vitest run), code:bash (docker compose build backend frontend), code:bash (sleep 15), code:bash ($pid = (curl.exe -s -X POST http://localhost:8090/api/projec), code:bash (graphify update .), Integration — after all 3 tracks land, Task INT-1: Full backend suite (+4 more)
+
+### Community 147 - "Community 147"
+Cohesion: 0.2
+Nodes (8): _pg_conn_str(), LangGraph graph builder.  Uses PostgresSaver so the graph state (`AnalysisStat, Build a psycopg conninfo from POSTGRES_* env vars.      The SQLAlchemy URL is, For tests: drop the in-process compile cache so the next     build_graph() rebu, reset_graph_cache(), Verify the LangGraph checkpointer is durable across builder rebuilds.  We can', First builder writes a 'requirement' on a project_id; a fresh     builder must, test_state_survives_separate_build_graph_calls()
+
+### Community 148 - "Community 148"
+Cohesion: 0.2
+Nodes (10): code:python ("""Re-running analysis on the same project must not crash on), code:bash (docker cp backend/tests/test_analyze_idempotent.py ee-assist), code:python (async def save_to_db(session, project_id: str, payload: dict), code:bash (docker cp backend/app/api/analysis.py ee-assistant-backend-1), code:bash (docker compose exec -T backend python -m pytest tests/ -q --), code:bash (git add backend/app/api/analysis.py backend/tests/test_analy), Task C1: Write the failing test (RED), Task C2: Extract & rewrite the save logic (+2 more)
+
+### Community 149 - "Community 149"
+Cohesion: 0.32
+Nodes (6): listTemplates(), loadTemplate(), REGISTRY, Template, ids, t
+
+### Community 150 - "Community 150"
+Cohesion: 0.4
+Nodes (3): _make_project(), API tests for chat_messages persistence (M0 Track B).  Uses the codebase's exi, test_append_and_list_round_trip()
+
+### Community 151 - "Community 151"
+Cohesion: 0.33
+Nodes (6): code:dockerfile (FROM python:3.12-slim), code:python (from pydantic_settings import BaseSettings), code:python (from fastapi import FastAPI), code:bash (git add backend/), code:block9 (fastapi==0.115.0), Task 1.1: Backend Project Scaffold
+
+### Community 152 - "Community 152"
+Cohesion: 0.33
+Nodes (6): code:python (import uuid), code:python (from sqlalchemy.ext.asyncio import create_async_engine, Asyn), code:bash (cd backend), code:python (import asyncio), code:bash (git add backend/app/db/ backend/alembic.ini backend/alembic/), Task 1.2: Database Models & Migration
+
+### Community 153 - "Community 153"
+Cohesion: 0.33
+Nodes (6): code:typescript (export interface ServerChatMessage {), code:typescript (saveChatHistory: () => {), code:typescript (addMessage: (msg) => {), code:bash (cd frontend && npx tsc --noEmit), code:bash (cd frontend && npx vitest run), Task B6: Frontend — server-first chat history
+
+### Community 154 - "Community 154"
+Cohesion: 0.6
+Nodes (4): append_message(), _ensure_project(), list_messages(), Chat message persistence endpoints (M0 Track B).  These move chat history from
 
 ## Knowledge Gaps
-- **808 isolated node(s):** `initial: all 8 tables  Revision ID: 001 Revises: None Create Date: 2026-05-0`, `add knowledge_docs.status + ondelete SET NULL for component FKs  Revision ID:`, `add knowledge_docs.source_type + source_url for multi-source ingestion  Revisi`, `add component graph tables  Revision ID: a4d5b3e39d74 Revises: 001 Create Da`, `Wrap an async generator yielding SSE strings with periodic heartbeats.      Ke` (+803 more)
+- **884 isolated node(s):** `initial: all 8 tables  Revision ID: 001 Revises: None Create Date: 2026-05-0`, `add knowledge_docs.status + ondelete SET NULL for component FKs  Revision ID:`, `langgraph checkpoint tables (managed by PostgresSaver.setup())  LangGraph's Po`, `add knowledge_docs.source_type + source_url for multi-source ingestion  Revisi`, `chat_messages table  Revision ID: 003_chat_messages Revises: 002_langgraph_ch` (+879 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **13 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **15 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `KnowledgeProgressManager` connect `Community 0` to `Community 38`, `Community 47`, `Community 83`, `Community 21`, `Community 30`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
 - **Why does `ProgressEvent` connect `Community 0` to `Community 38`, `Community 29`, `Community 21`, `Community 14`?**
   _High betweenness centrality (0.029) - this node is a cross-community bridge._
+- **Why does `ComponentEdge` connect `Community 39` to `Community 65`, `Community 42`, `Community 2`, `Community 38`?**
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
 - **Are the 12 inferred relationships involving `KnowledgeProgressManager` (e.g. with `BatchDeleteInput` and `KnowledgeDocOut`) actually correct?**
   _`KnowledgeProgressManager` has 12 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 13 inferred relationships involving `extract_text()` (e.g. with `_process_document()` and `extract_pdf_text()`) actually correct?**
   _`extract_text()` has 13 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `initial: all 8 tables  Revision ID: 001 Revises: None Create Date: 2026-05-0`, `add knowledge_docs.status + ondelete SET NULL for component FKs  Revision ID:`, `add knowledge_docs.source_type + source_url for multi-source ingestion  Revisi` to the rest of the system?**
-  _808 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `initial: all 8 tables  Revision ID: 001 Revises: None Create Date: 2026-05-0`, `add knowledge_docs.status + ondelete SET NULL for component FKs  Revision ID:`, `langgraph checkpoint tables (managed by PostgresSaver.setup())  LangGraph's Po` to the rest of the system?**
+  _884 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.05 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11 - nodes in this community are weakly interconnected._
