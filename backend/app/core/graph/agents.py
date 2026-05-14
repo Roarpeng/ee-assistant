@@ -9,6 +9,57 @@ from app.core.component_normalizer import normalize_component_type, normalize_pr
 from app.core.topology_lint import lint_topology
 
 
+# ── M2 Track B: org-level selection bias ────────────────────────────────
+# Reorder selection candidates so previously-preferred manufacturer/model
+# tuples (captured by `selection_weights` via the resume path or feedback
+# API) float to the top of the list. Stable on ties — original RAG rank
+# is preserved within the same weight bucket so we never demote a higher-
+# quality match purely because of one historical click.
+async def _apply_org_bias(
+    candidates: list[dict],
+    org_id: str | None,
+) -> list[dict]:
+    if not candidates or not org_id:
+        return candidates
+    from app.core.decisions_service import lookup_weight
+    from app.db.repository import async_session
+
+    try:
+        async with async_session() as session:
+            weights: list[float] = []
+            for c in candidates:
+                category = (
+                    c.get("category")
+                    or c.get("component_type")
+                    or ""
+                )
+                manufacturer = c.get("manufacturer") or ""
+                model = (
+                    c.get("model")
+                    or c.get("order_number")
+                    or c.get("name")
+                    or ""
+                )
+                w = await lookup_weight(
+                    session,
+                    org_id=org_id,
+                    category=category,
+                    manufacturer=manufacturer,
+                    model=model,
+                )
+                weights.append(w)
+    except Exception:
+        # Bias is a "nice-to-have" signal — never block selection on a
+        # weights-table read error.
+        return candidates
+
+    indexed = sorted(
+        enumerate(candidates),
+        key=lambda iv: (-weights[iv[0]], iv[0]),
+    )
+    return [c for _, c in indexed]
+
+
 # ── Topology format normalizer ────────────────────────────────────────────
 # LLM 有时按 ReactFlow 风格 ({position:{x,y}, data:{label,...}}) 输出, 有时按
 # 内部 simple 风格 ({x,y,label,...}) 输出。前端 / DB 只接受 simple 风格,
@@ -507,6 +558,11 @@ async def fanout_selection_supervisor(state: AnalysisState) -> dict:
                     "source_chunk_id": None,
                     "alternatives": [],
                 })
+
+    # M2 Track B: reorder by this org's accumulated selection_weights so
+    # historically-preferred manufacturer/model pairs surface first. Runs
+    # last so it sees the final list, including LLM-fallback rows.
+    all_bom = await _apply_org_bias(all_bom, state.get("org_id"))
 
     return {
         "bom_items": all_bom,

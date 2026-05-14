@@ -30,3 +30,4 @@ class AnalysisState(TypedDict):
     llm_config: dict | None
     embedding_config: dict | None
     org_id: str | None  # propagated from Project.org_id at run start (M1)
+    run_history_id: str | None  # set by orchestrator on new runs (M2 Track B)
