@@ -8,7 +8,7 @@ import { SCLPanel } from './SCLPanel';
 import { SettingsModal } from './SettingsModal';
 import { KnowledgePanel } from './KnowledgePanel';
 import { ConversationSidebar } from './ConversationSidebar';
-import { Settings, Sun, Moon, Languages } from 'lucide-react';
+import { Settings, Sun, Moon, Languages, PenTool } from 'lucide-react';
 
 export function AppLayout() {
   const activeCanvasTab = useStore((s) => s.activeCanvasTab);
@@ -79,7 +79,7 @@ export function AppLayout() {
 
       {/* Chat / Knowledge panel (fixed width, resizable) */}
       <div style={{ width: chatWidth }} className="flex-shrink-0 flex flex-col min-w-0">
-        <div className="w-full flex flex-col bg-app-bg-secondary border border-app-border rounded-[2.5rem] h-full overflow-hidden shadow-xl">
+        <div className="w-full flex flex-col bg-app-bg-secondary border border-app-border rounded-lg h-full overflow-hidden shadow-xl">
           {/* Chat header: brand + tabs + controls */}
           <div className="flex items-center justify-between px-6 pt-5 pb-0 border-b border-app-border shrink-0">
             <div className="flex items-center gap-3">
@@ -100,9 +100,21 @@ export function AppLayout() {
               <button
                 onClick={toggleTheme}
                 className="w-8 h-8 bg-app-bg-secondary hover:bg-app-bg-tertiary border border-app-border rounded-full flex items-center justify-center text-app-text-secondary hover:text-app-text-primary transition-colors"
-                title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                title={
+                  theme === 'light'
+                    ? 'Switch to dark mode'
+                    : theme === 'dark'
+                    ? 'Switch to engineering mode'
+                    : 'Switch to light mode'
+                }
               >
-                {theme === 'light' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+                {theme === 'light' ? (
+                  <Moon className="w-3.5 h-3.5" />
+                ) : theme === 'dark' ? (
+                  <PenTool className="w-3.5 h-3.5" />
+                ) : (
+                  <Sun className="w-3.5 h-3.5" />
+                )}
               </button>
               <button
                 onClick={() => setIsSettingsOpen(true)}
@@ -163,7 +175,7 @@ export function AppLayout() {
       {/* Right: Canvas Workspace (flex-1, takes remaining space) */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Canvas header with tabs */}
-        <header className="h-[56px] flex items-center justify-between px-6 bg-app-bg-secondary border border-app-border rounded-[2.5rem] shrink-0 shadow-sm">
+        <header className="h-[56px] flex items-center justify-between px-6 bg-app-bg-secondary border border-app-border rounded-lg shrink-0 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-app-bg-tertiary/50 rounded-full">
               <span className="w-1.5 h-1.5 bg-app-accent rounded-full animate-pulse" />
@@ -192,7 +204,7 @@ export function AppLayout() {
           <div className="w-[72px]" />
         </header>
 
-        <main className="flex-1 mt-4 overflow-hidden relative border border-app-border rounded-[2.5rem] bg-app-bg-secondary shadow-xl">
+        <main className="flex-1 mt-4 overflow-hidden relative border border-app-border rounded-lg bg-app-bg-secondary shadow-xl">
           <div className={activeCanvasTab === 'topology' ? 'h-full' : 'hidden h-full'}>
             <TopologyPanel />
           </div>

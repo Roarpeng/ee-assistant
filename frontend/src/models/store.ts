@@ -133,7 +133,7 @@ interface AppState {
   stage: AnalysisStage;
   messages: ChatMessage[];
   activeCanvasTab: 'topology' | 'bom' | 'code';
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'engineering';
   language: Lang;
   settings: AppSettings;
   knowledgeDocs: KnowledgeDoc[];
@@ -187,7 +187,7 @@ export const useStore = create<AppState>((set) => ({
   stage: 'idle',
   messages: [],
   activeCanvasTab: 'topology',
-  theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'dark',
+  theme: (localStorage.getItem('theme') as 'light' | 'dark' | 'engineering') || 'engineering',
   language: getInitialLang(),
   settings: loadSettings(),
   knowledgeDocs: [],
@@ -234,7 +234,12 @@ export const useStore = create<AppState>((set) => ({
   setActiveCanvasTab: (tab) => set({ activeCanvasTab: tab }),
   toggleTheme: () =>
     set((s) => {
-      const next = s.theme === 'light' ? 'dark' : 'light';
+      const cycle: Record<typeof s.theme, typeof s.theme> = {
+        light: 'dark',
+        dark: 'engineering',
+        engineering: 'light',
+      };
+      const next = cycle[s.theme];
       localStorage.setItem('theme', next);
       document.documentElement.setAttribute('data-theme', next);
       return { theme: next };
