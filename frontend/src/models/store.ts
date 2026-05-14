@@ -90,6 +90,9 @@ export interface ChatMessage {
   content: string;
   timestamp: number;
   context?: ChatContext & { componentSummary?: string };
+  // Optional structured clarification card. When present, ChatPanel renders
+  // a chip-picker below the message bubble; absent → plain text rendering.
+  options?: Array<{ key: string; label: string; choices: string[] }>;
 }
 
 export type NewConversationMode = 'clear-canvas' | 'keep-canvas';

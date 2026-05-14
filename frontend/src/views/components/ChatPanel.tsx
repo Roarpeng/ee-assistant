@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStore, consumePendingSeedPrompt } from '../../models/store';
+import { ClarifyCard } from './ClarifyCard';
 import type { NodeData, EdgeData } from '../../models/store';
 import { useChatHistory } from '../../hooks/useChatHistory';
 import { api } from '../../services/api';
@@ -495,6 +496,16 @@ export function ChatPanel() {
                 </div>
               )}
               {msg.content}
+              {msg.role === 'assistant' && msg.options && msg.options.length > 0 && (
+                <ClarifyCard
+                  groups={msg.options}
+                  onSelect={(key, choice) =>
+                    setInputValue((prev) =>
+                      prev ? `${prev}\n${key}=${choice}` : `${key}=${choice}`
+                    )
+                  }
+                />
+              )}
             </div>
           </div>
         ))}
