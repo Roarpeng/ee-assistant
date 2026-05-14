@@ -183,6 +183,24 @@ export function ChatPanel() {
     if (Array.isArray(state.io_items)) {
       useStore.getState().setIOItems(state.io_items);
     }
+    if (state.clarification?.needed && Array.isArray(state.clarification.groups)) {
+      // Only inject ONCE per partial run — the requirement node fires
+      // exactly once, so checking the last assistant message keeps the
+      // chip picker from being duplicated on retries.
+      const messages = useStore.getState().messages;
+      const lastClarify = [...messages].reverse().find(
+        (m) => m.role === 'assistant' && Array.isArray(m.options) && m.options.length > 0
+      );
+      if (!lastClarify) {
+        useStore.getState().addMessage({
+          id: '',
+          role: 'assistant',
+          content: '为了选型更精准,请确认以下参数：',
+          options: state.clarification.groups,
+          timestamp: 0,
+        });
+      }
+    }
   };
 
   const buildCanvasContext = () => {

@@ -107,6 +107,7 @@ class Orchestrator:
                 "io_budget": None,
                 "commissioning_steps": None,
                 "io_items": None,
+                "clarification": None,
                 "graph_traces": [],
                 "errors": [],
                 "messages": [],
@@ -129,7 +130,7 @@ class Orchestrator:
     # 把节点产出的字段映射到前端可直接 applyAnalysisPayload() 消费的 payload。
     # 让用户在工作流跑到一半就能看到 BOM、画布、代码 ── 渐进式呈现, 不再等终点。
     _NODE_PARTIAL_KEYS: dict[str, tuple[str, ...]] = {
-        "requirements_agent":   ("requirement",),
+        "requirements_agent":   ("requirement", "clarification"),
         "category_mapper":      ("categories",),
         "selection_supervisor": ("bom_items",),
         "rule_validator":       ("violations", "io_budget"),

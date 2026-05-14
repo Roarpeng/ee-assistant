@@ -203,11 +203,20 @@ async def requirements_agent(state: AnalysisState) -> dict:
     if state.get("stage", "") in ("requirements_done", "selection_done", "continuing") and state.get("requirement"):
         return {}
     req = await llm_service.analyze_requirements(state["user_input"])
-    return {
+    # Deterministic clarify-needs detector — no LLM cost. When critical
+    # fields (safety_level, environment, plc_family) are missing or
+    # ambiguous, we emit a structured clarification block that the
+    # frontend renders as chip pickers under the assistant message.
+    from app.core.clarification_detector import detect_clarification
+    clarification = detect_clarification(req)
+    update: dict = {
         "requirement": req,
         "safety_level": req.get("safety_level"),
         "stage": "requirements_done",
     }
+    if clarification is not None:
+        update["clarification"] = clarification
+    return update
 
 
 async def category_mapper(state: AnalysisState) -> dict:
