@@ -31,3 +31,7 @@ class AnalysisState(TypedDict):
     embedding_config: dict | None
     org_id: str | None  # propagated from Project.org_id at run start (M1)
     run_history_id: str | None  # set by orchestrator on new runs (M2 Track B)
+    # Top-3 historical episode summary block, formatted Chinese natural
+    # language. Set by `fanout_selection_supervisor` (M3 Track B) for
+    # downstream visibility (frontend memory panel, future LLM prompts).
+    episodic_context: str | None

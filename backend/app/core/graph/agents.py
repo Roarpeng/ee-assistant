@@ -564,10 +564,39 @@ async def fanout_selection_supervisor(state: AnalysisState) -> dict:
     # last so it sees the final list, including LLM-fallback rows.
     all_bom = await _apply_org_bias(all_bom, state.get("org_id"))
 
+    # M3 Track B: pull the top-3 most-recent episodes for this org and
+    # render them into a Chinese summary block. The supervisor here
+    # doesn't currently assemble a free-text LLM prompt (its LLM call
+    # is the structured `llm_service.recommend_components(...)` above),
+    # so we surface the context via `state["episodic_context"]` for the
+    # frontend memory panel + any future prompt assembly. Best-effort:
+    # never block selection on a retrieval hiccup.
+    episodic_context: str | None = None
+    org_id = state.get("org_id")
+    if org_id:
+        try:
+            from app.core.episode_retrieval import (
+                format_for_prompt,
+                top_episodes,
+            )
+            machine_type = (state.get("requirement") or {}).get("machine_type")
+            async with async_session() as session:
+                eps = await top_episodes(
+                    session,
+                    org_id=org_id,
+                    machine_type=machine_type,
+                    limit=3,
+                )
+            block = format_for_prompt(eps)
+            episodic_context = block or None
+        except Exception:
+            episodic_context = None
+
     return {
         "bom_items": all_bom,
         "graph_traces": new_traces,
         "llm_fallback_categories": llm_fallback_categories,
+        "episodic_context": episodic_context,
         "stage": "selection_done",
     }
 
