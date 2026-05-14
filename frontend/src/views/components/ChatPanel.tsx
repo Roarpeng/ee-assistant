@@ -180,6 +180,9 @@ export function ChatPanel() {
     if (Array.isArray(state.commissioning_steps)) {
       useStore.getState().setCommissioningSteps(state.commissioning_steps);
     }
+    if (Array.isArray(state.io_items)) {
+      useStore.getState().setIOItems(state.io_items);
+    }
   };
 
   const buildCanvasContext = () => {

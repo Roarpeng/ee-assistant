@@ -24,6 +24,7 @@ def build_graph():
         code_generator,
         final_review_agent,
         commissioning_generator,
+        wiring_generator,
     )
 
     workflow.add_node("requirements_agent", requirements_agent)
@@ -36,6 +37,7 @@ def build_graph():
     workflow.add_node("code_generator", code_generator)
     workflow.add_node("final_review_agent", final_review_agent)
     workflow.add_node("commissioning_generator", commissioning_generator)
+    workflow.add_node("wiring_generator", wiring_generator)
 
     workflow.set_entry_point("requirements_agent")
     workflow.add_edge("requirements_agent", "category_mapper")
@@ -49,10 +51,12 @@ def build_graph():
     workflow.add_edge("rule_validator", "code_generator")
     workflow.add_edge("rule_validator", "final_review_agent")
     workflow.add_edge("rule_validator", "commissioning_generator")
+    workflow.add_edge("rule_validator", "wiring_generator")
     workflow.add_edge("schematic_generator", END)
     workflow.add_edge("code_generator", END)
     workflow.add_edge("final_review_agent", END)
     workflow.add_edge("commissioning_generator", END)
+    workflow.add_edge("wiring_generator", END)
 
     _compiled_graph = workflow.compile(checkpointer=MemorySaver())
     return _compiled_graph

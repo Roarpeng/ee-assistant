@@ -20,6 +20,7 @@ class AnalysisState(TypedDict):
     project_meta: dict | None  # {safety_level, bom_cost} for InfoPanel
     io_budget: list[dict] | None  # BudgetItem[] for IOBudgetBar
     commissioning_steps: list[dict] | None  # [{title, body}] for GuidePanel
+    io_items: list[dict] | None  # [{tag, signal, from, to, wire}] for WiringPanel
     graph_traces: Annotated[list[dict], operator.add]
     errors: Annotated[list[str], operator.add]
     messages: Annotated[list[dict], add_messages]

@@ -106,6 +106,7 @@ class Orchestrator:
                 "project_meta": None,
                 "io_budget": None,
                 "commissioning_steps": None,
+                "io_items": None,
                 "graph_traces": [],
                 "errors": [],
                 "messages": [],
@@ -136,6 +137,7 @@ class Orchestrator:
         "code_generator":       ("st_modules",),
         "final_review_agent":   ("review_notes", "project_meta"),
         "commissioning_generator": ("commissioning_steps",),
+        "wiring_generator":     ("io_items",),
     }
 
     @classmethod

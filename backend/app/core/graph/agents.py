@@ -802,3 +802,15 @@ async def commissioning_generator(state: AnalysisState) -> dict:
         requirement=state.get("requirement", {}),
     )
     return {"commissioning_steps": steps}
+
+
+async def wiring_generator(state: AnalysisState) -> dict:
+    """Deterministic node: assign requirement.io_list signals to the
+    selected PLC's terminals. Produces ioItems[] for WiringPanel.
+    Runs in parallel with the other terminal nodes off rule_validator."""
+    from app.core.wiring_generator import generate_wiring
+    rows = generate_wiring(
+        bom_items=state.get("bom_items", []),
+        io_list=(state.get("requirement", {}) or {}).get("io_list", []),
+    )
+    return {"io_items": rows}
