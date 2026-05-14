@@ -23,6 +23,22 @@
     "mtime": 1778734308.3386424,
     "hash": "0ef42cbf60ebd1a2c4979f28cfacc310"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\004_organizations.py": {
+    "mtime": 1778744710.6124022,
+    "hash": "1c2ae3b7c64abf27ab3f1135441927cf"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\005_projects_org_fk.py": {
+    "mtime": 1778744713.3585484,
+    "hash": "5daea4b6b6d2dddc65cd765455dcc890"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\006_decisions_runhistory_weights.py": {
+    "mtime": 1778746746.3545089,
+    "hash": "7f173087775c6dbf28d4fd2660a1aee5"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\007_episodic_memories_and_reports.py": {
+    "mtime": 1778748956.6516807,
+    "hash": "20749a8128fa916c018213c749c4319c"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\a4d5b3e39d74_add_component_graph_tables.py": {
     "mtime": 1778484650.4173272,
     "hash": "61a260e58b76a98b23d072cedf9b63dd"
@@ -32,28 +48,52 @@
     "hash": "ada3834acbd93d6f5508656f13aae080"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\main.py": {
-    "mtime": 1778734443.2437603,
-    "hash": "b9a431cb7bd6dbe498edba81e7804163"
+    "mtime": 1778759202.696205,
+    "hash": "b36354afa17226a6d701b6498308ed1c"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\__init__.py": {
     "mtime": 1778484650.4188328,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\admin_memory.py": {
+    "mtime": 1778748809.8038318,
+    "hash": "3344a6aac20c7385f62f1fa96f1b681f"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\analysis.py": {
     "mtime": 1778734527.4969635,
     "hash": "d27548e52c0ef00674a9d6662acb3cd3"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\clarify_answer.py": {
+    "mtime": 1778744810.0139222,
+    "hash": "45e142eb1c4221f578307941094e4caa"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\codegen.py": {
     "mtime": 1778484650.4208393,
     "hash": "a2e1686c7bc640e5d13181be55ad5d72"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\episodes.py": {
+    "mtime": 1778748685.6207223,
+    "hash": "b797738fa8d5072e92364b21c987a7ef"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\feedback.py": {
+    "mtime": 1778746832.9922523,
+    "hash": "0a45c99986fab1b21ae25bce19a20d34"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\knowledge.py": {
     "mtime": 1778484650.4218392,
     "hash": "af20ffa0d71c44d223d6746986a04286"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\memory_sources.py": {
+    "mtime": 1778747734.0223358,
+    "hash": "423d689ae754a4dcbe9ff88f5a38dc44"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\messages.py": {
     "mtime": 1778734431.1236398,
     "hash": "c921f2aee04127857ccc167f018fa5c0"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\orgs.py": {
+    "mtime": 1778744765.5563178,
+    "hash": "36fd61354e42643e8dd64c9574da35a1"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\projects.py": {
     "mtime": 1778484650.4218392,
@@ -103,9 +143,25 @@
     "mtime": 1778484650.4278557,
     "hash": "4d87d367fd67f398599b85a65bc207f2"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\consolidation_service.py": {
+    "mtime": 1778748798.4367073,
+    "hash": "f53de8307b94a407a6e81eeda51166f9"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\decisions_service.py": {
+    "mtime": 1778746808.4130511,
+    "hash": "2bb8b5247104e96c38955ac4b5319390"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\entity_extractor.py": {
     "mtime": 1778484650.4278557,
     "hash": "2a7fcd87cc702ca12e739a511b736cf6"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\episode_extractor.py": {
+    "mtime": 1778748654.0348868,
+    "hash": "e2800b60e49c12a74014d07b5564f582"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\episode_retrieval.py": {
+    "mtime": 1778748780.1201944,
+    "hash": "1b798e0ff07268abfbcea033bb64bbcf"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\extractors.py": {
     "mtime": 1778484650.4293213,
@@ -128,8 +184,16 @@
     "hash": "dd826f075bbe7d12b4fd6cac28ef866a"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\orchestrator.py": {
-    "mtime": 1778734548.809647,
-    "hash": "842aa882395ab15880f53ace9c7314f9"
+    "mtime": 1778748672.2397985,
+    "hash": "018aa724e0c4ddaf32ec580ef327129e"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\org_prefs_keys.py": {
+    "mtime": 1778744711.5461488,
+    "hash": "300b070f3e8bcc1560d4e73b4f49bed3"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\org_prefs_service.py": {
+    "mtime": 1778744733.2037182,
+    "hash": "a19140567790b43af5eeb722dbac61db"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\plc_catalog.py": {
     "mtime": 1778730820.1598704,
@@ -147,9 +211,13 @@
     "mtime": 1778484650.4366827,
     "hash": "7f0bd25a113e4e8a2848513ff157a7fa"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\run_history_service.py": {
+    "mtime": 1778747002.0083034,
+    "hash": "33ce2cfb0e6aba75f2374bbe669088a6"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\schemas.py": {
-    "mtime": 1778734322.5335014,
-    "hash": "5a5d22ea54963ae41358e491a8142d80"
+    "mtime": 1778748874.2973833,
+    "hash": "1a0e2919e66a3fa1272eb654b871962a"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\topology_lint.py": {
     "mtime": 1778484650.4376833,
@@ -168,24 +236,24 @@
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\graph\\agents.py": {
-    "mtime": 1778732122.4984286,
-    "hash": "916e275b0aefe83298c6cdd726103eac"
+    "mtime": 1778748860.1747105,
+    "hash": "e545edb44cc7cf6f0f0d785fca7bd4cc"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\graph\\builder.py": {
     "mtime": 1778734507.7153254,
     "hash": "00b06d49ef50a1e7a294ba9045f1b831"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\graph\\state.py": {
-    "mtime": 1778732127.2827373,
-    "hash": "d11dc0f0de68440a39334e426f878fdd"
+    "mtime": 1778748820.7100155,
+    "hash": "5c0d0b2bad6b5e71e6759407946f8eca"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\graph\\__init__.py": {
     "mtime": 1778484650.4304116,
     "hash": "0e3c9c299e3106b5c0b82f72b68e8129"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\db\\models.py": {
-    "mtime": 1778734295.9197586,
-    "hash": "a66438793932949b37e4a91bbbfdd37e"
+    "mtime": 1778748844.8638268,
+    "hash": "423ed760eaa45cd1d8ea8fd932b8af37"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\db\\repository.py": {
     "mtime": 1778484650.4396963,
@@ -193,6 +261,14 @@
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\db\\__init__.py": {
     "mtime": 1778484650.4386826,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\middleware\\org_auth.py": {
+    "mtime": 1778744729.5248997,
+    "hash": "9eee09773b8db9d15e935965d520f323"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\middleware\\__init__.py": {
+    "mtime": 1778744720.630592,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\conftest.py": {
@@ -203,9 +279,21 @@
     "mtime": 1778734286.8900597,
     "hash": "1ea6536c7e0755d2a35be97fe9fe0e1c"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_admin_memory.py": {
+    "mtime": 1778749005.4328356,
+    "hash": "c9971d0438ba7acf88ee3352c68918e3"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_analysis.py": {
     "mtime": 1778484650.4430037,
     "hash": "f27a0d0389b9f5ee1a162c78ebd98ea7"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_episodes.py": {
+    "mtime": 1778748733.222392,
+    "hash": "562e50781b1310bee4e14fa7c22cb119"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_feedback.py": {
+    "mtime": 1778746894.2884648,
+    "hash": "8259264e8b0b925f4884ff0268252115"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_knowledge.py": {
     "mtime": 1778484650.444006,
@@ -214,6 +302,10 @@
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_messages.py": {
     "mtime": 1778734342.6162605,
     "hash": "87857efeb475010ea4026bec9dd47038"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_orgs.py": {
+    "mtime": 1778744794.860155,
+    "hash": "0eb71fbf5fd8bfb9a6eb048fa08c836c"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_topology.py": {
     "mtime": 1778484650.444006,
@@ -231,6 +323,10 @@
     "mtime": 1778732048.9116156,
     "hash": "5793cef11ac7cb4b7ca31ee8f5ec4a91"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_clarify_writeback.py": {
+    "mtime": 1778745274.0760694,
+    "hash": "9beaf6b337f1b87ea3da71eae366cbd3"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_commissioning_generator.py": {
     "mtime": 1778731527.6192234,
     "hash": "54b9f23ed904609f1f64d5dfe1bda089"
@@ -239,9 +335,21 @@
     "mtime": 1778484650.4450064,
     "hash": "1a46e713517e6a1f68f7a20c68bcbf10"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_consolidation_service.py": {
+    "mtime": 1778748915.217404,
+    "hash": "182136c95b69cba4426154d223f84ecb"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_conversation_enhancements.py": {
     "mtime": 1778484650.4464269,
     "hash": "48858cf24b553de42156f5c7ffe887f0"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_episode_extractor.py": {
+    "mtime": 1778748711.0258107,
+    "hash": "cb4116fb84b8d5dff9cabd57356a1440"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_episode_retrieval.py": {
+    "mtime": 1778748893.351683,
+    "hash": "e3c2d3025cfee1d8816f4dfd4696d6cd"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_extractors.py": {
     "mtime": 1778484650.447906,
@@ -250,6 +358,10 @@
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_io_budget.py": {
     "mtime": 1778731204.3221762,
     "hash": "fc9ffe18a3bb1fd191015c9771a38d82"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_memory_sources.py": {
+    "mtime": 1778746919.209568,
+    "hash": "00dc6f7e33c92f324623fb8f1fde36d0"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_plc_catalog.py": {
     "mtime": 1778730756.7663915,
@@ -267,13 +379,25 @@
     "mtime": 1778484650.447906,
     "hash": "10a8b6b5b7c5ae3dd29ccf3f7e745070"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_requirements_enrichment.py": {
+    "mtime": 1778744928.69998,
+    "hash": "1f82f6f1b15eeb7ec246e045c3414d56"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_rule_engine.py": {
     "mtime": 1778484650.447906,
     "hash": "902eead7ddbefb074429b0e77c2c54d8"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_run_history_capture.py": {
+    "mtime": 1778747195.6835086,
+    "hash": "047b7bb414e3590b93ad5c90d2558daa"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_schemas.py": {
     "mtime": 1778484650.4493072,
     "hash": "495bdcdbeb4ddd809c0e77dcfc38b7ce"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_selection_weight_bias.py": {
+    "mtime": 1778747213.8283744,
+    "hash": "a505b29dda80647107694ba820559035"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_topology_lint.py": {
     "mtime": 1778484650.4493072,
@@ -308,8 +432,8 @@
     "hash": "0560c74ecea95852d82b416aa9c8e418"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\App.tsx": {
-    "mtime": 1778734691.3346436,
-    "hash": "f35affb99bd7e8b4b2a9e91c141e7bd3"
+    "mtime": 1778745243.0827518,
+    "hash": "4f76cb111edb0267dc5f5d67386752a6"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\main.tsx": {
     "mtime": 1778724095.9262052,
@@ -320,16 +444,16 @@
     "hash": "08b0ac9ffb59f67f66e6277f15c5fc14"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\models\\store.ts": {
-    "mtime": 1778734683.356611,
-    "hash": "5f3cb195d519fcc1bd4dd15d855a970d"
+    "mtime": 1778745217.6214793,
+    "hash": "d56e912315af445c955c7ad77426f011"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\models\\yjsStore.ts": {
     "mtime": 1778484650.4786522,
     "hash": "7cc1b0d0edf1a3b31662ff9c9a264d19"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\api.ts": {
-    "mtime": 1778734606.808545,
-    "hash": "bf080e4259fcf436a653fe52bf1ad6d3"
+    "mtime": 1778745112.2487257,
+    "hash": "2ffc58cca020977dfbbb3d4e94407f04"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\budget.test.ts": {
     "mtime": 1778726651.0148132,
@@ -351,9 +475,33 @@
     "mtime": 1778484650.4810133,
     "hash": "f640c102c4c432f35c216d32d7af47ae"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\feedback.test.ts": {
+    "mtime": 1778746809.0549498,
+    "hash": "e012acea263ef8578e00771901f1f380"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\feedback.ts": {
+    "mtime": 1778746779.0035443,
+    "hash": "bcb86fc756e80d135c3d1e5d23021131"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\i18n.ts": {
     "mtime": 1778726475.3457458,
     "hash": "f1a97dd06033493f365f45715b207432"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\memory.test.ts": {
+    "mtime": 1778748587.8793619,
+    "hash": "a72c684004c5d1837808e713b56f33e0"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\memory.ts": {
+    "mtime": 1778748567.1440244,
+    "hash": "9cbcc05f22a19b794bbe20c30ecd442a"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\orgClient.test.ts": {
+    "mtime": 1778744943.4462843,
+    "hash": "e751393d970262dbceabcf44f98cdb4d"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\orgClient.ts": {
+    "mtime": 1778744888.2942102,
+    "hash": "824ddcec6cd047b36f1b78c7a61f44cc"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\procurement.test.ts": {
     "mtime": 1778726205.307521,
@@ -383,9 +531,13 @@
     "mtime": 1778726495.1312864,
     "hash": "9d3a7d6eda80d5b5bbce0ed0847d1208"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\BOMPanel.test.tsx": {
+    "mtime": 1778747124.2558396,
+    "hash": "929f06056f896f1f6d9007360cee4102"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\BOMPanel.tsx": {
-    "mtime": 1778726262.2297666,
-    "hash": "1682cd9901c1589c87955ad1724c87fd"
+    "mtime": 1778746931.5785048,
+    "hash": "5fff72427a1a526785250f05755d8540"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\CabinetPanel.tsx": {
     "mtime": 1778726457.136403,
@@ -404,12 +556,12 @@
     "hash": "a2097a1779dd8486db220a2bb956fe32"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\ClarifyCard.tsx": {
-    "mtime": 1778725644.5078652,
-    "hash": "4794c46f8314840937c8c5acbe14f756"
+    "mtime": 1778745548.1041448,
+    "hash": "c401f7ebed4f883a6f3e125f68d10ccd"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\ConversationSidebar.tsx": {
-    "mtime": 1778734711.3313162,
-    "hash": "dbfad6d0ab8c0abab3a9f1bd35593d3c"
+    "mtime": 1778745479.1417773,
+    "hash": "64b09f240d6d5d9dd279f57a5633b4a9"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\CustomNodes.tsx": {
     "mtime": 1778484650.4876428,
@@ -451,9 +603,33 @@
     "mtime": 1778484650.4891539,
     "hash": "6993474874ad1370e2a8fa3a0742231e"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\MemorySourcePopover.test.tsx": {
+    "mtime": 1778746867.1678855,
+    "hash": "0c0d392658c6d23622773703ae1ce25d"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\MemorySourcePopover.tsx": {
+    "mtime": 1778746842.5277636,
+    "hash": "6e4346d1c5b9269b594c3540773c3da5"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\MemoryTab.test.tsx": {
+    "mtime": 1778748680.307051,
+    "hash": "209a957943206523add5329e12555152"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\MemoryTab.tsx": {
+    "mtime": 1778748649.5494094,
+    "hash": "0f1811e5013089c776cd2fa0894999c3"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\NodeInfoCard.tsx": {
     "mtime": 1778484650.4901543,
     "hash": "fde2d156f77b5ddc098632d0532335bf"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\OrgSettingsPanel.test.tsx": {
+    "mtime": 1778745361.751707,
+    "hash": "ffc3b80486f751f377fbee9a803b1650"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\OrgSettingsPanel.tsx": {
+    "mtime": 1778748809.5746908,
+    "hash": "f4e8ca114d516d058e5b7affa3a42504"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\SCLPanel.tsx": {
     "mtime": 1778484650.4901543,
@@ -468,16 +644,16 @@
     "hash": "b90286dee6783c4725fe5ac1806d8cf0"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\TopologyPanel.tsx": {
-    "mtime": 1778726748.3920503,
-    "hash": "7e28f4d6e1d241157e56bf03878314aa"
+    "mtime": 1778747009.4449925,
+    "hash": "a8bffa8d7b4c7bd8b2fb9bffc29fe78c"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\WiringPanel.test.tsx": {
     "mtime": 1778725113.2045014,
     "hash": "14a909841d43cc7d1be02ec76ce2918a"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\WiringPanel.tsx": {
-    "mtime": 1778725030.8788383,
-    "hash": "7cb049668321a451bac5646aaa1ab1fc"
+    "mtime": 1778746960.0189638,
+    "hash": "13efd26b20a834336b0ee54dbd9964e6"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\scripts\\backup_knowledge.ps1": {
     "mtime": 1778484650.6054425,
@@ -546,6 +722,18 @@
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-14-memory-flywheel-m0-plan.md": {
     "mtime": 1778733898.1991484,
     "hash": "3d6289cd98e68a9be6d6cac08d3cc78a"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-14-memory-flywheel-m1-plan.md": {
+    "mtime": 1778744369.0448828,
+    "hash": "c33aa0a20471db92b77f7b8aae031999"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-14-memory-flywheel-m2-plan.md": {
+    "mtime": 1778746447.0564365,
+    "hash": "20da8c0477e64947dd878060e3649043"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-14-memory-flywheel-m3-plan.md": {
+    "mtime": 1778748315.554497,
+    "hash": "7fb5adacc11c8dfc76aa51ef040d1e8e"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-01-ee-assistant-design.md": {
     "mtime": 1778484650.4601116,

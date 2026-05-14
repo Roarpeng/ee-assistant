@@ -1,16 +1,16 @@
 # Graph Report - ee-assistant  (2026-05-14)
 
 ## Corpus Check
-- 148 files · ~103,144 words
+- 195 files · ~132,211 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1854 nodes · 2333 edges · 158 communities (143 shown, 15 thin omitted)
-- Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 206 edges (avg confidence: 0.73)
+- 2338 nodes · 3123 edges · 206 communities (181 shown, 25 thin omitted)
+- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 347 edges (avg confidence: 0.75)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `81c55cb3`
+- Built from commit: `61714986`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -154,44 +154,91 @@
 - [[_COMMUNITY_Community 155|Community 155]]
 - [[_COMMUNITY_Community 156|Community 156]]
 - [[_COMMUNITY_Community 157|Community 157]]
+- [[_COMMUNITY_Community 158|Community 158]]
+- [[_COMMUNITY_Community 159|Community 159]]
+- [[_COMMUNITY_Community 160|Community 160]]
+- [[_COMMUNITY_Community 161|Community 161]]
+- [[_COMMUNITY_Community 162|Community 162]]
+- [[_COMMUNITY_Community 163|Community 163]]
+- [[_COMMUNITY_Community 164|Community 164]]
+- [[_COMMUNITY_Community 165|Community 165]]
+- [[_COMMUNITY_Community 166|Community 166]]
+- [[_COMMUNITY_Community 167|Community 167]]
+- [[_COMMUNITY_Community 168|Community 168]]
+- [[_COMMUNITY_Community 169|Community 169]]
+- [[_COMMUNITY_Community 170|Community 170]]
+- [[_COMMUNITY_Community 171|Community 171]]
+- [[_COMMUNITY_Community 172|Community 172]]
+- [[_COMMUNITY_Community 173|Community 173]]
+- [[_COMMUNITY_Community 174|Community 174]]
+- [[_COMMUNITY_Community 175|Community 175]]
+- [[_COMMUNITY_Community 176|Community 176]]
+- [[_COMMUNITY_Community 177|Community 177]]
+- [[_COMMUNITY_Community 178|Community 178]]
+- [[_COMMUNITY_Community 179|Community 179]]
+- [[_COMMUNITY_Community 180|Community 180]]
+- [[_COMMUNITY_Community 181|Community 181]]
+- [[_COMMUNITY_Community 182|Community 182]]
+- [[_COMMUNITY_Community 183|Community 183]]
+- [[_COMMUNITY_Community 184|Community 184]]
+- [[_COMMUNITY_Community 185|Community 185]]
+- [[_COMMUNITY_Community 186|Community 186]]
+- [[_COMMUNITY_Community 187|Community 187]]
+- [[_COMMUNITY_Community 188|Community 188]]
+- [[_COMMUNITY_Community 189|Community 189]]
+- [[_COMMUNITY_Community 190|Community 190]]
+- [[_COMMUNITY_Community 191|Community 191]]
+- [[_COMMUNITY_Community 192|Community 192]]
+- [[_COMMUNITY_Community 193|Community 193]]
+- [[_COMMUNITY_Community 194|Community 194]]
+- [[_COMMUNITY_Community 195|Community 195]]
+- [[_COMMUNITY_Community 196|Community 196]]
+- [[_COMMUNITY_Community 197|Community 197]]
+- [[_COMMUNITY_Community 198|Community 198]]
+- [[_COMMUNITY_Community 199|Community 199]]
+- [[_COMMUNITY_Community 200|Community 200]]
+- [[_COMMUNITY_Community 201|Community 201]]
+- [[_COMMUNITY_Community 202|Community 202]]
+- [[_COMMUNITY_Community 203|Community 203]]
+- [[_COMMUNITY_Community 205|Community 205]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `useStore` - 33 edges
-2. `KnowledgeProgressManager` - 18 edges
-3. `extract_text()` - 18 edges
-4. `LangGraph Multi-Agent + Component Knowledge Graph + Frontend Style — Implementation Plan` - 18 edges
-5. `Volta Engineering Memory Flywheel Design` - 18 edges
-6. `RAGEngine` - 17 edges
-7. `generate_wiring()` - 17 edges
-8. `Blueprint-Inspired UI Refresh Implementation Plan` - 17 edges
-9. `Orchestrator` - 16 edges
-10. `ComponentNode` - 16 edges
+1. `select` - 68 edges
+2. `useStore` - 38 edges
+3. `Base` - 22 edges
+4. `Orchestrator` - 19 edges
+5. `KnowledgeProgressManager` - 18 edges
+6. `extract_text()` - 18 edges
+7. `LangGraph Multi-Agent + Component Knowledge Graph + Frontend Style — Implementation Plan` - 18 edges
+8. `Volta Engineering Memory Flywheel Design` - 18 edges
+9. `RAGEngine` - 17 edges
+10. `generate_wiring()` - 17 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `requirements_agent()` --calls--> `detect_clarification()`  [INFERRED]
-  backend/app/core/graph/agents.py → backend/app/core/clarification_detector.py
-- `test_delete_doc_keeps_graph_nodes()` --calls--> `ComponentNode`  [INFERRED]
-  backend/tests/test_api_knowledge.py → backend/app/db/models.py
-- `test_save_twice_no_unique_violation()` --calls--> `save_to_db()`  [INFERRED]
-  backend/tests/test_analyze_idempotent.py → backend/app/api/analysis.py
-- `test_save_twice_no_duplicate_bom_or_st()` --calls--> `save_to_db()`  [INFERRED]
-  backend/tests/test_analyze_idempotent.py → backend/app/api/analysis.py
-- `test_save_updates_requirement_fields()` --calls--> `save_to_db()`  [INFERRED]
-  backend/tests/test_analyze_idempotent.py → backend/app/api/analysis.py
+- `list_reports()` --calls--> `select`  [INFERRED]
+  backend/app/api/admin_memory.py → frontend/src/views/components/OrgSettingsPanel.test.tsx
+- `analyze_project()` --calls--> `select`  [INFERRED]
+  backend/app/api/analysis.py → frontend/src/views/components/OrgSettingsPanel.test.tsx
+- `list_episodes()` --calls--> `select`  [INFERRED]
+  backend/app/api/episodes.py → frontend/src/views/components/OrgSettingsPanel.test.tsx
+- `list_docs()` --calls--> `select`  [INFERRED]
+  backend/app/api/knowledge.py → frontend/src/views/components/OrgSettingsPanel.test.tsx
+- `list_prefs()` --calls--> `select`  [INFERRED]
+  backend/app/api/orgs.py → frontend/src/views/components/OrgSettingsPanel.test.tsx
 
-## Communities (158 total, 15 thin omitted)
+## Communities (206 total, 25 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.05
-Nodes (57): generate_code(), KnowledgeProgressManager, Manages WebSocket connections for knowledge document processing progress., generate_schematic(), BaseModel, AccessoryRequirementOut, BatchDeleteInput, BOMItemOut (+49 more)
+Cohesion: 0.09
+Nodes (37): BaseModel, ChatInput, ChatMessageIn, ChatMessageOut, CodegenInput, ComponentNodeOut, ConnectivityTestInput, EditFeedbackIn (+29 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.11
 Nodes (27): CircuitBreakerNode(), ContactorNode(), DisconnectNode(), EStopNode(), FuseNode(), HANDLE_COLOR, HandleCategory, handleStyle() (+19 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.05
-Nodes (46): normalize_component_type(), normalize_property_map(), normalize_protocol(), Normalization helpers for component and protocol names., EntityExtractor, LLM-powered entity and relation extraction from PDF text for component knowledge, lint_topology(), Topology lint checks for electrical graph validity. (+38 more)
+Cohesion: 0.2
+Nodes (10): normalize_component_type(), normalize_property_map(), normalize_protocol(), Normalization helpers for component and protocol names., EntityExtractor, LLM-powered entity and relation extraction from PDF text for component knowledge, test_component_aliases(), test_property_map_normalization() (+2 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.05
@@ -238,8 +285,8 @@ Cohesion: 0.09
 Nodes (21): 1. Background, 2. Goals & Non-Goals, 3. Scope Tiers, 4.1 Test runner, 4.2 Engineering theme, 4.3 HeroLanding routing, 4.4 Tab system expansion, 4.5 Structured clarify cards (+13 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.11
-Nodes (15): _build_partial_payload(), _node_message(), Orchestrator, Core event loop: yield step/partial/interrupt/done events from graph.astream., Core event loop: yield step/partial/interrupt/done events from graph.astream., Start (or continue) a LangGraph analysis, streaming SSE events., Start (or continue) a LangGraph analysis, streaming SSE events., Resume a paused LangGraph analysis after human provides manual selection. (+7 more)
+Cohesion: 0.05
+Nodes (37): _build_partial_payload(), _node_message(), Orchestrator, Build input state: full initial for new projects, incremental for continuing., Core event loop: yield step/partial/interrupt/done events from graph.astream., Core event loop: yield step/partial/interrupt/done events from graph.astream., Start (or continue) a LangGraph analysis, streaming SSE events., Start (or continue) a LangGraph analysis, streaming SSE events. (+29 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.1
@@ -247,7 +294,7 @@ Nodes (20): 1. 在源端打包, 2. 分发, 3. 在目标端还原, 4. 验证, Bun
 
 ### Community 16 - "Community 16"
 Cohesion: 0.09
-Nodes (20): CanvasContextMenu(), CanvasContextMenuProps, NodeInfoCard(), STATUS_COLORS, AnalysisStage, AppSettings, AppState, BOMItem (+12 more)
+Nodes (21): CanvasContextMenu(), CanvasContextMenuProps, Header(), NodeInfoCard(), STATUS_COLORS, Props, AnalysisStage, AppSettings (+13 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.1
@@ -255,7 +302,7 @@ Nodes (20): code:python (import pytest), code:bash (python3 -m pytest backend/te
 
 ### Community 18 - "Community 18"
 Cohesion: 0.12
-Nodes (10): SOURCE_BADGE, STATUS_COLORS, SUPPORTED_MIMES, TERMINAL_STATUSES, UploadQueueState, KnowledgeDoc, KnowledgeDocStatus, KnowledgeSourceType (+2 more)
+Nodes (11): SOURCE_BADGE, STATUS_COLORS, SUPPORTED_MIMES, TERMINAL_STATUSES, UploadQueueState, KnowledgeDoc, KnowledgeDocStatus, KnowledgeSourceType (+3 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.1
@@ -267,19 +314,19 @@ Nodes (19): Bundle layout, code:block1 (knowledge-bundle-YYYYMMDD-HHMMSS.tgz), c
 
 ### Community 21 - "Community 21"
 Cohesion: 0.17
-Nodes (16): batch_delete_docs(), chunk_text(), delete_doc(), _delete_single_doc(), _extract_graph_knowledge(), _fetch_from_minio(), ingest_url(), _process_document() (+8 more)
+Nodes (17): batch_delete_docs(), chunk_text(), delete_doc(), _delete_single_doc(), _extract_graph_knowledge(), _fetch_from_minio(), ingest_url(), list_docs() (+9 more)
 
 ### Community 22 - "Community 22"
 Cohesion: 0.5
 Nodes (3): buildProcurementUrl(), ProcurementItem, url
 
 ### Community 23 - "Community 23"
-Cohesion: 0.29
-Nodes (7): ChatMessage, ConversationMeta, deleteConversationHistory(), deriveConversationTitle(), loadConversationMetas(), saveConversationMessages(), saveConversationMetas()
+Cohesion: 0.16
+Nodes (13): ChatMessage, ConversationMeta, deleteConversationHistory(), deriveConversationTitle(), loadConversationMetas(), saveConversationMessages(), saveConversationMetas(), listTemplates() (+5 more)
 
 ### Community 24 - "Community 24"
-Cohesion: 0.11
-Nodes (19): code:python (from anthropic import AsyncAnthropic), code:python (import pytest), code:bash (git add backend/app/core/llm_service.py backend/tests/confte), code:python (import json), code:python (from fastapi import APIRouter, Depends, HTTPException), code:python (from app.api.analysis import router as analysis_router), code:python (@app.websocket("/ws/projects/{project_id}")), code:python (import pytest) (+11 more)
+Cohesion: 0.18
+Nodes (11): code:python (from anthropic import AsyncAnthropic), code:python (import pytest), code:bash (git add backend/app/core/llm_service.py backend/tests/confte), code:typescript (import type { ChatMessage as ChatMessageType } from '../../m), code:typescript (import { useState } from 'react';), code:typescript (import { useRef, useEffect } from 'react';), code:bash (cd frontend && npx tsc --noEmit), code:bash (git add frontend/src/views/components/ChatMessage.tsx fronte) (+3 more)
 
 ### Community 25 - "Community 25"
 Cohesion: 0.11
@@ -294,12 +341,12 @@ Cohesion: 0.18
 Nodes (17): extract_pdf_text(), extract_text(), Bytes → text. Dispatches on suffix first, then MIME.      Raises ``Unsupported, _build_minimal_docx(), Unit tests for the per-format text extractors and the dispatch layer., Construct the smallest valid .docx that python-docx can read.      A .docx is, test_dispatch_falls_back_to_mime_when_suffix_unknown(), test_dispatch_unknown_suffix_raises_unsupported() (+9 more)
 
 ### Community 28 - "Community 28"
-Cohesion: 0.25
-Nodes (8): code:python (import json), code:python (from app.api.selection import router as selection_router), code:bash (git add backend/app/api/selection.py backend/app/main.py), code:python (import uuid), code:bash (git add backend/app/api/knowledge.py), M4: Knowledge Base & Selection Engine, Task 4.3: Selection API, Task 4.4: Knowledge Base API
+Cohesion: 0.11
+Nodes (18): code:python (import uuid), code:python (import pytest), code:bash (cd backend && python -m pytest tests/test_rag_engine.py -v), code:bash (git add backend/app/core/rag_engine.py backend/tests/test_ra), code:python ("""Selection validation rules for electrical components."""), code:python (from app.core.rule_engine import validate_all, check_breaker), code:bash (cd backend && python -m pytest tests/test_rule_engine.py -v), code:bash (git add backend/app/core/rule_engine.py backend/tests/test_r) (+10 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.08
-Nodes (33): run_selection(), _channel_of(), compute_io_budget(), IO budget aggregator — feeds the IOBudgetBar on the topology canvas.  Output s, Return BudgetItem[] for the frontend's IOBudgetBar.      Empty list when no PL, check_breaker_rating(), check_motor_starter_match(), check_protocol_compatibility() (+25 more)
+Cohesion: 0.16
+Nodes (18): _channel_of(), compute_io_budget(), IO budget aggregator — feeds the IOBudgetBar on the topology canvas.  Output s, Return BudgetItem[] for the frontend's IOBudgetBar.      Empty list when no PL, _plc_row(), Tests for the IO budget computation (IOBudgetBar data source).  Output shape M, For a BOM with a known PLC, output must have exactly one     row tagged `type=', Each io_list entry becomes one budget row with `signal` set     (no type), so t (+10 more)
 
 ### Community 30 - "Community 30"
 Cohesion: 0.17
@@ -314,8 +361,8 @@ Cohesion: 0.12
 Nodes (16): API 端点, code:block1 (浏览器 :80 → nginx ──────────────────────→ 静态文件 (React SPA)), code:bash (docker compose up -d --build), code:bash (docker compose up -d postgres qdrant minio), code:bash (cd backend && python -m pytest tests/ -v), code:block5 (ele/), Volta — 电气工程师助手 (LangGraph Multi-Agent), 全 Docker 一键部署 (+8 more)
 
 ### Community 33 - "Community 33"
-Cohesion: 0.16
-Nodes (19): AppLayout(), CabinetPanelMount(), GuidePanelMount(), InfoPanelMount(), WiringPanelMount(), BOMPanel(), ChatPanel(), ConversationSidebar() (+11 more)
+Cohesion: 0.18
+Nodes (16): AppLayout(), CabinetPanelMount(), GuidePanelMount(), InfoPanelMount(), WiringPanelMount(), BOMPanel(), ConversationSidebar(), KnowledgePanel() (+8 more)
 
 ### Community 34 - "Community 34"
 Cohesion: 0.12
@@ -334,12 +381,12 @@ Cohesion: 0.13
 Nodes (14): Architecture, code:block1 (App → AppLayout), code:block2 (User Input → ChatPanel → POST /analyze-v2 (SSE) → stream ste), code:ts (interface AppState {), Component Tree, Data Flow, In scope, Key Design Decisions (+6 more)
 
 ### Community 38 - "Community 38"
-Cohesion: 0.24
-Nodes (15): Idempotent project persistence for analyze-v2 / resume.      Re-running analys, save_to_db(), AsyncAttrs, Base, BOMItem, ChatMessage, IOItem, KnowledgeDoc (+7 more)
+Cohesion: 0.13
+Nodes (26): Idempotent project persistence for analyze-v2 / resume.      Re-running analys, save_to_db(), AsyncAttrs, Base, BOMItem, ChatMessage, Decision, EpisodicMemory (+18 more)
 
 ### Community 39 - "Community 39"
-Cohesion: 0.11
-Nodes (22): AccessoryRequirement, CategoryNode, CompatibilityConstraint, ComponentNodeSchema, GraphRelation, GraphRetrievalRequest, GraphRetrievalResult, HybridSearchResult (+14 more)
+Cohesion: 0.12
+Nodes (24): AccessoryRequirement, CategoryNode, CompatibilityConstraint, ComponentNodeSchema, GraphRelation, GraphRetrievalRequest, GraphRetrievalResult, HybridSearchResult (+16 more)
 
 ### Community 40 - "Community 40"
 Cohesion: 0.15
@@ -358,8 +405,8 @@ Cohesion: 0.17
 Nodes (11): Topology Hardening 开发文档（P0 执行版）, 任务 1：类型归一化层, 任务 2：实体抽取强化, 任务 3：拓扑 lint, 任务 4：编排接入, 回滚, 测试策略, 目标 (+3 more)
 
 ### Community 44 - "Community 44"
-Cohesion: 0.06
-Nodes (32): code:json ({), code:json ({), code:typescript (import { defineConfig } from 'vite';), code:javascript (// tailwind.config.js), code:javascript (// postcss.config.js), code:html (<!-- index.html -->), code:css (/* src/index.css */), code:dockerfile (# frontend/Dockerfile) (+24 more)
+Cohesion: 0.17
+Nodes (12): code:json ({), code:json ({), code:typescript (import { defineConfig } from 'vite';), code:javascript (// tailwind.config.js), code:javascript (// postcss.config.js), code:html (<!-- index.html -->), code:css (/* src/index.css */), code:dockerfile (# frontend/Dockerfile) (+4 more)
 
 ### Community 45 - "Community 45"
 Cohesion: 0.18
@@ -378,8 +425,8 @@ Cohesion: 0.2
 Nodes (9): code:python (async def search_with_graph(self, query: str, component_type), code:bash (git add backend/app/core/rag_engine.py), code:bash (git commit -m "chore: verify all tests pass, app loads, and ), code:bash (git add graphify-out/), LangGraph Multi-Agent + Component Knowledge Graph + Frontend Style — Implementation Plan, Summary, Task 15: Final integration test and verification, Task 16: Run graphify update per CLAUDE.md (+1 more)
 
 ### Community 49 - "Community 49"
-Cohesion: 0.24
-Nodes (6): HeroLanding(), Props, fn, input, App(), EXAMPLES
+Cohesion: 0.4
+Nodes (4): HeroLanding(), Props, fn, input
 
 ### Community 51 - "Community 51"
 Cohesion: 0.22
@@ -411,11 +458,11 @@ Nodes (9): 6. Backend Module Design, code:json ({), code:text (collect_source_co
 
 ### Community 58 - "Community 58"
 Cohesion: 0.27
-Nodes (8): analyze_project_v2(), chat_with_project(), Wrap an async generator yielding SSE strings with periodic heartbeats.      Ke, Resume a paused LangGraph workflow with human-provided component selections., Resume a paused LangGraph workflow with human-provided component selections., Wrap an async generator yielding SSE strings with periodic heartbeats.      Ke, resume_project_analysis(), _sse_with_heartbeat()
+Nodes (9): analyze_project(), analyze_project_v2(), chat_with_project(), Wrap an async generator yielding SSE strings with periodic heartbeats.      Ke, Resume a paused LangGraph workflow with human-provided component selections., Resume a paused LangGraph workflow with human-provided component selections., Wrap an async generator yielding SSE strings with periodic heartbeats.      Ke, resume_project_analysis() (+1 more)
 
 ### Community 59 - "Community 59"
-Cohesion: 0.29
-Nodes (6): ClarifyCard(), ClarifyGroup, Props, fn, other, picked
+Cohesion: 0.19
+Nodes (10): ChatPanel(), ClarifyCard(), ClarifyGroup, Props, fn, other, picked, useChatHistory() (+2 more)
 
 ### Community 60 - "Community 60"
 Cohesion: 0.25
@@ -438,8 +485,12 @@ Cohesion: 0.62
 Nodes (6): confirm_project_topology(), _get_latest_topology(), _get_project(), get_project_topology(), _get_topology_by_id(), save_project_topology()
 
 ### Community 65 - "Community 65"
+Cohesion: 0.07
+Nodes (39): _ensure_project(), post_edit_feedback(), post_negative_feedback(), post_select_feedback(), User-action feedback capture (M2 Track A).  Three POSTs that turn user actions, consolidate(), Sleep-time consolidation MVP (M3 Track B).  Scans recent ``decisions`` rows fo, Scan the last ``days`` of decisions for ``org_id`` and persist a     ``WeeklyMe (+31 more)
+
+### Community 66 - "Community 66"
 Cohesion: 0.29
-Nodes (4): Soft retrieval via Qdrant — ONLY for non-deterministic content.      Scope lim, Search for supplementary documentation only., Category-filtered vector search., VectorRetriever
+Nodes (3): test_batch_delete_docs(), test_delete_doc_keeps_graph_nodes(), test_delete_knowledge_doc()
 
 ### Community 67 - "Community 67"
 Cohesion: 0.29
@@ -483,7 +534,7 @@ Nodes (3): fmtNum(), InfoPanel(), Props
 
 ### Community 78 - "Community 78"
 Cohesion: 0.13
-Nodes (23): _baseline_steps(), generate_commissioning_steps(), _has_category(), Commissioning step generator (GuidePanel data source).  Pure deterministic — n, Universal commissioning stages, in dependency order. Conditional     steps are, Produce a commissioning step list tailored to this project., _requires_safety_validation(), commissioning_generator() (+15 more)
+Nodes (24): _baseline_steps(), generate_commissioning_steps(), _has_category(), Commissioning step generator (GuidePanel data source).  Pure deterministic — n, Universal commissioning stages, in dependency order. Conditional     steps are, Produce a commissioning step list tailored to this project., _requires_safety_validation(), commissioning_generator() (+16 more)
 
 ### Community 79 - "Community 79"
 Cohesion: 0.33
@@ -500,6 +551,10 @@ Nodes (6): 15. MVP Implementation Order, Milestone 1: Topology source of truth, 
 ### Community 83 - "Community 83"
 Cohesion: 0.4
 Nodes (3): CommunityDetector, Community detection on component knowledge graph using NetworkX Louvain., Run Louvain community detection.          nodes: [{id, name, component_type},
+
+### Community 84 - "Community 84"
+Cohesion: 0.14
+Nodes (9): generate_code(), create_project(), delete_project(), get_project(), list_projects(), generate_schematic(), select, ComponentGraph (+1 more)
 
 ### Community 85 - "Community 85"
 Cohesion: 0.4
@@ -526,8 +581,8 @@ Cohesion: 0.5
 Nodes (3): Props, WiringItem, WiringPanel()
 
 ### Community 91 - "Community 91"
-Cohesion: 0.13
-Nodes (20): detect_clarification(), _is_missing(), Detect when the analyzed requirement is missing critical engineering parameters, Treat None, empty string, and the literal 'None' / 'null'     strings (which LL, Return a `{needed: True, groups: [...]}` block when the requirement     is miss, Tests for the deterministic clarification-needs detector.  Pure function — no, Schema contract — `needed: True` so the frontend can branch     cleanly without, When all four critical params are present, no clarification     needed — the ag (+12 more)
+Cohesion: 0.07
+Nodes (38): Persist each answer into org_preferences via `bump_or_create`.      Returns th, submit_clarify(), detect_clarification(), _is_missing(), Detect when the analyzed requirement is missing critical engineering parameters, Treat None, empty string, and the literal 'None' / 'null'     strings (which LL, Return a `{needed: True, groups: [...]}` block when the requirement     is miss, apply_preferences() (+30 more)
 
 ### Community 92 - "Community 92"
 Cohesion: 0.4
@@ -602,8 +657,8 @@ Cohesion: 0.67
 Nodes (3): code:bash (cd frontend && npx tsc --noEmit && npx vite build), code:bash (git add frontend/src/views/components/ConversationSidebar.ts), Task P2b: Template entry in ConversationSidebar
 
 ### Community 114 - "Community 114"
-Cohesion: 0.1
-Nodes (17): EdgeData, addUserEdge(), addUserNode(), edgeToYMap(), getTopologySnapshot(), mergeAITopology(), nodeToYMap(), observeTopology() (+9 more)
+Cohesion: 0.11
+Nodes (16): addUserEdge(), addUserNode(), edgeToYMap(), getTopologySnapshot(), mergeAITopology(), nodeToYMap(), observeTopology(), removeUserEdges() (+8 more)
 
 ### Community 115 - "Community 115"
 Cohesion: 0.67
@@ -634,28 +689,28 @@ Cohesion: 0.26
 Nodes (11): _make_project(), _payload(), Re-running analysis on the same project must not crash on the 1:1 unique constr, BOM and ST modules are append-only by schema but logically     'latest run wins, Edits to requirement-level fields on a re-run must land —     the canonical cas, Insert a fresh Project row and return its id.      conftest.setup_database (au, A minimal LangGraph final_state shaped payload. `model_label`     flows into th, Two consecutive save_to_db calls on the same project_id must     not raise Inte (+3 more)
 
 ### Community 143 - "Community 143"
-Cohesion: 0.4
-Nodes (5): code:python (import uuid), code:python (import pytest), code:bash (cd backend && python -m pytest tests/test_rag_engine.py -v), code:bash (git add backend/app/core/rag_engine.py backend/tests/test_ra), Task 4.1: RAG Engine with Qdrant
+Cohesion: 0.06
+Nodes (33): A1: Migration, A2: Models, A3: Service, A4: Endpoints, A5: Tests, A6: Commit, B1: run_history_service, B2: Orchestrator integration (+25 more)
 
 ### Community 144 - "Community 144"
-Cohesion: 0.4
-Nodes (5): code:python ("""Selection validation rules for electrical components."""), code:python (from app.core.rule_engine import validate_all, check_breaker), code:bash (cd backend && python -m pytest tests/test_rule_engine.py -v), code:bash (git add backend/app/core/rule_engine.py backend/tests/test_r), Task 4.2: Rule Engine
+Cohesion: 0.06
+Nodes (32): A1: Migration, A2: Models — per the frozen schemas above. Verify `Float`, `Text` are imported in `models.py` (M2 Track A added them)., A3: Schemas — Pydantic shapes:, A4: Extractor (`episode_extractor.py`), A5: Orchestrator hook, A6: Episodes endpoint, A7: Tests, A8: Commit (+24 more)
 
 ### Community 145 - "Community 145"
 Cohesion: 0.17
 Nodes (12): code:bash (docker compose exec -T backend python -m pytest tests/ -q --), code:bash (cd frontend && npx tsc --noEmit && npx vitest run), code:bash (docker compose build backend frontend), code:bash (sleep 15), code:bash ($pid = (curl.exe -s -X POST http://localhost:8090/api/projec), code:bash (graphify update .), Integration — after all 3 tracks land, Task INT-1: Full backend suite (+4 more)
 
 ### Community 147 - "Community 147"
-Cohesion: 0.2
-Nodes (8): _pg_conn_str(), LangGraph graph builder.  Uses PostgresSaver so the graph state (`AnalysisStat, Build a psycopg conninfo from POSTGRES_* env vars.      The SQLAlchemy URL is, For tests: drop the in-process compile cache so the next     build_graph() rebu, reset_graph_cache(), Verify the LangGraph checkpointer is durable across builder rebuilds.  We can', First builder writes a 'requirement' on a project_id; a fresh     builder must, test_state_survives_separate_build_graph_calls()
+Cohesion: 0.1
+Nodes (18): DraftState, EMPTY_DRAFT, PreferencesTabBodyProps, Props, TabKey, clearStoredToken(), getStoredToken(), orgApi (+10 more)
 
 ### Community 148 - "Community 148"
 Cohesion: 0.2
 Nodes (10): code:python ("""Re-running analysis on the same project must not crash on), code:bash (docker cp backend/tests/test_analyze_idempotent.py ee-assist), code:python (async def save_to_db(session, project_id: str, payload: dict), code:bash (docker cp backend/app/api/analysis.py ee-assistant-backend-1), code:bash (docker compose exec -T backend python -m pytest tests/ -q --), code:bash (git add backend/app/api/analysis.py backend/tests/test_analy), Task C1: Write the failing test (RED), Task C2: Extract & rewrite the save logic (+2 more)
 
 ### Community 149 - "Community 149"
-Cohesion: 0.32
-Nodes (6): listTemplates(), loadTemplate(), REGISTRY, Template, ids, t
+Cohesion: 0.15
+Nodes (16): formatWeight(), MemorySourcePopover(), Props, Status, FULL, negSpy, onClose, ZERO (+8 more)
 
 ### Community 150 - "Community 150"
 Cohesion: 0.4
@@ -677,25 +732,165 @@ Nodes (6): code:typescript (export interface ServerChatMessage {), code:typescri
 Cohesion: 0.6
 Nodes (4): append_message(), _ensure_project(), list_messages(), Chat message persistence endpoints (M0 Track B).  These move chat history from
 
+### Community 158 - "Community 158"
+Cohesion: 0.16
+Nodes (18): format_for_prompt(), Top-N episodic memory retrieval for the selection supervisor (M3 Track B).  SQ, Return up to ``limit`` recent episodes for this org.      Without an ``org_id`, Render a list of episodes into a Chinese natural-language block     suitable fo, top_episodes(), fanout_selection_supervisor(), Fan-out selection with zero-hallucination guarantee.      For each category:, Fan-out selection with zero-hallucination guarantee.      For each category: (+10 more)
+
+### Community 159 - "Community 159"
+Cohesion: 0.17
+Nodes (12): Status, consolidateNow(), ConsolidateResult, Episode, fetchEpisodes(), fetchReports(), Report, headers (+4 more)
+
+### Community 160 - "Community 160"
+Cohesion: 0.14
+Nodes (15): _classify_protocol(), _normalize_edge(), _normalize_node(), _normalize_topology(), _pick_handles(), LangGraph agent node functions — each node receives state, returns partial state, Map a protocol string to one of the 4 electrical-circuit categories.      Cate, Coerce any LLM-produced edge into {id, source, target, protocol} shape.      ` (+7 more)
+
+### Community 161 - "Community 161"
+Cohesion: 0.19
+Nodes (14): run_selection(), check_breaker_rating(), check_motor_starter_match(), check_protocol_compatibility(), check_sil_redundancy(), check_voltage_matching(), Selection validation rules for electrical components., validate_all() (+6 more)
+
+### Community 162 - "Community 162"
+Cohesion: 0.17
+Nodes (14): consolidate_now(), ConsolidateIn, ConsolidateOut, ConsolidateSummary, list_reports(), Admin/org-scoped memory consolidation endpoints (M3 Track B).  Two routes:, Body for ``POST /api/admin/consolidate-memory``., ClarifyAnswer (+6 more)
+
+### Community 163 - "Community 163"
+Cohesion: 0.12
+Nodes (16): C1: orgClient, C2: API client switches to authedFetch, C3: Store, C4: App boot, C5: Settings panel, C6: ClarifyCard writeback, C7: Sidebar button, C8: Tests (+8 more)
+
+### Community 164 - "Community 164"
+Cohesion: 0.13
+Nodes (14): A1: Models, A3: Middleware, A4: Schemas, A6: Tests (RED → GREEN), A7: Commit Track A, code:python (# organizations), code:bash (git add backend/app/db/models.py \), code:python (PREF_PLC_FAMILY = "preferred_plc_family"   # value: {"family) (+6 more)
+
+### Community 165 - "Community 165"
+Cohesion: 0.17
+Nodes (9): KnowledgeProgressManager, Manages WebSocket connections for knowledge document processing progress., BatchDeleteInput, KnowledgeDocOut, KnowledgeRetryInput, KnowledgeSearch, KnowledgeURLIngest, ProgressEvent (+1 more)
+
+### Community 166 - "Community 166"
+Cohesion: 0.18
+Nodes (9): create_org(), _gen_code(), list_prefs(), Organization + preferences CRUD.  ``POST /api/orgs`` is the only unauthenticat, upsert_pref(), hash_token(), org_auth_middleware(), Token-based org identity.  Reads ``X-Volta-Org-Token``, hashes it with sha256, (+1 more)
+
+### Community 167 - "Community 167"
+Cohesion: 0.33
+Nodes (10): _bootstrap_org_and_project(), _new_client(), API tests for the M2 feedback endpoints (Track A).  Follows the inline ``ASGIT, Create an org + project; return (project_id, auth-header dict)., test_all_three_endpoints_require_org_token(), test_edit_with_target_bom_records_bom_edit(), test_negative_records_thumbs_down(), test_select_bumps_selection_weight_each_call() (+2 more)
+
+### Community 168 - "Community 168"
+Cohesion: 0.35
+Nodes (10): _bootstrap_org(), _fetch_pref(), _new_client(), Clarify-answer writeback API tests.  These tests exercise the full request pat, POST /api/orgs to mint a brand-new org + token. Returns (org_id, auth_headers)., test_writeback_bumps_confidence_when_value_matches(), test_writeback_creates_new_preference_at_initial_confidence(), test_writeback_ignores_unknown_group_keys() (+2 more)
+
+### Community 169 - "Community 169"
+Cohesion: 0.2
+Nodes (5): ProjectOut, Tests for conversation title/tags, search, and clustering., TestClusterLogic, TestProjectSchema, TestSearchEndpoint
+
+### Community 170 - "Community 170"
+Cohesion: 0.17
+Nodes (12): _build_fallback_topology(), _fallback_mermaid(), Generate hierarchical topology: Power→Protection→Control→Execution→Feedback., Generate hierarchical topology: Power→Protection→Control→Execution→Feedback., Generate hierarchical topology: Power→Protection→Control→Execution→Feedback., Generate a minimal valid Mermaid graph from BOM when the LLM call fails., Generate a minimal valid Mermaid graph from BOM when the LLM call fails., Generate Mermaid + ReactFlow topology in parallel, with per-call fallback. (+4 more)
+
+### Community 171 - "Community 171"
+Cohesion: 0.17
+Nodes (12): B1: Preference key constants, B2: Service helpers, B3: RequirementsAgent enrichment, B5: Tests, B6: Commit Track B, code:python ("""Canonical preference key strings shared by backend + fron), code:python ("""Org preference IO with confidence-bump semantics.), code:python (async def requirements_agent(state: AnalysisState) -> dict:) (+4 more)
+
+### Community 172 - "Community 172"
+Cohesion: 0.29
+Nodes (9): _create_org(), _new_client(), API tests for episodes listing (M3 Track A).  Same inline-app pattern as ``tes, Returns (org_id, token)., Insert a Project + EpisodicMemory directly via the session — the     capture-on, _seed_episode(), test_list_episodes_empty_returns_empty_array(), test_list_episodes_filters_by_org_and_returns_seeded_row() (+1 more)
+
+### Community 173 - "Community 173"
+Cohesion: 0.18
+Nodes (9): OrgSettingsPanel(), { container }, deleteSpy, listSpy, onClose, options, reloadSpy, textarea (+1 more)
+
+### Community 174 - "Community 174"
+Cohesion: 0.18
+Nodes (11): code:typescript (export type IOType = 'DI' | 'DO' | 'AI' | 'AO';), code:typescript (// frontend/src/models/selection.ts), code:typescript (// frontend/src/models/schematic.ts), code:typescript (// frontend/src/models/codegen.ts), code:bash (git add frontend/src/models/), code:typescript (const BASE = '/api';), code:typescript (import { create } from 'zustand';), code:bash (git add frontend/src/services/api.ts frontend/src/models/sto) (+3 more)
+
+### Community 175 - "Community 175"
+Cohesion: 0.33
+Nodes (8): _new_client(), API tests for organizations + preferences (M1 Track A).  Uses the inline ``ASG, test_create_org_returns_token_once(), test_invalid_token_rejected(), test_me_requires_token(), test_me_with_valid_token(), test_pref_delete(), test_pref_upsert_and_list()
+
+### Community 176 - "Community 176"
+Cohesion: 0.47
+Nodes (8): _bootstrap(), _ms_url(), _new_client(), API tests for the M2 memory-sources GET endpoint (Track A).  Hermetic FastAPI, test_both_signals_present_total_two(), test_no_signals_returns_all_zeros(), test_org_pref_match_via_plc_family_prefix(), test_selection_weight_signal_alone()
+
+### Community 177 - "Community 177"
+Cohesion: 0.22
+Nodes (8): MemoryTab(), consolidateSpy, EPISODE, fetchEpsSpy, fetchRepsSpy, REPORT, row, rules
+
+### Community 178 - "Community 178"
+Cohesion: 0.22
+Nodes (9): code:typescript (import React from 'react';), code:typescript (import { AppLayout } from './views/components/AppLayout';), code:typescript (import { ChatPanel } from './ChatPanel';), code:bash (cd frontend && npx tsc --noEmit), code:typescript (// frontend/src/views/components/ChatPanel.tsx), code:typescript (// frontend/src/views/components/CanvasPanel.tsx), code:bash (cd frontend && npx tsc --noEmit && npx vite build), code:bash (git add frontend/src/main.tsx frontend/src/App.tsx frontend/) (+1 more)
+
+### Community 179 - "Community 179"
+Cohesion: 0.43
+Nodes (6): _bootstrap_org(), _new_client(), Admin memory consolidation HTTP endpoints (M3 Track B).  Same hermetic-app pat, test_admin_memory_endpoints_require_org_token(), test_consolidate_now_creates_persisted_report(), test_list_memory_reports_returns_newest_first()
+
+### Community 180 - "Community 180"
+Cohesion: 0.25
+Nodes (6): fetchSpy, info, neg, negSpy, ROW, BOMItem
+
+### Community 181 - "Community 181"
+Cohesion: 0.25
+Nodes (6): fetchMemorySources(), body, headers, i, payload, spy
+
+### Community 182 - "Community 182"
+Cohesion: 0.25
+Nodes (8): code:python (import json), code:python (from fastapi import APIRouter, Depends, HTTPException), code:python (from app.api.analysis import router as analysis_router), code:python (@app.websocket("/ws/projects/{project_id}")), code:python (import pytest), code:bash (cd backend && python -m pytest tests/test_api_analysis.py -v), code:bash (git add backend/app/core/orchestrator.py backend/app/api/ana), Task 3.2: Analysis API & Orchestrator
+
+### Community 183 - "Community 183"
+Cohesion: 0.29
+Nodes (6): BOMItemOut, IOItemOut, RequirementInput, test_bom_item_confidence_enum(), test_io_item_serialization(), test_requirement_input_defaults()
+
+### Community 184 - "Community 184"
+Cohesion: 0.47
+Nodes (5): _ensure_project(), get_memory_sources(), _pref_matches(), Memory provenance for the BOM "ⓘ" popover (M2 Track A).  Surfaces *why* a part, Return True if this org_preferences value plausibly references the     given (m
+
+### Community 185 - "Community 185"
+Cohesion: 0.4
+Nodes (4): lint_topology(), Topology lint checks for electrical graph validity., test_lint_dangling_edge_error(), test_lint_ok_minimal()
+
+### Community 186 - "Community 186"
+Cohesion: 0.53
+Nodes (6): ConfidenceLevel, IOType, ModuleType, ProjectStatus, Enum, str
+
+### Community 187 - "Community 187"
+Cohesion: 0.4
+Nodes (5): category_mapper(), _derive_categories_from_requirement(), Rule-based category derivation when LLM returns empty results., Rule-based category derivation when LLM returns empty results., Rule-based category derivation when LLM returns empty results.
+
+### Community 192 - "Community 192"
+Cohesion: 0.5
+Nodes (4): code_generator(), Generate Siemens ST code modules. On LLM failure, emit a stub module so     the, Generate Siemens ST code modules. On LLM failure, emit a stub module so     the, Generate Siemens ST code modules. On LLM failure, emit a stub module so     the
+
+### Community 194 - "Community 194"
+Cohesion: 0.67
+Nodes (3): Deterministic node: assign requirement.io_list signals to the     selected PLC', Deterministic node: assign requirement.io_list signals to the     selected PLC', wiring_generator()
+
+### Community 195 - "Community 195"
+Cohesion: 0.67
+Nodes (3): A2: Migrations, code:python ("""organizations + org_preferences tables), code:python ("""projects.org_id FK (additive, NULL-able for back-compat))
+
+### Community 196 - "Community 196"
+Cohesion: 0.67
+Nodes (3): A5: Endpoints, code:python ("""Organization + preferences CRUD.), code:python (from app.middleware.org_auth import org_auth_middleware)
+
+### Community 197 - "Community 197"
+Cohesion: 0.67
+Nodes (3): B4: Clarify writeback API, code:python ("""When the user answers a ClarifyCard, we both inject the c), code:python (from app.api import clarify_answer)
+
 ## Knowledge Gaps
-- **884 isolated node(s):** `initial: all 8 tables  Revision ID: 001 Revises: None Create Date: 2026-05-0`, `add knowledge_docs.status + ondelete SET NULL for component FKs  Revision ID:`, `langgraph checkpoint tables (managed by PostgresSaver.setup())  LangGraph's Po`, `add knowledge_docs.source_type + source_url for multi-source ingestion  Revisi`, `chat_messages table  Revision ID: 003_chat_messages Revises: 002_langgraph_ch` (+879 more)
+- **1087 isolated node(s):** `initial: all 8 tables  Revision ID: 001 Revises: None Create Date: 2026-05-0`, `add knowledge_docs.status + ondelete SET NULL for component FKs  Revision ID:`, `langgraph checkpoint tables (managed by PostgresSaver.setup())  LangGraph's Po`, `add knowledge_docs.source_type + source_url for multi-source ingestion  Revisi`, `chat_messages table  Revision ID: 003_chat_messages Revises: 002_langgraph_ch` (+1082 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **15 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **25 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `ProgressEvent` connect `Community 0` to `Community 38`, `Community 29`, `Community 21`, `Community 14`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
-- **Why does `ComponentEdge` connect `Community 39` to `Community 65`, `Community 42`, `Community 2`, `Community 38`?**
-  _High betweenness centrality (0.024) - this node is a cross-community bridge._
-- **Are the 12 inferred relationships involving `KnowledgeProgressManager` (e.g. with `BatchDeleteInput` and `KnowledgeDocOut`) actually correct?**
-  _`KnowledgeProgressManager` has 12 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 13 inferred relationships involving `extract_text()` (e.g. with `_process_document()` and `extract_pdf_text()`) actually correct?**
-  _`extract_text()` has 13 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `select` connect `Community 84` to `Community 14`, `Community 142`, `Community 21`, `Community 154`, `Community 158`, `Community 161`, `Community 162`, `Community 38`, `Community 166`, `Community 167`, `Community 168`, `Community 42`, `Community 173`, `Community 179`, `Community 184`, `Community 58`, `Community 64`, `Community 193`, `Community 65`, `Community 66`, `Community 91`?**
+  _High betweenness centrality (0.163) - this node is a cross-community bridge._
+- **Why does `useStore` connect `Community 33` to `Community 1`, `Community 173`, `Community 16`, `Community 18`, `Community 147`, `Community 180`, `Community 149`, `Community 23`, `Community 59`?**
+  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+- **Why does `_build_fallback_topology()` connect `Community 170` to `Community 160`, `Community 84`?**
+  _High betweenness centrality (0.031) - this node is a cross-community bridge._
+- **Are the 67 inferred relationships involving `select` (e.g. with `list_reports()` and `save_to_db()`) actually correct?**
+  _`select` has 67 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 5 inferred relationships involving `Orchestrator` (e.g. with `ProgressEvent` and `Requirement`) actually correct?**
+  _`Orchestrator` has 5 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `initial: all 8 tables  Revision ID: 001 Revises: None Create Date: 2026-05-0`, `add knowledge_docs.status + ondelete SET NULL for component FKs  Revision ID:`, `langgraph checkpoint tables (managed by PostgresSaver.setup())  LangGraph's Po` to the rest of the system?**
-  _884 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1087 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
-- **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.11 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09 - nodes in this community are weakly interconnected._
