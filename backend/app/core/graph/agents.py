@@ -769,4 +769,14 @@ async def final_review_agent(state: AnalysisState) -> dict:
         errors = [v for v in violations if v.get("severity") == "error"]
         if errors:
             notes.append(f"{len(errors)} hard constraint violations. Review required before proceeding.")
-    return {"review_notes": notes}
+
+    # InfoPanel data: safety level + indicative bom cost (CNY 估算).
+    # Computed here because we're the last node — bom_items and
+    # safety_level are both finalized.
+    from app.core.project_meta import compute_project_meta
+    project_meta = compute_project_meta(
+        bom_items=bom,
+        safety_level=state.get("safety_level") or state.get("requirement", {}).get("safety_level"),
+    )
+
+    return {"review_notes": notes, "project_meta": project_meta}

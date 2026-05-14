@@ -170,6 +170,10 @@ interface AppState {
   syncTopologyFromYjs: () => void;
   setBOM: (bom: BOMItem[]) => void;
   setSCLCode: (code: string) => void;
+  setProjectMeta: (meta: { safetyLevel?: string; bomCost?: number }) => void;
+  setIOItems: (items: AppState['ioItems']) => void;
+  setCommissioningSteps: (steps: AppState['commissioningSteps']) => void;
+  setBudgetItems: (items: AppState['budgetItems']) => void;
   setProject: (p: { id: string; name: string }) => void;
   setStage: (s: AnalysisStage) => void;
   addMessage: (m: ChatMessage) => void;
@@ -268,6 +272,14 @@ export const useStore = create<AppState>((set, get) => ({
   },
   setBOM: (bom) => set({ bom }),
   setSCLCode: (sclCode) => set({ sclCode }),
+  setProjectMeta: ({ safetyLevel, bomCost }) =>
+    set((s) => ({
+      safetyLevel: safetyLevel !== undefined ? safetyLevel : s.safetyLevel,
+      bomCost: bomCost !== undefined ? bomCost : s.bomCost,
+    })),
+  setIOItems: (ioItems) => set({ ioItems }),
+  setCommissioningSteps: (commissioningSteps) => set({ commissioningSteps }),
+  setBudgetItems: (budgetItems) => set({ budgetItems }),
   setProject: (p) => {
     try { localStorage.setItem('volta-last-project', JSON.stringify(p)); } catch {}
     set({ project: p });

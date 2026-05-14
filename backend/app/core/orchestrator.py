@@ -101,6 +101,7 @@ class Orchestrator:
                 "st_modules": None,
                 "topology": None,
                 "review_notes": None,
+                "project_meta": None,
                 "graph_traces": [],
                 "errors": [],
                 "messages": [],
@@ -129,7 +130,7 @@ class Orchestrator:
         "rule_validator":       ("violations",),
         "schematic_generator":  ("mermaid_code", "topology"),
         "code_generator":       ("st_modules",),
-        "final_review_agent":   ("review_notes",),
+        "final_review_agent":   ("review_notes", "project_meta"),
     }
 
     @classmethod

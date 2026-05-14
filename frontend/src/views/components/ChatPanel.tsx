@@ -168,6 +168,12 @@ export function ChatPanel() {
         .join('\n\n');
       useStore.getState().setSCLCode(codeText);
     }
+    if (state.project_meta) {
+      useStore.getState().setProjectMeta({
+        safetyLevel: state.project_meta.safety_level ?? undefined,
+        bomCost: state.project_meta.bom_cost ?? undefined,
+      });
+    }
   };
 
   const buildCanvasContext = () => {
