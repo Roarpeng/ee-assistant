@@ -15,6 +15,9 @@ from app.api.schematic import router as schematic_router
 from app.api.codegen import router as codegen_router
 from app.api.topology import router as topology_router
 from app.api.messages import router as messages_router
+from app.api.orgs import router as orgs_router
+from app.api.clarify_answer import router as clarify_answer_router
+from app.middleware.org_auth import org_auth_middleware
 
 
 @asynccontextmanager
@@ -36,6 +39,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.middleware("http")(org_auth_middleware)
+
 app.include_router(projects_router)
 app.include_router(analysis_router)
 app.include_router(selection_router)
@@ -44,6 +49,8 @@ app.include_router(schematic_router)
 app.include_router(codegen_router)
 app.include_router(topology_router)
 app.include_router(messages_router)
+app.include_router(orgs_router)
+app.include_router(clarify_answer_router)
 
 
 @app.get("/api/health")
