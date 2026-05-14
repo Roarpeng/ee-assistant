@@ -287,3 +287,40 @@ class ChatMessageOut(BaseModel):
     sequence: int
     created_at: datetime
     model_config = {"from_attributes": True}
+
+
+# ── Organizations + preferences (M1 Track A) ──
+
+class OrgIn(BaseModel):
+    name: str
+
+
+class OrgCreated(BaseModel):
+    id: str
+    name: str
+    code: str
+    token: str  # only shown at creation
+
+
+class OrgOut(BaseModel):
+    id: str
+    name: str
+    code: str
+
+    model_config = {"from_attributes": True}
+
+
+class PrefIn(BaseModel):
+    value: dict
+    confidence: float | None = None
+    source: str | None = None
+
+
+class PrefOut(BaseModel):
+    key: str
+    value: dict
+    confidence: float
+    source: str
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
