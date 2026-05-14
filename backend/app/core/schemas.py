@@ -324,3 +324,52 @@ class PrefOut(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ── Memory flywheel M2: feedback + memory-sources ──
+
+
+class SelectFeedbackIn(BaseModel):
+    """Body for POST /api/projects/{pid}/feedback/select."""
+    category: str
+    manufacturer: str
+    model: str
+    before: dict | None = None
+    rationale: str | None = None
+
+
+class SelectFeedbackOut(BaseModel):
+    decision_id: str
+    weight: float
+
+
+class EditFeedbackIn(BaseModel):
+    """Body for POST /api/projects/{pid}/feedback/edit."""
+    target: str  # 'bom' | 'wiring' | 'topology'
+    before: dict
+    after: dict
+    rationale: str | None = None
+
+
+class EditFeedbackOut(BaseModel):
+    decision_id: str
+
+
+class NegativeFeedbackIn(BaseModel):
+    """Body for POST /api/projects/{pid}/feedback/negative."""
+    target: str  # 'bom_row' | 'general'
+    context: dict = Field(default_factory=dict)
+    rationale: str | None = None
+
+
+class NegativeFeedbackOut(BaseModel):
+    decision_id: str
+
+
+class MemorySourcesOut(BaseModel):
+    """Response for GET /api/projects/{pid}/memory-sources/{cat}/{mfg}/{model}."""
+    org_pref_match: bool = False
+    selection_weight: float = 0.0
+    similar_episodes_count: int = 0  # M3 placeholder
+    kb_doc_hits: int = 0  # M3 placeholder
+    total_signals: int = 0

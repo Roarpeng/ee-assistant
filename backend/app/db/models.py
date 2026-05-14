@@ -218,3 +218,85 @@ class OrgPreference(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+
+# ── Memory flywheel M2: decisions / run_history / selection_weights ──
+
+
+class Decision(Base):
+    """Captured user decision that disagreed with (or confirmed) the AI's
+    suggestion. Drives the org-level selection bias loop in M2 and the
+    per-org learned-preferences synthesis in M3."""
+
+    __tablename__ = "decisions"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    project_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("projects.id"), index=True, nullable=False
+    )
+    org_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("organizations.id"), nullable=True, index=True
+    )
+    # 'manual_select' | 'bom_edit' | 'wiring_edit' | 'topology_edit' |
+    # 'thumbs_down' | 'clarify'
+    type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    context: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    before: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    after: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    rationale: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+
+
+class RunHistory(Base):
+    """Per-analysis-run telemetry. Track B writes start/finish; Track A
+    just owns the table definition + migration."""
+
+    __tablename__ = "run_history"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    project_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("projects.id"), index=True, nullable=False
+    )
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # {node_name: ms_elapsed}
+    nodes_executed: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    # [{"node": str, "error": str}, ...]
+    errors: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    final_stage: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+
+class SelectionWeight(Base):
+    """Per-(org, category, manufacturer, model) accumulator that biases
+    selection_supervisor candidate ordering. NULL `org_id` is reserved
+    for "global" preferences; the service layer substitutes the literal
+    string ``"_global_"`` to side-step SQLite NULL-in-composite-PK
+    quirks."""
+
+    __tablename__ = "selection_weights"
+
+    org_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("organizations.id"),
+        primary_key=True,
+        nullable=True,
+    )
+    category: Mapped[str] = mapped_column(String(64), primary_key=True)
+    manufacturer: Mapped[str] = mapped_column(String(120), primary_key=True)
+    model: Mapped[str] = mapped_column(String(120), primary_key=True)
+    weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    last_selected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
