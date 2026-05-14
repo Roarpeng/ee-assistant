@@ -181,3 +181,29 @@ body {
 [data-theme="light"] .react-flow-dark .react-flow__background pattern circle {
   fill: #d1d5db !important;
 }
+
+/* ===== Engineering theme: wireframe overrides for ReactFlow nodes =====
+ *  We don't rewrite each node renderer (700+ lines of rich markup); instead
+ *  we strip shadows/glows and tighten borders globally so the same JSX reads
+ *  as engineering-line-art under [data-theme="engineering"].
+ */
+[data-theme="engineering"] .react-flow__node {
+  /* Kill drop shadows entirely */
+  filter: none !important;
+}
+[data-theme="engineering"] .react-flow__node > div > div {
+  /* Drop the rounded-2xl + heavy shadow that wraps every node body */
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+[data-theme="engineering"] .react-flow__node .shadow-xl,
+[data-theme="engineering"] .react-flow__node .shadow-lg,
+[data-theme="engineering"] .react-flow__node .shadow-md {
+  box-shadow: none !important;
+}
+[data-theme="engineering"] .react-flow__edge-path {
+  stroke-width: 1.25 !important;
+}
+[data-theme="engineering"] .react-flow__background pattern circle {
+  fill: var(--color-grid) !important;
+}

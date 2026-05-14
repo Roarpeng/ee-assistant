@@ -673,7 +673,7 @@ export function TopologyPanel() {
               attributionPosition="bottom-right"
               className="react-flow-dark"
             >
-              <Background color="#525252" variant={BackgroundVariant.Dots} gap={24} size={2} />
+              <Background color="var(--color-grid)" variant={BackgroundVariant.Dots} gap={24} size={2} />
               <Controls className="bg-app-bg-tertiary border-app-border fill-app-text-secondary text-app-text-secondary" />
             </ReactFlow>
             {contextMenu && (
