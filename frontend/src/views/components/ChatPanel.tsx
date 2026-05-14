@@ -174,6 +174,9 @@ export function ChatPanel() {
         bomCost: state.project_meta.bom_cost ?? undefined,
       });
     }
+    if (Array.isArray(state.io_budget)) {
+      useStore.getState().setBudgetItems(state.io_budget);
+    }
   };
 
   const buildCanvasContext = () => {

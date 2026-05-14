@@ -499,7 +499,17 @@ async def rule_validator(state: AnalysisState) -> dict:
         "total_load_current_a": 0,
     }
     violations = validate_all(bom, req_data)
-    return {"violations": violations}
+
+    # IOBudgetBar data — computed here because we're already walking
+    # both BOM and requirement, and the budget bar should appear at
+    # the same time as the topology (next node).
+    from app.core.io_budget import compute_io_budget
+    io_budget = compute_io_budget(
+        bom_items=bom,
+        io_list=req.get("io_list", []),
+    )
+
+    return {"violations": violations, "io_budget": io_budget}
 
 
 def _build_fallback_topology(bom_list: list[dict]) -> dict:
