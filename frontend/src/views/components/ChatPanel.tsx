@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useStore } from '../../models/store';
+import { useStore, consumePendingSeedPrompt } from '../../models/store';
 import type { NodeData, EdgeData } from '../../models/store';
 import { useChatHistory } from '../../hooks/useChatHistory';
 import { api } from '../../services/api';
@@ -48,6 +48,13 @@ export function ChatPanel() {
       useStore.getState().saveChatHistory();
     };
   }, []);
+
+  // Hero landing → newProject({ seedPrompt }) leaves a one-shot prompt that we
+  // pop into the chat input here. Runs once per project switch.
+  useEffect(() => {
+    const seed = consumePendingSeedPrompt();
+    if (seed) setInputValue(seed);
+  }, [project?.id]);
 
   // Auto-compose prompt when chatContext is set from canvas
   useEffect(() => {

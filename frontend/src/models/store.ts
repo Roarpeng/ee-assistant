@@ -163,7 +163,7 @@ interface AppState {
   setKnowledgeLoading: (loading: boolean) => void;
   setChatContext: (ctx: ChatContext | null) => void;
   setPreviewNodeId: (id: string | null) => void;
-  newProject: (options?: { preserveCanvas?: boolean }) => Promise<void>;
+  newProject: (options?: { preserveCanvas?: boolean; seedPrompt?: string }) => Promise<void>;
   clearChat: () => void;
   resetCanvasWorkspace: () => void;
   incrementUnread: () => void;
@@ -174,7 +174,19 @@ interface AppState {
 
 let msgCounter = 0;
 
-export const useStore = create<AppState>((set) => ({
+// One-shot seed prompt handed off from HeroLanding/Templates to ChatPanel.
+// Module-level (not in the store) so its existence doesn't widen AppState typing.
+let _pendingSeedPrompt: string | null = null;
+export function setPendingSeedPrompt(p: string | null) {
+  _pendingSeedPrompt = p;
+}
+export function consumePendingSeedPrompt(): string | null {
+  const p = _pendingSeedPrompt;
+  _pendingSeedPrompt = null;
+  return p;
+}
+
+export const useStore = create<AppState>((set, get) => ({
   topology: {
     nodes: [],
     edges: [],
@@ -305,8 +317,9 @@ export const useStore = create<AppState>((set) => ({
   },
 
   newProject: async (options) => {
-    const s = useStore.getState();
+    const s = get();
     const preserveCanvas = options?.preserveCanvas ?? false;
+    setPendingSeedPrompt(options?.seedPrompt ?? null);
     const preservedCanvas = {
       topology: s.topology,
       yTopologyVersion: s.yTopologyVersion,
