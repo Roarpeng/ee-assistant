@@ -19,7 +19,7 @@ export default function App() {
   // Best-effort restore of the last project on cold boot so reloads don't kick
   // the user back to the hero screen.
   useEffect(() => {
-    if (!project) loadChatHistory();
+    if (!project) void loadChatHistory();
   }, [project, loadChatHistory]);
 
   if (!project) {

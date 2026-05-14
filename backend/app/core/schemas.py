@@ -268,3 +268,22 @@ class HybridSearchResponseSchema(BaseModel):
     graph_result: GraphRetrievalResponseSchema
     vector_results: list[dict] = Field(default_factory=list)
     requires_human_review: bool = False
+
+
+# ── Chat message persistence (M0 Track B) ──
+
+class ChatMessageIn(BaseModel):
+    role: str
+    content: str
+    options: list[dict] | None = None
+
+
+class ChatMessageOut(BaseModel):
+    id: str
+    project_id: str
+    role: str
+    content: str
+    options: list[dict] | None
+    sequence: int
+    created_at: datetime
+    model_config = {"from_attributes": True}

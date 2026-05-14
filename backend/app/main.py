@@ -14,6 +14,7 @@ from app.api.knowledge import router as knowledge_router
 from app.api.schematic import router as schematic_router
 from app.api.codegen import router as codegen_router
 from app.api.topology import router as topology_router
+from app.api.messages import router as messages_router
 
 
 @asynccontextmanager
@@ -42,6 +43,7 @@ app.include_router(knowledge_router)
 app.include_router(schematic_router)
 app.include_router(codegen_router)
 app.include_router(topology_router)
+app.include_router(messages_router)
 
 
 @app.get("/api/health")

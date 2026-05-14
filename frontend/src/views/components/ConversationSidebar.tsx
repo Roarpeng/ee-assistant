@@ -80,7 +80,7 @@ export function ConversationSidebar() {
       saveConversationMessages(s.project.id, s.messages);
     }
     setProject({ id: conv.id, name: conv.name });
-    useStore.getState().loadChatHistory();
+    await useStore.getState().loadChatHistory(conv.id);
   }, [setProject]);
 
   const handleDelete = useCallback((e: React.MouseEvent, id: string) => {

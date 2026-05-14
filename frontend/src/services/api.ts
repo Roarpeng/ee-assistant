@@ -241,4 +241,29 @@ export const api = {
       `/test-connectivity`,
       { method: 'POST', body: JSON.stringify({ chat, embedding }) }
     ),
+
+  // Chat messages — server-side persistence (M0 Track B). The store
+  // calls these so chat history survives a docker restart and is
+  // shareable across devices/tabs; localStorage remains as offline cache.
+  listMessages: (projectId: string) =>
+    request<ServerChatMessage[]>(`/projects/${projectId}/messages`),
+
+  appendMessage: (
+    projectId: string,
+    msg: { role: string; content: string; options?: unknown },
+  ) =>
+    request<ServerChatMessage>(`/projects/${projectId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify(msg),
+    }),
 };
+
+export interface ServerChatMessage {
+  id: string;
+  project_id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  options: Array<{ key: string; label: string; choices: string[] }> | null;
+  sequence: number;
+  created_at: string;
+}

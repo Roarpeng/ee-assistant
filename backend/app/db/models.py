@@ -171,3 +171,15 @@ class ComponentEdge(Base):
     )
     target_node: Mapped["ComponentNode"] = relationship(foreign_keys=[target_id])
     source_doc: Mapped["KnowledgeDoc | None"] = relationship()
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), index=True, nullable=False)
+    role: Mapped[str] = mapped_column(String(16), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    options: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    sequence: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

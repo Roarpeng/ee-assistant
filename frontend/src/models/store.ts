@@ -204,7 +204,7 @@ interface AppState {
   incrementUnread: () => void;
   resetUnread: () => void;
   saveChatHistory: () => void;
-  loadChatHistory: () => void;
+  loadChatHistory: (projectId?: string) => Promise<void>;
 }
 
 let msgCounter = 0;
@@ -285,10 +285,30 @@ export const useStore = create<AppState>((set, get) => ({
     set({ project: p });
   },
   setStage: (stage) => set({ stage }),
-  addMessage: (m) =>
-    set((s) => ({
-      messages: [...s.messages, { ...m, id: String(++msgCounter), timestamp: Date.now() }],
-    })),
+  addMessage: (m) => {
+    const id = m.id || String(++msgCounter);
+    const final: ChatMessage = { ...m, id, timestamp: m.timestamp || Date.now() };
+    set((s) => ({ messages: [...s.messages, final] }));
+    // Fire-and-forget server persistence so chat history survives a
+    // docker compose restart (M0 Track B). localStorage stays as the
+    // offline cache; server failures are intentionally swallowed.
+    const project = get().project;
+    if (
+      project &&
+      final.content &&
+      (final.role === 'user' || final.role === 'assistant')
+    ) {
+      void import('../services/api').then(({ api }) => {
+        api
+          .appendMessage(project.id, {
+            role: final.role,
+            content: final.content,
+            options: final.options,
+          })
+          .catch(() => {});
+      });
+    }
+  },
   setActiveCanvasTab: (tab) => set({ activeCanvasTab: tab }),
   toggleTheme: () =>
     set((s) => {
@@ -435,22 +455,49 @@ export const useStore = create<AppState>((set, get) => ({
     } catch {}
   },
 
-  loadChatHistory: () => {
-    const s = useStore.getState();
-    // If no project in state, try to restore last project from localStorage
-    if (!s.project) {
-      try {
-        const saved = localStorage.getItem('volta-last-project');
-        if (saved) {
-          const p = JSON.parse(saved);
-          if (p && p.id) {
-            set({ project: p });
+  loadChatHistory: async (projectId?: string) => {
+    // Resolve which project we're loading messages for. Cold-boot path
+    // (App.tsx mount with no project in state) restores the last project
+    // from localStorage so reloads don't kick the user back to Hero.
+    let pid = projectId;
+    if (!pid) {
+      const s = useStore.getState();
+      if (s.project?.id) {
+        pid = s.project.id;
+      } else {
+        try {
+          const saved = localStorage.getItem('volta-last-project');
+          if (saved) {
+            const p = JSON.parse(saved);
+            if (p && p.id) {
+              set({ project: p });
+              pid = p.id;
+            }
           }
-        }
-      } catch {}
+        } catch {}
+      }
     }
-    const pid = s.project?.id;
     if (!pid) return;
+
+    // Server is the source of truth (M0 Track B). On any network /
+    // API failure we silently fall back to the localStorage cache so
+    // the UX degrades gracefully when offline.
+    try {
+      const { api } = await import('../services/api');
+      const serverMsgs = await api.listMessages(pid);
+      const messages: ChatMessage[] = serverMsgs.map((m) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        timestamp: new Date(m.created_at).getTime(),
+        options: m.options ?? undefined,
+      }));
+      set({ messages });
+      return;
+    } catch {}
+
+    // Offline fallback: shared 'volta-chat-history' cache that
+    // conversations.ts also writes to.
     try {
       const raw = localStorage.getItem('volta-chat-history');
       if (!raw) return;
@@ -458,7 +505,10 @@ export const useStore = create<AppState>((set, get) => ({
       const msgs = all[pid];
       if (msgs && msgs.length > 0) {
         set({ messages: msgs });
-        const maxId = msgs.reduce((max: number, m: any) => Math.max(max, parseInt(m.id) || 0), 0);
+        const maxId = msgs.reduce(
+          (max: number, m: any) => Math.max(max, parseInt(m.id) || 0),
+          0,
+        );
         msgCounter = maxId;
       }
     } catch {}
