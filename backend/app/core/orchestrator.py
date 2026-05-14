@@ -80,14 +80,14 @@ class Orchestrator:
                 dimensions=embedding_config.get("dimension", 0),
             )
 
-    def _build_input_state(
+    async def _build_input_state(
         self, project_id: str, user_input: str,
         llm_config: dict | None, embedding_config: dict | None,
         history: list[dict] | None, graph,
     ) -> dict:
         """Build input state: full initial for new projects, incremental for continuing."""
         config = {"configurable": {"thread_id": project_id}}
-        current_state = graph.get_state(config)
+        current_state = await graph.aget_state(config)
 
         if not current_state.values:
             return {
@@ -193,7 +193,7 @@ class Orchestrator:
                 yield evt
 
         # Stream complete — read full final state from checkpoint
-        final_state = graph.get_state(config).values
+        final_state = (await graph.aget_state(config)).values
         yield {"done": True, "payload": final_state}
 
     async def stream_graph_analysis(self, project_id: str, user_input: str,
@@ -206,9 +206,9 @@ class Orchestrator:
         yield {"step": "正在准备 LangGraph 执行环境...", "node": "init"}
         await self._configure_services(llm_config, embedding_config)
 
-        graph = build_graph()
+        graph = await build_graph()
         config = {"configurable": {"thread_id": project_id}}
-        input_state = self._build_input_state(
+        input_state = await self._build_input_state(
             project_id, user_input, llm_config, embedding_config, history, graph
         )
 
@@ -226,7 +226,7 @@ class Orchestrator:
         yield {"step": "人工选型数据已接收，继续工程分析...", "node": "resume"}
         await self._configure_services(None, None)
 
-        graph = build_graph()
+        graph = await build_graph()
         config = {"configurable": {"thread_id": project_id}}
 
         async for evt in self._stream_events(graph, Command(resume=resume_value), config):
@@ -239,9 +239,9 @@ class Orchestrator:
 
         await self._configure_services(llm_config, embedding_config)
 
-        graph = build_graph()
+        graph = await build_graph()
         config = {"configurable": {"thread_id": project_id}}
-        input_state = self._build_input_state(
+        input_state = await self._build_input_state(
             project_id, user_input, llm_config, embedding_config, None, graph
         )
 
