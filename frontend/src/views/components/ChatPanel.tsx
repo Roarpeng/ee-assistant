@@ -177,6 +177,9 @@ export function ChatPanel() {
     if (Array.isArray(state.io_budget)) {
       useStore.getState().setBudgetItems(state.io_budget);
     }
+    if (Array.isArray(state.commissioning_steps)) {
+      useStore.getState().setCommissioningSteps(state.commissioning_steps);
+    }
   };
 
   const buildCanvasContext = () => {

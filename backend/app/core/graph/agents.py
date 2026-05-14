@@ -790,3 +790,15 @@ async def final_review_agent(state: AnalysisState) -> dict:
     )
 
     return {"review_notes": notes, "project_meta": project_meta}
+
+
+async def commissioning_generator(state: AnalysisState) -> dict:
+    """Deterministic node: produce a tailored commissioning step list
+    for the GuidePanel. Runs in parallel with the other terminal nodes
+    off rule_validator — depends only on BOM + requirement metadata."""
+    from app.core.commissioning_generator import generate_commissioning_steps
+    steps = generate_commissioning_steps(
+        bom_items=state.get("bom_items", []),
+        requirement=state.get("requirement", {}),
+    )
+    return {"commissioning_steps": steps}

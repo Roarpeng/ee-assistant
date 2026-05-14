@@ -16,6 +16,8 @@ _NODE_MESSAGES: dict[str, str] = {
     "schematic_generator": "系统拓扑结构生成完成。",
     "code_generator": "PLC ST 代码生成完成。",
     "final_review_agent": "最终审查完成。",
+    "commissioning_generator": "调试步骤生成完成。",
+    "wiring_generator": "I/O 接线表生成完成。",
 }
 
 
@@ -103,6 +105,7 @@ class Orchestrator:
                 "review_notes": None,
                 "project_meta": None,
                 "io_budget": None,
+                "commissioning_steps": None,
                 "graph_traces": [],
                 "errors": [],
                 "messages": [],
@@ -132,6 +135,7 @@ class Orchestrator:
         "schematic_generator":  ("mermaid_code", "topology"),
         "code_generator":       ("st_modules",),
         "final_review_agent":   ("review_notes", "project_meta"),
+        "commissioning_generator": ("commissioning_steps",),
     }
 
     @classmethod
