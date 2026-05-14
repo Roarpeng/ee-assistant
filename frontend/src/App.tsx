@@ -16,6 +16,13 @@ export default function App() {
   const newProject = useStore((s) => s.newProject);
   const loadChatHistory = useStore((s) => s.loadChatHistory);
 
+  // M1: bootstrap (or restore) the organization identity exactly once
+  // before any other API call goes out. `bootstrapOrg` is idempotent —
+  // if a token already exists in localStorage it just hydrates `org`.
+  useEffect(() => {
+    void useStore.getState().bootstrapOrg();
+  }, []);
+
   // Best-effort restore of the last project on cold boot so reloads don't kick
   // the user back to the hero screen.
   useEffect(() => {

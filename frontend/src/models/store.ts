@@ -5,6 +5,7 @@ import {
   getTopologySnapshot,
   resetYjsDoc,
 } from './yjsStore';
+import type { OrgInfo, OrgPreference } from '../services/orgClient';
 
 // ===== Topology Types =====
 export type NodeData = {
@@ -165,6 +166,11 @@ interface AppState {
   chatContext: ChatContext | null;
   previewNodeId: string | null;
   unreadChatCount: number;
+  // M1: Organization identity. `org` is null until `bootstrapOrg` resolves
+  // (server round-trip on first mount). `preferences` mirrors the server-
+  // side org_preferences table; refreshed after every clarify writeback.
+  org: OrgInfo | null;
+  preferences: OrgPreference[];
 
   setTopology: (nodes: NodeData[], edges: EdgeData[], source?: 'ai' | 'user') => void;
   syncTopologyFromYjs: () => void;
@@ -205,6 +211,8 @@ interface AppState {
   resetUnread: () => void;
   saveChatHistory: () => void;
   loadChatHistory: (projectId?: string) => Promise<void>;
+  bootstrapOrg: () => Promise<void>;
+  refreshPreferences: () => Promise<void>;
 }
 
 let msgCounter = 0;
@@ -247,6 +255,8 @@ export const useStore = create<AppState>((set, get) => ({
   chatContext: null,
   previewNodeId: null,
   unreadChatCount: 0,
+  org: null,
+  preferences: [],
 
   setTopology: (nodes, edges, source = 'user') => {
     if (source === 'ai') {
@@ -511,6 +521,46 @@ export const useStore = create<AppState>((set, get) => ({
         );
         msgCounter = maxId;
       }
+    } catch {}
+  },
+
+  // M1: bootstrap or restore the org identity. Idempotent — if a
+  // valid token already lives in localStorage we skip POST /api/orgs
+  // and just call /api/orgs/me to hydrate. On a stale/invalid token
+  // we wipe + re-bootstrap once. Always refreshes the prefs cache
+  // afterwards so OrgSettingsPanel renders without a second round-trip.
+  bootstrapOrg: async () => {
+    try {
+      const { orgApi, getStoredToken, setStoredToken, clearStoredToken } =
+        await import('../services/orgClient');
+      const token = getStoredToken();
+      if (!token) {
+        const created = await orgApi.bootstrap('Default Org');
+        setStoredToken(created.token);
+        set({ org: { id: created.id, name: created.name, code: created.code } });
+      } else {
+        try {
+          const me = await orgApi.me();
+          set({ org: me });
+        } catch {
+          clearStoredToken();
+          const created = await orgApi.bootstrap('Default Org');
+          setStoredToken(created.token);
+          set({ org: { id: created.id, name: created.name, code: created.code } });
+        }
+      }
+      await get().refreshPreferences();
+    } catch {
+      // Backend unavailable or non-2xx everywhere; degrade silently
+      // so the SPA still renders. UI surfaces "未连接" via `org === null`.
+    }
+  },
+
+  refreshPreferences: async () => {
+    try {
+      const { orgApi } = await import('../services/orgClient');
+      const prefs = await orgApi.listPreferences();
+      set({ preferences: prefs });
     } catch {}
   },
 }));

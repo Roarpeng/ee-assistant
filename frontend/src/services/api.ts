@@ -1,3 +1,5 @@
+import { authedFetch } from './orgClient';
+
 const BASE = '/api';
 
 function getSettings() {
@@ -12,7 +14,7 @@ function getSettings() {
 }
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${url}`, {
+  const res = await authedFetch(`${BASE}${url}`, {
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
   });
@@ -76,7 +78,7 @@ export const api = {
   // Analysis v2 (LangGraph via SSE)
   analyzeV2SSE: (projectId: string, message: string, history: any[] = [], canvasContext: any = {}) => {
     const settings = getSettings();
-    return fetch(`${BASE}/projects/${projectId}/analyze-v2`, {
+    return authedFetch(`${BASE}/projects/${projectId}/analyze-v2`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -108,7 +110,7 @@ export const api = {
     canvasContext: any = {}
   ) => {
     const settings = getSettings();
-    return fetch(`${BASE}/projects/${projectId}/chat`, {
+    return authedFetch(`${BASE}/projects/${projectId}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -128,7 +130,7 @@ export const api = {
 
   // Resume paused analysis (human selection after NOT_FOUND)
   resumeAnalysis: (projectId: string, manualSelections: any[]) => {
-    return fetch(`${BASE}/projects/${projectId}/resume`, {
+    return authedFetch(`${BASE}/projects/${projectId}/resume`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ manual_selections: manualSelections }),
@@ -155,7 +157,7 @@ export const api = {
 
   // Knowledge
   uploadKnowledgeDoc: (formData: FormData) =>
-    fetch(`${BASE}/knowledge/docs`, { method: 'POST', body: formData }),
+    authedFetch(`${BASE}/knowledge/docs`, { method: 'POST', body: formData }),
 
   searchKnowledge: (query: string, filters?: { category?: string[]; manufacturer?: string }) => {
     const settings = getSettings();

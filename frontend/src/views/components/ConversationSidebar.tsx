@@ -9,6 +9,7 @@ import {
   type ConversationMeta,
 } from '../../services/conversations';
 import { listTemplates, type Template } from '../../services/templates';
+import { OrgSettingsPanel } from './OrgSettingsPanel';
 
 function formatRelativeTime(timestamp: number) {
   const diff = Date.now() - timestamp;
@@ -28,6 +29,7 @@ export function ConversationSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [search, setSearch] = useState('');
   const [showNewMenu, setShowNewMenu] = useState(false);
+  const [showOrgSettings, setShowOrgSettings] = useState(false);
 
   // Update conversation list when messages change
   useEffect(() => {
@@ -225,6 +227,24 @@ export function ConversationSidebar() {
           </div>
         )}
       </div>
+
+      {/* Footer — org settings entry. Anchored at the bottom of the
+          sidebar so it survives long conversation lists scrolling. */}
+      <div className="shrink-0 border-t border-app-border p-2">
+        <button
+          type="button"
+          onClick={() => setShowOrgSettings(true)}
+          className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-app-text-secondary hover:bg-app-bg-tertiary hover:text-app-text-primary transition-colors flex items-center justify-between"
+        >
+          <span>组织设置</span>
+          <span className="text-app-text-tertiary text-[10px]">⚙</span>
+        </button>
+      </div>
+
+      <OrgSettingsPanel
+        open={showOrgSettings}
+        onClose={() => setShowOrgSettings(false)}
+      />
     </div>
   );
 }
