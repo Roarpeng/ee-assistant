@@ -23,3 +23,9 @@ test-resp.txt
 # Worktrees (kept project-local, never committed)
 .worktrees/
 
+# Graphify local-only state — only the canonical artifacts (graph.json,
+# graph.html, GRAPH_REPORT.md, manifest.json) are committed.
+graphify-out/cache/
+graphify-out/.graphify_labels.json
+graphify-out/.graphify_root
+
