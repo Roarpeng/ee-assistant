@@ -300,3 +300,76 @@ class SelectionWeight(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+
+# ── Memory flywheel M3: episodic_memories / weekly_memory_reports ──
+
+
+class EpisodicMemory(Base):
+    """One row per finished analysis run — distilled into a one-line
+    summary plus the structured ``key_decisions`` extracted from the
+    run's ``decisions`` rows. The selection_supervisor (Track B) reads
+    the most-recent N rows for an org to inject historical context into
+    the prompt.
+
+    ``embedding_id`` is reserved for M3.6 (Qdrant hybrid search); today's
+    retrieval is plain SQL ``ORDER BY created_at DESC``.
+    """
+
+    __tablename__ = "episodic_memories"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    project_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("projects.id"), nullable=False, index=True
+    )
+    org_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("organizations.id"), nullable=True, index=True
+    )
+    requirement_snapshot: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    bom_snapshot: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    # [{cat, before, after, rationale, type}, ...]
+    key_decisions: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    score: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+
+
+class WeeklyMemoryReport(Base):
+    """Sleep-time consolidation output (owned by Track B's
+    ``consolidation_service``). Track A owns only the table definition
+    so Track B can land its writer + endpoints against a stable schema.
+
+    Each row is a snapshot of decisions analysed in the given period:
+      - ``new_rules``: (cat × manufacturer × model) tuples seen ≥ 3
+        times in ``manual_select`` decisions
+      - ``revisions``: edit targets that recurred in the period
+      - ``gaps``: thumbs_down decisions grouped by component
+      - ``metrics``: scan counts (decisions_scanned, candidate_rules, ...)
+    """
+
+    __tablename__ = "weekly_memory_reports"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    org_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("organizations.id"), nullable=True, index=True
+    )
+    period_start: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    period_end: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    new_rules: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    revisions: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    gaps: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    metrics: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )

@@ -373,3 +373,42 @@ class MemorySourcesOut(BaseModel):
     similar_episodes_count: int = 0  # M3 placeholder
     kb_doc_hits: int = 0  # M3 placeholder
     total_signals: int = 0
+
+
+# ── Memory flywheel M3: episodic memories + weekly reports ──
+
+
+class EpisodeOut(BaseModel):
+    """Read-shape for ``GET /api/orgs/me/episodes`` (and reusable from
+    Track B's retrieval endpoints).
+
+    We deliberately omit ``requirement_snapshot`` / ``bom_snapshot``
+    from the listing payload — they can be heavy and the UI's "memory"
+    tab only renders the summary + decision count today. A detail
+    endpoint can surface them later if needed.
+    """
+
+    id: str
+    project_id: str
+    org_id: str | None
+    summary: str
+    key_decisions: list[dict] = Field(default_factory=list)
+    score: float
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+class ReportOut(BaseModel):
+    """Read-shape for ``GET /api/orgs/me/memory-reports`` (Track B
+    writes the rows; Track A owns the schema)."""
+
+    id: str
+    org_id: str | None
+    period_start: datetime
+    period_end: datetime
+    new_rules: list[dict] = Field(default_factory=list)
+    revisions: list[dict] = Field(default_factory=list)
+    gaps: list[dict] = Field(default_factory=list)
+    metrics: dict = Field(default_factory=dict)
+    created_at: datetime
+    model_config = {"from_attributes": True}

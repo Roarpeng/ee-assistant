@@ -282,6 +282,25 @@ class Orchestrator:
             errors=errors,
             final_stage=final_stage,
         )
+
+        # M3 Track A: capture this finished run as an EpisodicMemory row
+        # so cross-project selection can retrieve it later. We read
+        # project_id + org_id straight off the final state (both were
+        # injected by `_build_input_state`); if the state shape is
+        # unexpected we silently skip rather than guess. The extractor
+        # itself is internally try/except-wrapped, but we add a second
+        # layer here so a NameError / import failure can never break
+        # the done event downstream consumers depend on.
+        try:
+            if isinstance(final_state, dict):
+                pid = final_state.get("project_id")
+                org_id = final_state.get("org_id")
+                if pid:
+                    from app.core.episode_extractor import extract_and_store_episode
+                    await extract_and_store_episode(pid, org_id, final_state)
+        except Exception:
+            pass
+
         yield {"done": True, "payload": final_state}
 
     async def stream_graph_analysis(self, project_id: str, user_input: str,
