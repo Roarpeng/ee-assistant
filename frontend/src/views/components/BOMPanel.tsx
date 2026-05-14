@@ -1,6 +1,7 @@
-import { Download, Search, Filter } from 'lucide-react';
+import { Download, Search, Filter, ExternalLink } from 'lucide-react';
 import { useStore } from '../../models/store';
 import { t } from '../../services/i18n';
+import { buildProcurementUrl } from '../../services/procurement';
 
 export function BOMPanel() {
   const bomData = useStore((s) => s.bom);
@@ -55,30 +56,49 @@ export function BOMPanel() {
                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">{tr.bom.partNo}</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">{tr.bom.qty}</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">{tr.bom.specs}</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">采购</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-800/50">
-              {bomData.map((item) => (
-                <tr
-                  key={item.id}
-                  className={`hover:bg-neutral-800/50 transition-colors ${item.active ? 'bg-neutral-900' : ''}`}
-                >
-                  <td className="px-6 py-4 text-indigo-400 font-bold">{item.id}</td>
-                  <td className="px-6 py-4 font-medium">{item.name}</td>
-                  <td className="px-6 py-4 text-neutral-400">{item.mfg}</td>
-                  <td className="px-6 py-4 font-mono text-emerald-400">
-                    <span className="bg-emerald-500/10 inline-block mt-2 px-2.5 py-0.5 rounded-md text-xs font-bold">
-                      {item.pn}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="px-2.5 py-1 rounded-md bg-indigo-500/20 text-indigo-400 font-bold">
-                      {item.qty}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-neutral-400">{item.specs}</td>
-                </tr>
-              ))}
+              {bomData.map((item) => {
+                const proc = buildProcurementUrl({ manufacturer: item.mfg, model: item.pn });
+                return (
+                  <tr
+                    key={item.id}
+                    className={`hover:bg-neutral-800/50 transition-colors ${item.active ? 'bg-neutral-900' : ''}`}
+                  >
+                    <td className="px-6 py-4 text-indigo-400 font-bold">{item.id}</td>
+                    <td className="px-6 py-4 font-medium">{item.name}</td>
+                    <td className="px-6 py-4 text-neutral-400">{item.mfg}</td>
+                    <td className="px-6 py-4 font-mono text-emerald-400">
+                      <span className="bg-emerald-500/10 inline-block mt-2 px-2.5 py-0.5 rounded-md text-xs font-bold">
+                        {item.pn}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-2.5 py-1 rounded-md bg-indigo-500/20 text-indigo-400 font-bold">
+                        {item.qty}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-neutral-400">{item.specs}</td>
+                    <td className="px-6 py-4">
+                      {proc ? (
+                        <a
+                          href={proc}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-app-accent hover:text-app-accent-hover text-xs font-mono"
+                          title={`在供应商目录中查找 ${item.pn}`}
+                        >
+                          查询 <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        <span className="text-neutral-600 text-xs">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

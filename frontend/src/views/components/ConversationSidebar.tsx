@@ -8,6 +8,7 @@ import {
   saveConversationMetas,
   type ConversationMeta,
 } from '../../services/conversations';
+import { listTemplates, type Template } from '../../services/templates';
 
 function formatRelativeTime(timestamp: number) {
   const diff = Date.now() - timestamp;
@@ -61,6 +62,16 @@ export function ConversationSidebar() {
     setShowNewMenu(false);
     await useStore.getState().newProject({ preserveCanvas });
   }, []);
+
+  const handleFromTemplate = useCallback(async (template: Template) => {
+    setShowNewMenu(false);
+    await useStore.getState().newProject({
+      preserveCanvas: false,
+      seedPrompt: template.seedPrompt,
+    });
+  }, []);
+
+  const templates = useMemo(() => listTemplates(), []);
 
   const handleSwitchConversation = useCallback(async (conv: ConversationMeta) => {
     const s = useStore.getState();
@@ -130,21 +141,38 @@ export function ConversationSidebar() {
             + 新对话
           </button>
           {showNewMenu && (
-            <div className="absolute z-20 top-11 left-0 right-0 rounded-2xl border border-app-border bg-app-bg-primary shadow-2xl p-1.5">
+            <div className="absolute z-20 top-11 left-0 right-0 rounded-md border border-app-border bg-app-bg-primary shadow-2xl p-1.5 max-h-[60vh] overflow-y-auto custom-scrollbar">
               <button
                 onClick={() => handleNewConversation(false)}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-app-bg-tertiary transition-colors"
+                className="w-full text-left px-3 py-2 rounded-md hover:bg-app-bg-tertiary transition-colors"
               >
                 <div className="text-xs font-bold text-app-text-primary">清空画布开始</div>
                 <div className="text-[10px] text-app-text-tertiary mt-0.5">新需求、新拓扑和新 BOM</div>
               </button>
               <button
                 onClick={() => handleNewConversation(true)}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-app-bg-tertiary transition-colors"
+                className="w-full text-left px-3 py-2 rounded-md hover:bg-app-bg-tertiary transition-colors"
               >
                 <div className="text-xs font-bold text-app-text-primary">沿用当前画布继续</div>
                 <div className="text-[10px] text-app-text-tertiary mt-0.5">保留拓扑、BOM 和代码，仅开启新对话</div>
               </button>
+              <div className="mt-1 pt-1 border-t border-app-border-light">
+                <div className="px-3 py-1 text-[9px] font-mono uppercase tracking-widest text-app-text-tertiary">
+                  从行业模板开始
+                </div>
+                {templates.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    onClick={() => handleFromTemplate(tpl)}
+                    className="w-full text-left px-3 py-2 rounded-md hover:bg-app-bg-tertiary transition-colors"
+                  >
+                    <div className="text-xs font-bold text-app-text-primary">{tpl.name}</div>
+                    <div className="text-[10px] text-app-text-tertiary mt-0.5 line-clamp-2">
+                      {tpl.summary}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
