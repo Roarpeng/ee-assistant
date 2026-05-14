@@ -132,8 +132,12 @@ interface AppState {
   project: { id: string; name: string } | null;
   stage: AnalysisStage;
   messages: ChatMessage[];
-  activeCanvasTab: 'topology' | 'bom' | 'code';
+  activeCanvasTab: 'info' | 'topology' | 'wiring' | 'bom' | 'code' | 'guide';
   theme: 'light' | 'dark' | 'engineering';
+  ioItems: Array<{ tag: string; signal: string; from: string; to: string; wire: string }>;
+  commissioningSteps: Array<{ title: string; body: string }>;
+  bomCost?: number;
+  safetyLevel?: string;
   language: Lang;
   settings: AppSettings;
   knowledgeDocs: KnowledgeDoc[];
@@ -151,7 +155,7 @@ interface AppState {
   setProject: (p: { id: string; name: string }) => void;
   setStage: (s: AnalysisStage) => void;
   addMessage: (m: ChatMessage) => void;
-  setActiveCanvasTab: (tab: 'topology' | 'bom' | 'code') => void;
+  setActiveCanvasTab: (tab: 'info' | 'topology' | 'wiring' | 'bom' | 'code' | 'guide') => void;
   toggleTheme: () => void;
   toggleLanguage: () => void;
   updateSettings: (s: AppSettings) => void;
@@ -198,7 +202,9 @@ export const useStore = create<AppState>((set, get) => ({
   project: null,
   stage: 'idle',
   messages: [],
-  activeCanvasTab: 'topology',
+  activeCanvasTab: 'info',
+  ioItems: [],
+  commissioningSteps: [],
   theme: (localStorage.getItem('theme') as 'light' | 'dark' | 'engineering') || 'engineering',
   language: getInitialLang(),
   settings: loadSettings(),

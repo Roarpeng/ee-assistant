@@ -8,6 +8,9 @@ import { SCLPanel } from './SCLPanel';
 import { SettingsModal } from './SettingsModal';
 import { KnowledgePanel } from './KnowledgePanel';
 import { ConversationSidebar } from './ConversationSidebar';
+import { InfoPanel } from './InfoPanel';
+import { WiringPanel } from './WiringPanel';
+import { GuidePanel } from './GuidePanel';
 import { Settings, Sun, Moon, Languages, PenTool } from 'lucide-react';
 
 export function AppLayout() {
@@ -67,9 +70,12 @@ export function AppLayout() {
   }, []);
 
   const canvasTabs: [string, string][] = [
+    ['info', tr.header.info],
     ['topology', tr.header.topology],
+    ['wiring', tr.header.wiring],
     ['bom', tr.header.bom],
     ['code', tr.header.code],
+    ['guide', tr.header.guide],
   ];
 
   return (
@@ -189,8 +195,12 @@ export function AppLayout() {
             {canvasTabs.map(([id, label]) => (
               <button
                 key={id}
-                onClick={() => setActiveCanvasTab(id as 'topology' | 'bom' | 'code')}
-                className={`px-5 h-full flex items-center rounded-full transition-all tracking-wide ${
+                onClick={() =>
+                  setActiveCanvasTab(
+                    id as 'info' | 'topology' | 'wiring' | 'bom' | 'code' | 'guide'
+                  )
+                }
+                className={`px-4 h-full flex items-center rounded-full transition-all tracking-wide ${
                   activeCanvasTab === id
                     ? 'bg-app-bg-tertiary text-app-text-primary shadow-sm'
                     : 'hover:text-app-text-primary hover:bg-app-bg-tertiary/50'
@@ -205,8 +215,14 @@ export function AppLayout() {
         </header>
 
         <main className="flex-1 mt-4 overflow-hidden relative border border-app-border rounded-lg bg-app-bg-secondary shadow-xl">
+          <div className={activeCanvasTab === 'info' ? 'h-full' : 'hidden h-full'}>
+            <InfoPanelMount />
+          </div>
           <div className={activeCanvasTab === 'topology' ? 'h-full' : 'hidden h-full'}>
             <TopologyPanel />
+          </div>
+          <div className={activeCanvasTab === 'wiring' ? 'h-full' : 'hidden h-full'}>
+            <WiringPanelMount />
           </div>
           <div className={activeCanvasTab === 'bom' ? 'h-full' : 'hidden h-full'}>
             <BOMPanel />
@@ -214,10 +230,42 @@ export function AppLayout() {
           <div className={activeCanvasTab === 'code' ? 'h-full' : 'hidden h-full'}>
             <SCLPanel />
           </div>
+          <div className={activeCanvasTab === 'guide' ? 'h-full' : 'hidden h-full'}>
+            <GuidePanelMount />
+          </div>
         </main>
       </div>
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
+}
+
+// ---------- Adapters: pull from the global store, hand off to pure panels ----
+
+function InfoPanelMount() {
+  const project = useStore((s) => s.project);
+  const nodes = useStore((s) => s.topology.nodes);
+  const bomCost = useStore((s) => s.bomCost);
+  const safetyLevel = useStore((s) => s.safetyLevel);
+  const components = nodes.map((n) => ({ id: n.id, label: n.label, type: n.type }));
+  return (
+    <InfoPanel
+      projectName={project?.name ?? ''}
+      safetyLevel={safetyLevel}
+      bomCost={bomCost}
+      components={components}
+      nodes={nodes}
+    />
+  );
+}
+
+function WiringPanelMount() {
+  const ioItems = useStore((s) => s.ioItems);
+  return <WiringPanel ioItems={ioItems} />;
+}
+
+function GuidePanelMount() {
+  const steps = useStore((s) => s.commissioningSteps);
+  return <GuidePanel steps={steps} />;
 }

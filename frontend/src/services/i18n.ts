@@ -4,9 +4,12 @@ export type TranslationDict = typeof zh;
 const zh = {
   app: { name: 'Volta', tagline: '电气工程智能设计平台' },
   header: {
+    info: '概览',
     topology: '拓扑图',
+    wiring: '接线表',
     bom: '物料清单',
     code: 'ST 代码',
+    guide: '调试指引',
     version: 'v2.0.0',
   },
   chat: {
@@ -125,9 +128,12 @@ const zh = {
 const en: TranslationDict = {
   app: { name: 'Volta', tagline: 'Electrical Engineering AI Design Platform' },
   header: {
+    info: 'Overview',
     topology: 'Topology',
+    wiring: 'Wiring',
     bom: 'BOM',
     code: 'ST Code',
+    guide: 'Commissioning',
     version: 'v2.0.0',
   },
   chat: {
