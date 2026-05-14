@@ -21,6 +21,7 @@ import { NodeInfoCard } from './NodeInfoCard';
 import { IOBudgetBar } from './IOBudgetBar';
 import { computeIOBudget } from '../../services/budget';
 import { api } from '../../services/api';
+import { postEditFeedback } from '../../services/feedback';
 import {
   observeTopology,
   updateNodePosition,
@@ -132,6 +133,10 @@ export function TopologyPanel() {
 
   // Track which nodes are being dragged to suppress Yjs→ReactFlow position sync
   const draggingNodeIdsRef = useRef<Set<string>>(new Set());
+  // M2 memory-flywheel: capture each node's pre-drag position so we can
+  // emit a `topology_edit` decision with a meaningful before/after pair
+  // once the user releases the mouse. Cleared per drag.
+  const dragStartPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
   // Yjs CRDT observer: incrementally syncs topology into ReactFlow local state.
   // Unlike the old Zustand effect, this does NOT replace all nodes — it diffs
@@ -329,12 +334,44 @@ export function TopologyPanel() {
       for (const c of changes) {
         if (c.type === 'position') {
           if (c.dragging) {
+            // First position-change of this drag: snapshot the current
+            // (pre-drag) position so we can ship it as `before` to the
+            // memory-flywheel feedback API on release.
+            if (!draggingNodeIdsRef.current.has(c.id)) {
+              const startNode = nodesRef.current.find((n) => n.id === c.id);
+              if (startNode) {
+                dragStartPositionsRef.current.set(c.id, {
+                  x: startNode.position.x,
+                  y: startNode.position.y,
+                });
+              }
+            }
             draggingNodeIdsRef.current.add(c.id);
           } else {
             draggingNodeIdsRef.current.delete(c.id);
             const rfNode = nodesRef.current.find((n) => n.id === c.id);
             if (rfNode) {
               updateNodePosition(c.id, rfNode.position.x, rfNode.position.y);
+              // Fire the M2 `topology_edit` decision after persist. We
+              // only post when we have a real before/after pair AND the
+              // position actually changed — a stray click on a node
+              // shouldn't create noisy feedback rows. All errors are
+              // swallowed: a flaky backend must never break drag UX.
+              const before = dragStartPositionsRef.current.get(c.id);
+              dragStartPositionsRef.current.delete(c.id);
+              if (
+                project &&
+                before &&
+                (before.x !== rfNode.position.x || before.y !== rfNode.position.y)
+              ) {
+                postEditFeedback(project.id, {
+                  target: 'topology',
+                  before: { nodeId: c.id, x: before.x, y: before.y },
+                  after: { nodeId: c.id, x: rfNode.position.x, y: rfNode.position.y },
+                }).catch(() => {
+                  /* best-effort */
+                });
+              }
             }
           }
         }
@@ -353,7 +390,7 @@ export function TopologyPanel() {
         setTimeout(handleSyncToCode, 500);
       }
     },
-    [onNodesChange, handleSyncToCode]
+    [onNodesChange, handleSyncToCode, project]
   );
 
   const handleEdgesChange = useCallback(

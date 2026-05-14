@@ -1,3 +1,13 @@
+// M2 memory-flywheel hook (Track C):
+//   When inline editing of wire spec / terminal / signal lands, call
+//   `postEditFeedback(projectId, { target: 'wiring', before, after })`
+//   from `services/feedback`. The current WiringPanel is read-only (no
+//   inline editor exists), so the hook is intentionally NOT wired here
+//   yet — adding edit UI just to fire the hook would be premature.
+//   See `docs/superpowers/plans/2026-05-14-memory-flywheel-m2-plan.md`
+//   §C4 for the full pattern.
+// TODO(memory-M2): wire postEditFeedback when wiring inline-edit lands.
+
 export interface WiringItem {
   tag: string;
   signal: string;
