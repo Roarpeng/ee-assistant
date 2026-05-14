@@ -203,6 +203,22 @@ async def requirements_agent(state: AnalysisState) -> dict:
     if state.get("stage", "") in ("requirements_done", "selection_done", "continuing") and state.get("requirement"):
         return {}
     req = await llm_service.analyze_requirements(state["user_input"])
+
+    # M1 memory flywheel: enrich `req` from this org's preferences BEFORE
+    # the clarify detector runs. If a previous project already answered
+    # "we always use S7-1200 / SIL2 / indoor", those fields fill in here
+    # and detect_clarification stops asking about them.
+    org_id = state.get("org_id")
+    if org_id:
+        try:
+            from app.core.org_prefs_service import apply_preferences
+            from app.db.repository import async_session as _sm
+            async with _sm() as _s:
+                req = await apply_preferences(_s, org_id, req)
+        except Exception:
+            # Enrichment is best-effort — never block a run on a pref-store hiccup.
+            pass
+
     # Deterministic clarify-needs detector — no LLM cost. When critical
     # fields (safety_level, environment, plc_family) are missing or
     # ambiguous, we emit a structured clarification block that the

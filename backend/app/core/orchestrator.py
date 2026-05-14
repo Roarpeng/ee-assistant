@@ -80,6 +80,27 @@ class Orchestrator:
                 dimensions=embedding_config.get("dimension", 0),
             )
 
+    async def _lookup_project_org_id(self, project_id: str) -> str | None:
+        """Resolve the project's org_id (None if project missing or has no org).
+
+        Centralised so every entry point that builds an initial AnalysisState
+        injects the same value — RequirementsAgent reads `state["org_id"]`
+        to enrich the parsed requirement from this org's preferences.
+        """
+        from sqlalchemy import select
+        from app.db.models import Project
+        from app.db.repository import async_session
+        try:
+            async with async_session() as session:
+                proj = (await session.execute(
+                    select(Project).where(Project.id == project_id)
+                )).scalar_one_or_none()
+                if proj is None:
+                    return None
+                return getattr(proj, "org_id", None)
+        except Exception:
+            return None
+
     async def _build_input_state(
         self, project_id: str, user_input: str,
         llm_config: dict | None, embedding_config: dict | None,
@@ -88,6 +109,8 @@ class Orchestrator:
         """Build input state: full initial for new projects, incremental for continuing."""
         config = {"configurable": {"thread_id": project_id}}
         current_state = await graph.aget_state(config)
+
+        org_id = await self._lookup_project_org_id(project_id)
 
         if not current_state.values:
             return {
@@ -115,6 +138,7 @@ class Orchestrator:
                 "stage": "started",
                 "llm_config": llm_config,
                 "embedding_config": embedding_config,
+                "org_id": org_id,
             }
         else:
             state: dict = {
@@ -122,6 +146,7 @@ class Orchestrator:
                 "stage": "continuing",
                 "llm_config": llm_config,
                 "embedding_config": embedding_config,
+                "org_id": org_id,
             }
             if history:
                 state["messages"] = history

@@ -29,3 +29,4 @@ class AnalysisState(TypedDict):
     stage: str
     llm_config: dict | None
     embedding_config: dict | None
+    org_id: str | None  # propagated from Project.org_id at run start (M1)
