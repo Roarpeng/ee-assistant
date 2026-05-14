@@ -17,6 +17,8 @@ from app.api.topology import router as topology_router
 from app.api.messages import router as messages_router
 from app.api.orgs import router as orgs_router
 from app.api.clarify_answer import router as clarify_answer_router
+from app.api.feedback import router as feedback_router
+from app.api.memory_sources import router as memory_sources_router
 from app.middleware.org_auth import org_auth_middleware
 
 
@@ -51,6 +53,8 @@ app.include_router(topology_router)
 app.include_router(messages_router)
 app.include_router(orgs_router)
 app.include_router(clarify_answer_router)
+app.include_router(feedback_router)
+app.include_router(memory_sources_router)
 
 
 @app.get("/api/health")

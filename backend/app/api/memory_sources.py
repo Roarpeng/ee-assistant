@@ -86,7 +86,7 @@ async def _ensure_project(session: AsyncSession, project_id: str) -> Project:
 
 
 @router.get(
-    "/{category}/{manufacturer}/{model}",
+    "/{category}/{manufacturer}/{model:path}",
     response_model=MemorySourcesOut,
 )
 async def get_memory_sources(
