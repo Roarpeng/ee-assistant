@@ -17,3 +17,9 @@ bundles/
 # Local SSE/HTTP response captures from manual debugging
 test-resp.txt
 
+# Legacy snapshot of the project nested inside itself (pre-2026-05 backup)
+/ee-assistant/
+
+# Worktrees (kept project-local, never committed)
+.worktrees/
+
