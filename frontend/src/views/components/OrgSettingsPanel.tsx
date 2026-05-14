@@ -7,11 +7,14 @@ import {
   type OrgPreference,
   type PrefKey,
 } from '../../services/orgClient';
+import { MemoryTab } from './MemoryTab';
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
+
+type TabKey = 'preferences' | 'memory';
 
 interface DraftState {
   /** undefined = no draft open; null/PrefKey = draft for that (new) key */
@@ -64,6 +67,7 @@ export function OrgSettingsPanel({ open, onClose }: Props) {
   const [draft, setDraft] = useState<DraftState | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>('preferences');
 
   const sortedPrefs = useMemo(() => {
     return [...preferences].sort((a, b) => a.key.localeCompare(b.key));
@@ -183,155 +187,42 @@ export function OrgSettingsPanel({ open, onClose }: Props) {
           </button>
         </div>
 
+        {/* Tabs */}
+        <div
+          role="tablist"
+          aria-label="设置面板"
+          className="flex items-center gap-1 px-5 pt-3 border-b border-app-border shrink-0 bg-app-bg-secondary"
+        >
+          <TabButton
+            label="偏好"
+            active={activeTab === 'preferences'}
+            onClick={() => setActiveTab('preferences')}
+            testid="org-tab-preferences"
+          />
+          <TabButton
+            label="记忆"
+            active={activeTab === 'memory'}
+            onClick={() => setActiveTab('memory')}
+            testid="org-tab-memory"
+          />
+        </div>
+
         {/* Body */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-4">
-          <div className="text-xs text-app-text-secondary">
-            组织偏好将在新对话中自动应用。confidence ≥ 0.6 时会跳过对应的澄清问题。
-          </div>
-
-          {/* Preferences table */}
-          <div className="rounded-xl border border-app-border overflow-hidden bg-app-bg-primary">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-app-bg-tertiary text-app-text-tertiary border-b border-app-border">
-                <tr>
-                  <th className="px-3 py-2 font-bold uppercase tracking-wider">偏好键</th>
-                  <th className="px-3 py-2 font-bold uppercase tracking-wider">值</th>
-                  <th className="px-3 py-2 font-bold uppercase tracking-wider">置信度</th>
-                  <th className="px-3 py-2 font-bold uppercase tracking-wider">来源</th>
-                  <th className="px-3 py-2 font-bold uppercase tracking-wider">更新时间</th>
-                  <th className="px-3 py-2 font-bold uppercase tracking-wider w-20">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-app-border/60">
-                {sortedPrefs.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-3 py-6 text-center text-app-text-tertiary"
-                      data-testid="prefs-empty"
-                    >
-                      暂无偏好。点击下方"添加偏好"开始记录。
-                    </td>
-                  </tr>
-                )}
-                {sortedPrefs.map((p) => (
-                  <tr
-                    key={p.key}
-                    data-testid={`pref-row-${p.key}`}
-                    className="hover:bg-app-bg-tertiary/50"
-                  >
-                    <td className="px-3 py-2 font-mono text-app-text-primary">{p.key}</td>
-                    <td className="px-3 py-2 font-mono text-app-text-secondary truncate max-w-[180px]">
-                      {formatJson(p.value)}
-                    </td>
-                    <td className="px-3 py-2">
-                      <ConfidenceBar value={p.confidence} />
-                    </td>
-                    <td className="px-3 py-2 text-app-text-secondary">{p.source}</td>
-                    <td className="px-3 py-2 text-app-text-tertiary text-[10px]">
-                      {formatTimestamp(p.updated_at)}
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          aria-label={`编辑 ${p.key}`}
-                          onClick={() => startEdit(p)}
-                          disabled={busyKey === p.key}
-                          className="text-app-text-tertiary hover:text-app-accent disabled:opacity-40"
-                        >
-                          ✎
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={`删除 ${p.key}`}
-                          onClick={() => deletePref(p.key)}
-                          disabled={busyKey === p.key}
-                          className="text-app-text-tertiary hover:text-rose-400 disabled:opacity-40"
-                        >
-                          🗑
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Add / Edit form */}
-          {draft === null ? (
-            <button
-              type="button"
-              onClick={startAdd}
-              className="w-full py-2 rounded-xl border border-dashed border-app-border text-xs font-bold text-app-text-secondary hover:border-app-accent hover:text-app-accent transition-colors"
-            >
-              + 添加偏好
-            </button>
+          {activeTab === 'memory' ? (
+            <MemoryTab />
           ) : (
-            <div
-              data-testid="pref-draft-form"
-              className="rounded-xl border border-app-border bg-app-bg-primary p-3 space-y-2"
-            >
-              <div className="flex items-center gap-2">
-                <label className="text-[10px] font-mono uppercase tracking-widest text-app-text-tertiary w-20 shrink-0">
-                  KEY
-                </label>
-                <select
-                  aria-label="偏好键"
-                  value={draft.key}
-                  disabled={draft.isEdit}
-                  onChange={(e) =>
-                    setDraft({ ...draft, key: e.target.value as PrefKey | '', error: null })
-                  }
-                  className="flex-1 rounded-md bg-app-bg-secondary border border-app-border px-2 py-1.5 text-xs text-app-text-primary focus:outline-none focus:border-app-accent disabled:opacity-60"
-                >
-                  <option value="">— 请选择 —</option>
-                  {PREF_KEYS.map((k) => (
-                    <option key={k} value={k}>
-                      {k}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-start gap-2">
-                <label className="text-[10px] font-mono uppercase tracking-widest text-app-text-tertiary w-20 shrink-0 pt-1.5">
-                  VALUE
-                </label>
-                <textarea
-                  aria-label="偏好值 JSON"
-                  rows={4}
-                  value={draft.valueJson}
-                  onChange={(e) =>
-                    setDraft({ ...draft, valueJson: e.target.value, error: null })
-                  }
-                  placeholder='{"family": "S7-1200"}'
-                  className="flex-1 rounded-md bg-app-bg-secondary border border-app-border px-2 py-1.5 text-xs font-mono text-app-text-primary focus:outline-none focus:border-app-accent"
-                />
-              </div>
-              {draft.error && (
-                <div className="text-[11px] text-rose-400" data-testid="pref-draft-error">
-                  {draft.error}
-                </div>
-              )}
-              <div className="flex items-center justify-end gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={cancelDraft}
-                  className="px-3 py-1.5 text-xs font-bold rounded-md border border-app-border text-app-text-secondary hover:bg-app-bg-tertiary"
-                >
-                  取消
-                </button>
-                <button
-                  type="button"
-                  onClick={saveDraft}
-                  disabled={busyKey !== null}
-                  className="px-3 py-1.5 text-xs font-bold rounded-md bg-app-accent hover:bg-app-accent-hover text-app-text-primary disabled:opacity-50"
-                >
-                  保存
-                </button>
-              </div>
-            </div>
+            <PreferencesTabBody
+              sortedPrefs={sortedPrefs}
+              draft={draft}
+              busyKey={busyKey}
+              startAdd={startAdd}
+              startEdit={startEdit}
+              cancelDraft={cancelDraft}
+              saveDraft={saveDraft}
+              deletePref={deletePref}
+              setDraft={setDraft}
+            />
           )}
         </div>
 
@@ -373,5 +264,209 @@ export function OrgSettingsPanel({ open, onClose }: Props) {
         </div>
       </div>
     </div>
+  );
+}
+
+function TabButton({
+  label,
+  active,
+  onClick,
+  testid,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  testid: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      data-testid={testid}
+      onClick={onClick}
+      className={`px-3 py-1.5 -mb-px text-xs font-bold border-b-2 transition-colors ${
+        active
+          ? 'border-app-accent text-app-text-primary'
+          : 'border-transparent text-app-text-tertiary hover:text-app-text-secondary'
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+interface PreferencesTabBodyProps {
+  sortedPrefs: OrgPreference[];
+  draft: DraftState | null;
+  busyKey: string | null;
+  startAdd: () => void;
+  startEdit: (p: OrgPreference) => void;
+  cancelDraft: () => void;
+  saveDraft: () => void | Promise<void>;
+  deletePref: (key: string) => void | Promise<void>;
+  setDraft: (d: DraftState) => void;
+}
+
+function PreferencesTabBody({
+  sortedPrefs,
+  draft,
+  busyKey,
+  startAdd,
+  startEdit,
+  cancelDraft,
+  saveDraft,
+  deletePref,
+  setDraft,
+}: PreferencesTabBodyProps) {
+  return (
+    <>
+      <div className="text-xs text-app-text-secondary">
+        组织偏好将在新对话中自动应用。confidence ≥ 0.6 时会跳过对应的澄清问题。
+      </div>
+
+      <div className="rounded-xl border border-app-border overflow-hidden bg-app-bg-primary">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-app-bg-tertiary text-app-text-tertiary border-b border-app-border">
+            <tr>
+              <th className="px-3 py-2 font-bold uppercase tracking-wider">偏好键</th>
+              <th className="px-3 py-2 font-bold uppercase tracking-wider">值</th>
+              <th className="px-3 py-2 font-bold uppercase tracking-wider">置信度</th>
+              <th className="px-3 py-2 font-bold uppercase tracking-wider">来源</th>
+              <th className="px-3 py-2 font-bold uppercase tracking-wider">更新时间</th>
+              <th className="px-3 py-2 font-bold uppercase tracking-wider w-20">操作</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-app-border/60">
+            {sortedPrefs.length === 0 && (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-3 py-6 text-center text-app-text-tertiary"
+                  data-testid="prefs-empty"
+                >
+                  暂无偏好。点击下方"添加偏好"开始记录。
+                </td>
+              </tr>
+            )}
+            {sortedPrefs.map((p) => (
+              <tr
+                key={p.key}
+                data-testid={`pref-row-${p.key}`}
+                className="hover:bg-app-bg-tertiary/50"
+              >
+                <td className="px-3 py-2 font-mono text-app-text-primary">{p.key}</td>
+                <td className="px-3 py-2 font-mono text-app-text-secondary truncate max-w-[180px]">
+                  {formatJson(p.value)}
+                </td>
+                <td className="px-3 py-2">
+                  <ConfidenceBar value={p.confidence} />
+                </td>
+                <td className="px-3 py-2 text-app-text-secondary">{p.source}</td>
+                <td className="px-3 py-2 text-app-text-tertiary text-[10px]">
+                  {formatTimestamp(p.updated_at)}
+                </td>
+                <td className="px-3 py-2">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      aria-label={`编辑 ${p.key}`}
+                      onClick={() => startEdit(p)}
+                      disabled={busyKey === p.key}
+                      className="text-app-text-tertiary hover:text-app-accent disabled:opacity-40"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`删除 ${p.key}`}
+                      onClick={() => deletePref(p.key)}
+                      disabled={busyKey === p.key}
+                      className="text-app-text-tertiary hover:text-rose-400 disabled:opacity-40"
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {draft === null ? (
+        <button
+          type="button"
+          onClick={startAdd}
+          className="w-full py-2 rounded-xl border border-dashed border-app-border text-xs font-bold text-app-text-secondary hover:border-app-accent hover:text-app-accent transition-colors"
+        >
+          + 添加偏好
+        </button>
+      ) : (
+        <div
+          data-testid="pref-draft-form"
+          className="rounded-xl border border-app-border bg-app-bg-primary p-3 space-y-2"
+        >
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-app-text-tertiary w-20 shrink-0">
+              KEY
+            </label>
+            <select
+              aria-label="偏好键"
+              value={draft.key}
+              disabled={draft.isEdit}
+              onChange={(e) =>
+                setDraft({ ...draft, key: e.target.value as PrefKey | '', error: null })
+              }
+              className="flex-1 rounded-md bg-app-bg-secondary border border-app-border px-2 py-1.5 text-xs text-app-text-primary focus:outline-none focus:border-app-accent disabled:opacity-60"
+            >
+              <option value="">— 请选择 —</option>
+              {PREF_KEYS.map((k) => (
+                <option key={k} value={k}>
+                  {k}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-start gap-2">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-app-text-tertiary w-20 shrink-0 pt-1.5">
+              VALUE
+            </label>
+            <textarea
+              aria-label="偏好值 JSON"
+              rows={4}
+              value={draft.valueJson}
+              onChange={(e) =>
+                setDraft({ ...draft, valueJson: e.target.value, error: null })
+              }
+              placeholder='{"family": "S7-1200"}'
+              className="flex-1 rounded-md bg-app-bg-secondary border border-app-border px-2 py-1.5 text-xs font-mono text-app-text-primary focus:outline-none focus:border-app-accent"
+            />
+          </div>
+          {draft.error && (
+            <div className="text-[11px] text-rose-400" data-testid="pref-draft-error">
+              {draft.error}
+            </div>
+          )}
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={cancelDraft}
+              className="px-3 py-1.5 text-xs font-bold rounded-md border border-app-border text-app-text-secondary hover:bg-app-bg-tertiary"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              onClick={saveDraft}
+              disabled={busyKey !== null}
+              className="px-3 py-1.5 text-xs font-bold rounded-md bg-app-accent hover:bg-app-accent-hover text-app-text-primary disabled:opacity-50"
+            >
+              保存
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
