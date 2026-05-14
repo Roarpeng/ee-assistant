@@ -63,9 +63,21 @@
     "mtime": 1778484650.419842,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\bom_prices.py": {
+    "mtime": 1778730895.3473678,
+    "hash": "3d42a1c4af76f310161dd2db764d7ed5"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\chat_orchestrator.py": {
     "mtime": 1778484650.4258387,
     "hash": "499697752e76fd2bd931a2229c493a2a"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\clarification_detector.py": {
+    "mtime": 1778732086.3862154,
+    "hash": "7a1ef350568d5d3e081790d9c3d847ae"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\commissioning_generator.py": {
+    "mtime": 1778731589.4445572,
+    "hash": "2de593286d397cfc13885d45e8d5b6ca"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\community_detector.py": {
     "mtime": 1778484650.426838,
@@ -91,6 +103,10 @@
     "mtime": 1778484650.4336774,
     "hash": "22c397aaad7c1c26fbd9b87bd6bf4338"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\io_budget.py": {
+    "mtime": 1778731242.8451703,
+    "hash": "ecfcde75a18de85f4ef0392f2b8a0225"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\knowledge_graph.py": {
     "mtime": 1778484650.4336774,
     "hash": "a82b5109aa55da45a59ec394f17c88e7"
@@ -100,8 +116,16 @@
     "hash": "dd826f075bbe7d12b4fd6cac28ef866a"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\orchestrator.py": {
-    "mtime": 1778484650.435683,
-    "hash": "67d22ec7f9a5d3bce1d47714f1788e4e"
+    "mtime": 1778732131.4231877,
+    "hash": "beb4ce8b9052f7188c039433e047495e"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\plc_catalog.py": {
+    "mtime": 1778730820.1598704,
+    "hash": "9fdb182ce32685285ce291a2bcb04f9e"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\project_meta.py": {
+    "mtime": 1778731001.3227153,
+    "hash": "2fbf8acd14ec533c4d9f45a2716aaaeb"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\rag_engine.py": {
     "mtime": 1778484650.435683,
@@ -123,21 +147,25 @@
     "mtime": 1778484650.4376833,
     "hash": "22ac7827ed867846cf3c44da613b09aa"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\wiring_generator.py": {
+    "mtime": 1778731851.7047563,
+    "hash": "65f6d4176747fc7fbe05bd8d914f852f"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\__init__.py": {
     "mtime": 1778484650.4258387,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\graph\\agents.py": {
-    "mtime": 1778484650.431417,
-    "hash": "fdfd1e48c67949bde5f0ace530cffbe5"
+    "mtime": 1778732122.4984286,
+    "hash": "916e275b0aefe83298c6cdd726103eac"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\graph\\builder.py": {
-    "mtime": 1778484650.432417,
-    "hash": "11d88bdd4d6835cdea2c52e4ca8d2a6f"
+    "mtime": 1778731901.4847386,
+    "hash": "1933456e8712151218d3b029cc689f93"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\graph\\state.py": {
-    "mtime": 1778484650.432417,
-    "hash": "2a46fdb554df07e0445cd27f5fa39e6d"
+    "mtime": 1778732127.2827373,
+    "hash": "d11dc0f0de68440a39334e426f878fdd"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\graph\\__init__.py": {
     "mtime": 1778484650.4304116,
@@ -171,9 +199,21 @@
     "mtime": 1778484650.444006,
     "hash": "7b7ce1aa7bd5dae0a86b1107cbfe3c6e"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_bom_prices.py": {
+    "mtime": 1778730856.4680798,
+    "hash": "99f856e6848359581117624397383c60"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_chat_orchestrator.py": {
     "mtime": 1778484650.4450064,
     "hash": "e2f770b73bff05cfe32b9bd05619c26e"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_clarification_detector.py": {
+    "mtime": 1778732048.9116156,
+    "hash": "5793cef11ac7cb4b7ca31ee8f5ec4a91"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_commissioning_generator.py": {
+    "mtime": 1778731527.6192234,
+    "hash": "54b9f23ed904609f1f64d5dfe1bda089"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_component_normalizer.py": {
     "mtime": 1778484650.4450064,
@@ -186,6 +226,18 @@
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_extractors.py": {
     "mtime": 1778484650.447906,
     "hash": "ec980f0cde2d5b5f58b78a881093695b"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_io_budget.py": {
+    "mtime": 1778731204.3221762,
+    "hash": "fc9ffe18a3bb1fd191015c9771a38d82"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_plc_catalog.py": {
+    "mtime": 1778730756.7663915,
+    "hash": "6631ea9480c2591c2ce66bf4ca906a85"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_project_meta.py": {
+    "mtime": 1778730970.5647235,
+    "hash": "6a0abea4b1c8f318c1ffb7eaac7d866b"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_rag_engine.py": {
     "mtime": 1778484650.447906,
@@ -206,6 +258,10 @@
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_url_fetcher.py": {
     "mtime": 1778484650.4503148,
     "hash": "e444f82d1266401505f5e58940fca2a1"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_wiring_generator.py": {
+    "mtime": 1778731807.98548,
+    "hash": "aa9387bd7c44fb78ce4997e17b8d12da"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\__init__.py": {
     "mtime": 1778484650.442003,
@@ -240,8 +296,8 @@
     "hash": "ab681eb06cdf19d0cd2770f6f02b2b6a"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\models\\store.ts": {
-    "mtime": 1778726720.5418282,
-    "hash": "9be44ee6cc697474f9c5e0ccb0420100"
+    "mtime": 1778731102.0839982,
+    "hash": "78d74b3d884d3fed028b1cf9a2e10cfc"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\models\\yjsStore.ts": {
     "mtime": 1778484650.4786522,
@@ -316,8 +372,8 @@
     "hash": "ac29614e7df3917c0023bf647295693b"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\ChatPanel.tsx": {
-    "mtime": 1778725723.5302186,
-    "hash": "a8197d83914ec15d1c5a254da9c4f268"
+    "mtime": 1778732144.6693985,
+    "hash": "87ea863a9e428b6a8d5611d0007eeedf"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\ClarifyCard.test.tsx": {
     "mtime": 1778725525.496376,
@@ -455,6 +511,10 @@
     "mtime": 1778484650.4591122,
     "hash": "d1de69f138dbbd6ec67368c73fdf64a8"
   },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-14-backend-ui-data-channels-plan.md": {
+    "mtime": 1778730590.7510583,
+    "hash": "ab65d5ef4d59a78078708a38365b476e"
+  },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-14-blueprint-ui-refresh-plan.md": {
     "mtime": 1778723753.2996812,
     "hash": "33996918f96981a999a0a3d8eed025a5"
@@ -498,6 +558,10 @@
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-09-knowledge-multi-source-design.md": {
     "mtime": 1778484650.4671135,
     "hash": "f22fcd4928754797646801292efe351f"
+  },
+  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-14-backend-ui-data-channels-design.md": {
+    "mtime": 1778730548.3379474,
+    "hash": "b9aedfbe3acea4e580962626d375a1a6"
   },
   "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-14-blueprint-ui-refresh-design.md": {
     "mtime": 1778723599.600182,
