@@ -11,6 +11,7 @@ import { ConversationSidebar } from './ConversationSidebar';
 import { InfoPanel } from './InfoPanel';
 import { WiringPanel } from './WiringPanel';
 import { GuidePanel } from './GuidePanel';
+import { CabinetPanel } from './CabinetPanel';
 import { Settings, Sun, Moon, Languages, PenTool } from 'lucide-react';
 
 export function AppLayout() {
@@ -75,6 +76,7 @@ export function AppLayout() {
     ['wiring', tr.header.wiring],
     ['bom', tr.header.bom],
     ['code', tr.header.code],
+    ['cabinet', tr.header.cabinet],
     ['guide', tr.header.guide],
   ];
 
@@ -197,7 +199,14 @@ export function AppLayout() {
                 key={id}
                 onClick={() =>
                   setActiveCanvasTab(
-                    id as 'info' | 'topology' | 'wiring' | 'bom' | 'code' | 'guide'
+                    id as
+                      | 'info'
+                      | 'topology'
+                      | 'wiring'
+                      | 'bom'
+                      | 'code'
+                      | 'guide'
+                      | 'cabinet'
                   )
                 }
                 className={`px-4 h-full flex items-center rounded-full transition-all tracking-wide ${
@@ -229,6 +238,9 @@ export function AppLayout() {
           </div>
           <div className={activeCanvasTab === 'code' ? 'h-full' : 'hidden h-full'}>
             <SCLPanel />
+          </div>
+          <div className={activeCanvasTab === 'cabinet' ? 'h-full' : 'hidden h-full'}>
+            <CabinetPanelMount />
           </div>
           <div className={activeCanvasTab === 'guide' ? 'h-full' : 'hidden h-full'}>
             <GuidePanelMount />
@@ -268,4 +280,10 @@ function WiringPanelMount() {
 function GuidePanelMount() {
   const steps = useStore((s) => s.commissioningSteps);
   return <GuidePanel steps={steps} />;
+}
+
+function CabinetPanelMount() {
+  const nodes = useStore((s) => s.topology.nodes);
+  const components = nodes.map((n) => ({ id: n.id, type: n.type, label: n.label }));
+  return <CabinetPanel components={components} />;
 }

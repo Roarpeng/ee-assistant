@@ -10,6 +10,7 @@ const zh = {
     bom: '物料清单',
     code: 'ST 代码',
     guide: '调试指引',
+    cabinet: '控制柜',
     version: 'v2.0.0',
   },
   chat: {
@@ -134,6 +135,7 @@ const en: TranslationDict = {
     bom: 'BOM',
     code: 'ST Code',
     guide: 'Commissioning',
+    cabinet: 'Cabinet',
     version: 'v2.0.0',
   },
   chat: {

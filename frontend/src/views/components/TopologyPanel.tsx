@@ -18,6 +18,8 @@ import { t } from '../../services/i18n';
 import { PLCNode, HMINode, IONode, VFDNode, ServoNode, PowerNode, SwitchNode, SafetyRelayNode, SensorNode, IPCNode, SafetyPLCNode, CircuitBreakerNode, ContactorNode, RelayNode, EStopNode, TransformerNode, FuseNode, DisconnectNode } from './CustomNodes';
 import { CanvasContextMenu } from './CanvasContextMenu';
 import { NodeInfoCard } from './NodeInfoCard';
+import { IOBudgetBar } from './IOBudgetBar';
+import { computeIOBudget } from '../../services/budget';
 import { api } from '../../services/api';
 import {
   observeTopology,
@@ -120,6 +122,8 @@ export function TopologyPanel() {
   } | null>(null);
 
   const setPreviewNodeId = useStore((s) => s.setPreviewNodeId);
+  const budgetItems = useStore((s) => s.budgetItems);
+  const budget = computeIOBudget(budgetItems);
 
   const [rfInstance, setRfInstance] = useState<any>(null);
 
@@ -647,6 +651,7 @@ export function TopologyPanel() {
           </div>
 
           <div className="flex-1 relative z-10 p-0 rounded-3xl overflow-hidden border border-app-border/50 bg-app-bg-primary">
+            <IOBudgetBar budget={budget} />
             <ReactFlow
               key={`rf-${project?.id || 'default'}`}
               nodes={nodes}

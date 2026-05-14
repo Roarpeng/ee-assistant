@@ -135,10 +135,25 @@ interface AppState {
   project: { id: string; name: string } | null;
   stage: AnalysisStage;
   messages: ChatMessage[];
-  activeCanvasTab: 'info' | 'topology' | 'wiring' | 'bom' | 'code' | 'guide';
+  activeCanvasTab:
+    | 'info'
+    | 'topology'
+    | 'wiring'
+    | 'bom'
+    | 'code'
+    | 'guide'
+    | 'cabinet';
   theme: 'light' | 'dark' | 'engineering';
   ioItems: Array<{ tag: string; signal: string; from: string; to: string; wire: string }>;
   commissioningSteps: Array<{ title: string; body: string }>;
+  // Optional snapshot of PLC capacity + signal-bearing items for the live
+  // budget bar on the topology canvas. When empty, the bar hides itself.
+  budgetItems: Array<{
+    type?: string;
+    signal?: 'di' | 'do_' | 'ai' | 'ao' | 'none';
+    model?: string;
+    capacity?: { di?: number; do_?: number; ai?: number; ao?: number };
+  }>;
   bomCost?: number;
   safetyLevel?: string;
   language: Lang;
@@ -158,7 +173,16 @@ interface AppState {
   setProject: (p: { id: string; name: string }) => void;
   setStage: (s: AnalysisStage) => void;
   addMessage: (m: ChatMessage) => void;
-  setActiveCanvasTab: (tab: 'info' | 'topology' | 'wiring' | 'bom' | 'code' | 'guide') => void;
+  setActiveCanvasTab: (
+    tab:
+      | 'info'
+      | 'topology'
+      | 'wiring'
+      | 'bom'
+      | 'code'
+      | 'guide'
+      | 'cabinet',
+  ) => void;
   toggleTheme: () => void;
   toggleLanguage: () => void;
   updateSettings: (s: AppSettings) => void;
@@ -208,6 +232,7 @@ export const useStore = create<AppState>((set, get) => ({
   activeCanvasTab: 'info',
   ioItems: [],
   commissioningSteps: [],
+  budgetItems: [],
   theme: (localStorage.getItem('theme') as 'light' | 'dark' | 'engineering') || 'engineering',
   language: getInitialLang(),
   settings: loadSettings(),
