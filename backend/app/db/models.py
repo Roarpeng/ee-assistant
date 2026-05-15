@@ -15,6 +15,11 @@ class Project(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name: Mapped[str] = mapped_column(String(255), default="Untitled")
+    # Conversation-workspace fields (alembic 008): short LLM-derived title
+    # for the project list, topic_tags drive the cluster sidebar. Both
+    # nullable / empty-list for legacy rows that pre-date 008.
+    title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    topic_tags: Mapped[list] = mapped_column(JSON, default=list, server_default="[]")
     status: Mapped[str] = mapped_column(String(32), default="draft")  # draft|analyzing|ready|selecting|done
     org_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("organizations.id"), nullable=True, index=True
