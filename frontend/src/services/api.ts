@@ -1,3 +1,5 @@
+import { authedFetch } from './orgClient';
+
 const BASE = '/api';
 
 function getSettings() {
@@ -12,7 +14,7 @@ function getSettings() {
 }
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${url}`, {
+  const res = await authedFetch(`${BASE}${url}`, {
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
   });
@@ -36,6 +38,18 @@ export const api = {
   listProjects: () => request<any[]>(`/projects`),
 
   deleteProject: (id: string) => request<void>(`/projects/${id}`, { method: 'DELETE' }),
+
+  saveTopology: (projectId: string, snapshot: { nodes: any[]; edges: any[] }, source = 'user') =>
+    request<any>(`/projects/${projectId}/topology`, {
+      method: 'POST',
+      body: JSON.stringify({ snapshot, source }),
+    }),
+
+  confirmTopology: (projectId: string, topologyId?: string) =>
+    request<any>(`/projects/${projectId}/topology/confirm`, {
+      method: 'POST',
+      body: JSON.stringify(topologyId ? { topology_id: topologyId } : {}),
+    }),
 
   // Analysis v1 (fallback)
   analyze: (projectId: string, text: string) => {
@@ -62,14 +76,15 @@ export const api = {
   },
 
   // Analysis v2 (LangGraph via SSE)
-  analyzeV2SSE: (projectId: string, message: string, history: any[] = []) => {
+  analyzeV2SSE: (projectId: string, message: string, history: any[] = [], canvasContext: any = {}) => {
     const settings = getSettings();
-    return fetch(`${BASE}/projects/${projectId}/analyze-v2`, {
+    return authedFetch(`${BASE}/projects/${projectId}/analyze-v2`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text: message,
         history,
+        canvas_context: canvasContext,
         llm_config: {
           api_key: settings.chat.apiKey,
           base_url: settings.chat.baseUrl,
@@ -87,9 +102,35 @@ export const api = {
     });
   },
 
+  // Fast validated conversation agent (keeps current canvas context)
+  chatSSE: (
+    projectId: string,
+    message: string,
+    history: any[] = [],
+    canvasContext: any = {}
+  ) => {
+    const settings = getSettings();
+    return authedFetch(`${BASE}/projects/${projectId}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: message,
+        history,
+        canvas_context: canvasContext,
+        llm_config: {
+          api_key: settings.chat.apiKey,
+          base_url: settings.chat.baseUrl,
+          model: settings.chat.model,
+          max_tokens: settings.chat.maxTokens ?? 4096,
+          temperature: settings.chat.temperature ?? 0.1,
+        },
+      }),
+    });
+  },
+
   // Resume paused analysis (human selection after NOT_FOUND)
   resumeAnalysis: (projectId: string, manualSelections: any[]) => {
-    return fetch(`${BASE}/projects/${projectId}/resume`, {
+    return authedFetch(`${BASE}/projects/${projectId}/resume`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ manual_selections: manualSelections }),
@@ -116,7 +157,7 @@ export const api = {
 
   // Knowledge
   uploadKnowledgeDoc: (formData: FormData) =>
-    fetch(`${BASE}/knowledge/docs`, { method: 'POST', body: formData }),
+    authedFetch(`${BASE}/knowledge/docs`, { method: 'POST', body: formData }),
 
   searchKnowledge: (query: string, filters?: { category?: string[]; manufacturer?: string }) => {
     const settings = getSettings();
@@ -170,9 +211,61 @@ export const api = {
       body: JSON.stringify({ ids }),
     }),
 
+  // Single-page URL ingestion. Server fetches the URL, dispatches by
+  // Content-Type to the same extractor pipeline as file uploads.
+  ingestUrl: (url: string, manufacturer: string = 'Unknown', categoryTags: string[] = []) => {
+    const settings = getSettings();
+    return request<any>(`/knowledge/urls`, {
+      method: 'POST',
+      body: JSON.stringify({
+        url,
+        manufacturer,
+        category_tags: categoryTags,
+        llm_config: {
+          api_key: settings.chat.apiKey,
+          base_url: settings.chat.baseUrl,
+          model: settings.chat.model,
+          max_tokens: settings.chat.maxTokens ?? 4096,
+          temperature: settings.chat.temperature ?? 0.1,
+        },
+        embedding_config: {
+          api_key: settings.embedding.apiKey,
+          base_url: settings.embedding.baseUrl,
+          model: settings.embedding.model,
+          dimension: settings.embedding.dimension ?? 4096,
+        },
+      }),
+    });
+  },
+
   testConnectivity: (chat: any, embedding: any) =>
     request<{ chat: { ok: boolean; error?: string; model?: string }; embedding: { ok: boolean; error?: string; dimension?: number } }>(
       `/test-connectivity`,
       { method: 'POST', body: JSON.stringify({ chat, embedding }) }
     ),
+
+  // Chat messages — server-side persistence (M0 Track B). The store
+  // calls these so chat history survives a docker restart and is
+  // shareable across devices/tabs; localStorage remains as offline cache.
+  listMessages: (projectId: string) =>
+    request<ServerChatMessage[]>(`/projects/${projectId}/messages`),
+
+  appendMessage: (
+    projectId: string,
+    msg: { role: string; content: string; options?: unknown },
+  ) =>
+    request<ServerChatMessage>(`/projects/${projectId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify(msg),
+    }),
 };
+
+export interface ServerChatMessage {
+  id: string;
+  project_id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  options: Array<{ key: string; label: string; choices: string[] }> | null;
+  sequence: number;
+  created_at: string;
+}

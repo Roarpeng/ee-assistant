@@ -146,6 +146,18 @@ component_edges:  id | source_id → target_id | relation | properties(JSONB) | 
 3. 图路径 (新增): LLM 实体提取 → LLM 关系提取 → upsert 到 PG → Louvain 社区检测
 4. 选型时: Qdrant 语义 + 图 BFS 双路检索, 结果合并去重
 
+## 知识库 Bundle (跨部署共享)
+
+知识库建立成本高 (embedding API + LLM 实体抽取费用), 用 bundle 脚本一次打包多端复用:
+
+```bash
+./scripts/backup_knowledge.sh                           # → bundles/knowledge-bundle-*.tgz
+./scripts/restore_knowledge.sh <bundle.tgz>             # 目标端: 还原 4 张知识表 + Qdrant + MinIO PDF
+# Windows: scripts/backup_knowledge.ps1 / restore_knowledge.ps1
+```
+
+Bundle = Qdrant snapshot + `pg_dump` (knowledge_docs/component_nodes/component_edges/alembic_version) + MinIO bucket. 含 `manifest.json` 校验 embed model/dim, 不匹配中止保护用户. 详见 `docs/knowledge-bundle.md`.
+
 ## 知识库状态机
 
 文档处理异步流转, WebSocket 实时推送:
@@ -158,8 +170,10 @@ uploading → chunking → embedding → graph_extracting → ready
 any_stage → error (异常时, 可点 ↻ 重试)
 ```
 
-- PDF 存储到 MinIO, 失败后可重试无需重新上传
-- 重试: `POST /api/knowledge/docs/{id}/retry`
+- 原始字节(PDF/TXT/MD/HTML/DOCX/URL 抓取页)存储到 MinIO, 失败后可重试无需重新上传
+- 文本提取统一走 `core/extractors.py` 调度,按文件后缀+MIME 双重匹配
+- URL 通道: `POST /api/knowledge/urls` 单页抓取(httpx, 800MB 上限, 不跟链),`source_type='url'`
+- 重试: `POST /api/knowledge/docs/{id}/retry`(从 MinIO 重读, 重新走 dispatch)
 - 进度推送: `WS /ws/knowledge/docs/{id}`
 
 ## 部署架构 (Docker)
@@ -228,7 +242,8 @@ FK 级联: `component_nodes.source_doc_id` / `component_edges.source_doc_id` →
 | POST | `/api/projects/{id}/analyze-v2` | ★ v2 LangGraph 全流程 |
 | POST | `/api/projects/{id}/schematic` | 原理图生成 |
 | POST | `/api/projects/{id}/codegen` | ST 代码生成 |
-| GET/POST | `/api/knowledge/docs` | 知识库列表/上传 (异步+阶段推送) |
+| GET/POST | `/api/knowledge/docs` | 知识库列表/上传 (PDF/TXT/MD/HTML/DOCX,异步+阶段推送) |
+| POST | `/api/knowledge/urls` | **★ 单页 URL 抓取入库** `{url, manufacturer?, ...}` |
 | DELETE | `/api/knowledge/docs` | **批量删除** `{ids: [...]}` |
 | DELETE | `/api/knowledge/docs/{id}` | 删除单个文档 |
 | POST | `/api/knowledge/docs/{id}/retry` | **重试失败文档** |

@@ -1,10 +1,18 @@
 import asyncio
 import uuid
+import httpx
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchAny, MatchValue
 from openai import AsyncOpenAI
 
 from app.config import settings
+
+
+def _build_httpx_client() -> httpx.AsyncClient:
+    """Same hardened client as llm_service: long timeouts, no keepalive, trust env proxy."""
+    timeout = httpx.Timeout(connect=30.0, read=120.0, write=30.0, pool=30.0)
+    limits = httpx.Limits(max_connections=20, max_keepalive_connections=0)
+    return httpx.AsyncClient(timeout=timeout, limits=limits, trust_env=True)
 from app.core.graph_rag import (
     GraphRetriever,
     GraphRetrievalRequest,
@@ -18,7 +26,7 @@ class RAGEngine:
     def __init__(self):
         self.qdrant = AsyncQdrantClient(url=settings.qdrant_url)
         self._embed_client: AsyncOpenAI | None = None
-        self._embed_model: str = settings.embed_model
+        self._embed_model: str = settings.effective_embed_model()
         self._embed_dim: int = settings.embedding_dim
         self.collection = settings.qdrant_collection
 
@@ -26,13 +34,18 @@ class RAGEngine:
         if self._embed_client:
             return self._embed_client
         return AsyncOpenAI(
-            api_key=settings.embed_api_key,
-            base_url=settings.embed_base_url if settings.embed_api_key else None,
+            api_key=settings.effective_embed_api_key(),
+            base_url=settings.effective_embed_base_url() or None,
+            http_client=_build_httpx_client(),
         )
 
     def configure(self, api_key: str = "", base_url: str = "", model: str = "", dimensions: int = 0):
         if api_key and base_url:
-            self._embed_client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+            self._embed_client = AsyncOpenAI(
+                api_key=api_key,
+                base_url=base_url,
+                http_client=_build_httpx_client(),
+            )
         if model:
             self._embed_model = model
         if dimensions:

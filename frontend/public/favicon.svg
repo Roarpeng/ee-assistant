@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Volta favicon: lightning bolt forming letter V on indigo badge -->
+  <!-- Background: indigo-950 rounded square, reads on light & dark browser themes -->
+  <rect width="32" height="32" rx="6" fill="#1e1b4b"/>
+  <!-- Subtle inner stroke for crispness at 16px -->
+  <rect x="0.5" y="0.5" width="31" height="31" rx="5.5" fill="none" stroke="#312e81" stroke-width="1"/>
+  <!-- Lightning bolt / V silhouette -->
+  <!-- Designed so the bolt's two strokes form a V at small sizes,
+       with the offset zigzag still readable at 32px+ -->
+  <path d="M 11 5 L 7 17 L 13 17 L 9 27 L 23 13 L 17 13 L 21 5 Z"
+        fill="#a5b4fc"
+        stroke="#818cf8"
+        stroke-width="0.6"
+        stroke-linejoin="round"/>
+  <!-- Energized terminal dot at the bolt tip -->
+  <circle cx="9.5" cy="26" r="1.4" fill="#fbbf24"/>
+</svg>

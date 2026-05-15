@@ -17,6 +17,11 @@ class AnalysisState(TypedDict):
     st_modules: list[dict] | None
     topology: dict | None # { nodes: list, edges: list }
     review_notes: list[str] | None
+    project_meta: dict | None  # {safety_level, bom_cost} for InfoPanel
+    io_budget: list[dict] | None  # BudgetItem[] for IOBudgetBar
+    commissioning_steps: list[dict] | None  # [{title, body}] for GuidePanel
+    io_items: list[dict] | None  # [{tag, signal, from, to, wire}] for WiringPanel
+    clarification: dict | None  # {needed, groups: [{key, label, choices}]} for ClarifyCard
     graph_traces: Annotated[list[dict], operator.add]
     errors: Annotated[list[str], operator.add]
     messages: Annotated[list[dict], add_messages]
@@ -24,3 +29,9 @@ class AnalysisState(TypedDict):
     stage: str
     llm_config: dict | None
     embedding_config: dict | None
+    org_id: str | None  # propagated from Project.org_id at run start (M1)
+    run_history_id: str | None  # set by orchestrator on new runs (M2 Track B)
+    # Top-3 historical episode summary block, formatted Chinese natural
+    # language. Set by `fanout_selection_supervisor` (M3 Track B) for
+    # downstream visibility (frontend memory panel, future LLM prompts).
+    episodic_context: str | None

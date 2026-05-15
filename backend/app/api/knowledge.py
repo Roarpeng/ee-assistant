@@ -5,13 +5,29 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException, W
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
-from app.core.schemas import BatchDeleteInput, KnowledgeDocOut, KnowledgeRetryInput, KnowledgeSearch, ProgressEvent
+from app.core.schemas import (
+    BatchDeleteInput,
+    KnowledgeDocOut,
+    KnowledgeRetryInput,
+    KnowledgeSearch,
+    KnowledgeURLIngest,
+    ProgressEvent,
+)
 from app.db.models import KnowledgeDoc
 from app.db.repository import get_session
 from app.core.rag_engine import rag_engine
 from app.core.entity_extractor import entity_extractor
 from app.core.knowledge_graph import ComponentGraph
 from app.core.community_detector import CommunityDetector
+from app.core.extractors import (
+    ExtractionError,
+    SUPPORTED_SUFFIXES,
+    UnsupportedSourceError,
+    detect_source_type,
+    extract_text,
+    normalize_suffix,
+)
+from app.core.url_fetcher import URLFetchError, fetch_url
 
 router = APIRouter(prefix="/api/knowledge", tags=["knowledge"])
 
@@ -53,20 +69,87 @@ async def upload_doc(
     llm_cfg = json_module.loads(llm_config) or None
     embed_cfg = json_module.loads(embedding_config) or None
 
+    # Reject early with a 415 if the suffix isn't on our whitelist —
+    # better than queueing a doomed background task and surfacing the
+    # error 30 seconds later via WebSocket.
+    filename = file.filename or "unknown"
+    try:
+        source_type = detect_source_type(filename, file.content_type)
+    except UnsupportedSourceError as exc:
+        raise HTTPException(status_code=415, detail=str(exc))
+
     doc = KnowledgeDoc(
-        filename=file.filename or "unknown.pdf",
+        filename=filename,
         manufacturer=manufacturer,
         category_tags=tags,
         chunk_count=0,
         status="uploading",
+        source_type=source_type,
     )
     session.add(doc)
     await session.commit()
     await session.refresh(doc)
 
     content = await file.read()
-    _store_in_minio(doc.id, content, file.filename)
-    asyncio.create_task(_process_document(content, doc.id, manufacturer, tags, llm_cfg, embed_cfg))
+    _store_in_minio(doc.id, content, filename)
+    asyncio.create_task(_process_document(content, doc.id, filename, manufacturer, tags, llm_cfg, embed_cfg))
+
+    return doc
+
+
+@router.post("/urls", response_model=KnowledgeDocOut, status_code=201)
+async def ingest_url(
+    body: KnowledgeURLIngest,
+    session: AsyncSession = Depends(get_session),
+):
+    """Single-URL ingestion. Fetches the page, dispatches by Content-Type
+    to the same extractor pipeline as file uploads. Background processing
+    is identical to /docs from this point on.
+    """
+    try:
+        content, mime, derived_name = await fetch_url(body.url)
+    except URLFetchError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    # The URL endpoint always tags source_type='url' regardless of the
+    # underlying parsed format — that lets the UI badge "URL" distinctly.
+    # The actual parser is still picked from the derived filename suffix
+    # so the extractor dispatch stays uniform.
+    try:
+        # Validate that we *can* parse what we just fetched before we
+        # commit a DB row + MinIO blob.
+        detect_source_type(derived_name, mime)
+    except UnsupportedSourceError as exc:
+        raise HTTPException(
+            status_code=415,
+            detail=f"URL returned unsupported content: {exc}",
+        )
+
+    doc = KnowledgeDoc(
+        filename=derived_name,
+        manufacturer=body.manufacturer,
+        category_tags=body.category_tags,
+        chunk_count=0,
+        status="uploading",
+        source_type="url",
+        source_url=body.url,
+    )
+    session.add(doc)
+    await session.commit()
+    await session.refresh(doc)
+
+    _store_in_minio(doc.id, content, derived_name)
+    asyncio.create_task(
+        _process_document(
+            content,
+            doc.id,
+            derived_name,
+            body.manufacturer,
+            body.category_tags,
+            body.llm_config,
+            body.embedding_config,
+        )
+    )
 
     return doc
 
@@ -133,7 +216,7 @@ async def retry_doc(doc_id: str, body: KnowledgeRetryInput, session: AsyncSessio
     await session.commit()
     await session.refresh(doc)
 
-    asyncio.create_task(_process_document(content, doc.id, doc.manufacturer, doc.category_tags,
+    asyncio.create_task(_process_document(content, doc.id, doc.filename, doc.manufacturer, doc.category_tags,
                                           body.llm_config, body.embedding_config))
 
     return doc
@@ -161,7 +244,7 @@ async def _delete_single_doc(doc_id: str, session: AsyncSession):
     await session.commit()
 
 
-async def _process_document(content: bytes, doc_id: str, manufacturer: str, tags: list[str],
+async def _process_document(content: bytes, doc_id: str, filename: str, manufacturer: str, tags: list[str],
                             llm_config: dict | None = None, embedding_config: dict | None = None):
     """Background task: extract text → chunk → embed → graph extract with phase updates."""
     from app.db.repository import engine
@@ -169,7 +252,6 @@ async def _process_document(content: bytes, doc_id: str, manufacturer: str, tags
     from app.core.llm_service import llm_service
     import traceback
 
-    # Apply frontend-provided config at the start so all subsequent calls use it
     if llm_config or embedding_config:
         llm_service.configure(chat_config=llm_config, embed_config=embedding_config)
     if embedding_config:
@@ -186,15 +268,21 @@ async def _process_document(content: bytes, doc_id: str, manufacturer: str, tags
         try:
             await _update_status(session, doc_id, "chunking")
             await knowledge_progress.push(doc_id, ProgressEvent(
-                stage="chunking", message="正在提取 PDF 文本并分块..."
+                stage="chunking", message=f"正在提取文本并分块（{normalize_suffix(filename) or '未知格式'}）..."
             ))
 
-            # Run synchronous PDF extraction in a thread pool to avoid blocking
+            # Extractor dispatch is sync + CPU-bound; keep it off the
+            # event loop so concurrent uploads stay snappy.
             loop = asyncio.get_running_loop()
-            text = await loop.run_in_executor(None, extract_pdf_text, content)
-
-            if not text.strip():
-                raise ValueError("PDF 文本提取为空，可能是扫描件（暂不支持 OCR）或加密文档。")
+            try:
+                text = await loop.run_in_executor(
+                    None,
+                    lambda: extract_text(content, filename=filename),
+                )
+            except UnsupportedSourceError as exc:
+                raise ValueError(f"暂不支持的文档类型: {exc}") from exc
+            except ExtractionError as exc:
+                raise ValueError(str(exc)) from exc
 
             chunks = chunk_text(text, doc_id, manufacturer, tags)
             if not chunks:
@@ -239,7 +327,7 @@ async def _update_status(session: AsyncSession, doc_id: str, status: str):
 
 
 async def _extract_graph_knowledge(text: str, doc_id: str, session: AsyncSession):
-    """Extract component entities and relationships from PDF text into the knowledge graph."""
+    """Extract component entities and relationships from text into the knowledge graph."""
     try:
         graph = ComponentGraph(session)
         entities = await entity_extractor.extract_entities(text)
@@ -284,25 +372,12 @@ async def _extract_graph_knowledge(text: str, doc_id: str, session: AsyncSession
         pass
 
 
-def extract_pdf_text(content: bytes) -> str:
-    import fitz
-    try:
-        doc = fitz.open(stream=content, filetype="pdf")
-        text = ""
-        # Limit to first 200 pages for 20MB+ documents to avoid OOM
-        max_pages = 200
-        for i, page in enumerate(doc):
-            if i >= max_pages:
-                break
-            text += page.get_text()
-        doc.close()
-        return text
-    except Exception as e:
-        print(f"PyMuPDF error: {e}")
-        return ""
-
-
 def _store_in_minio(doc_id: str, content: bytes, filename: str):
+    """Persist raw bytes for retry. Path prefix `pdfs/` is historical —
+    we keep it for backward compatibility with backup/restore scripts.
+    Actual file types under this prefix may be PDF, TXT, HTML, DOCX, etc.
+    See docs/superpowers/specs/2026-05-09-knowledge-multi-source-design.md
+    """
     try:
         from minio import Minio
         from app.config import settings
@@ -340,9 +415,18 @@ def _fetch_from_minio(doc_id: str) -> bytes | None:
         return None
 
 
+# ---------------------------------------------------------------------------
+# Legacy alias kept for any external import. The single source of truth for
+# extraction now lives in app.core.extractors.extract_text().
+# ---------------------------------------------------------------------------
+
+
+def extract_pdf_text(content: bytes) -> str:
+    return extract_text(content, filename="legacy.pdf")
+
+
 def chunk_text(text: str, doc_id: str, manufacturer: str, tags: list[str]) -> list[dict]:
     chunks = []
-    # Larger chunk size (1500 chars) to reduce total request count for large PDFs
     chunk_size = 1500
     paragraphs = text.split("\n\n")
     current = ""
@@ -358,7 +442,7 @@ def chunk_text(text: str, doc_id: str, manufacturer: str, tags: list[str]) -> li
                     "category_tags": tags
                 })
             current = para + "\n\n"
-            
+
             # If a single paragraph is larger than chunk_size, split it forcefully
             if len(current) > chunk_size:
                 while len(current) > chunk_size:

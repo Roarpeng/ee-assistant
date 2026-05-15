@@ -1,25 +1,56 @@
-version: "3.8"
-
 services:
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
+      args:
+        HTTP_PROXY: http://host.docker.internal:3128
+        HTTPS_PROXY: http://host.docker.internal:3128
+        NO_PROXY: localhost,127.0.0.1,host.docker.internal
     ports:
-      - "80:80"
+      - "8090:80"
+    environment:
+      # 运行时清空 proxy:nginx/容器内服务通过 backend service 名直连,无需走代理
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      NO_PROXY: "*"
+      http_proxy: ""
+      https_proxy: ""
+      no_proxy: "*"
     depends_on:
       - backend
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
+      args:
+        HTTP_PROXY: http://host.docker.internal:3128
+        HTTPS_PROXY: http://host.docker.internal:3128
+        NO_PROXY: localhost,127.0.0.1,host.docker.internal
+    # Runtime 也需要 extra_hosts:Docker Desktop 默认不为 Linux 容器注入 host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8000:8000"
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql+asyncpg://ele:ele@postgres:5432/ele
-      - QDRANT_URL=http://qdrant:6333
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
+      DATABASE_URL: postgresql+asyncpg://ele:ele@postgres:5432/ele
+      QDRANT_URL: http://qdrant:6333
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      # LLM 调用 (api.deepseek.com / api.siliconflow.cn) 必须走宿主代理出外网,
+      # 但内部依赖 (postgres/qdrant/minio) 通过 service name 直连必须绕开代理。
+      HTTP_PROXY: http://host.docker.internal:3128
+      HTTPS_PROXY: http://host.docker.internal:3128
+      NO_PROXY: localhost,127.0.0.1,host.docker.internal,postgres,qdrant,minio
+      http_proxy: http://host.docker.internal:3128
+      https_proxy: http://host.docker.internal:3128
+      no_proxy: localhost,127.0.0.1,host.docker.internal,postgres,qdrant,minio
     depends_on:
       - postgres
       - qdrant

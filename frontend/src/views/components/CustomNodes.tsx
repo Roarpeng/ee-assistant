@@ -1,20 +1,111 @@
+import type { CSSProperties } from 'react';
 import { Handle, Position } from 'reactflow';
 
-function handleClass(selected?: boolean) {
-  return `!w-3 !h-3 transition-all duration-200 z-50 rounded-full ${
-    selected
-      ? '!bg-indigo-400 !border-2 !border-white scale-150 shadow-[0_0_10px_rgba(129,140,248,1)] !opacity-100'
-      : '!bg-neutral-500 !border-2 !border-neutral-900 !opacity-0 group-hover:!opacity-100'
-  }`;
+// Color tokens per electrical-circuit category — kept in sync with
+// `CATEGORY_COLORS` used in TopologyPanel for edge stroke.
+const HANDLE_COLOR = {
+  power: '#f59e0b',    // amber  — power lines (top/bottom)
+  network: '#3b82f6',  // blue   — field network (left/right)
+  safety: '#ef4444',   // red    — safety bus (left/right)
+  feedback: '#10b981', // green  — sensor feedback (top/bottom, opposite of power)
+} as const;
+
+type HandleCategory = keyof typeof HANDLE_COLOR;
+
+function handleStyle(category: HandleCategory, selected?: boolean): CSSProperties {
+  const color = HANDLE_COLOR[category];
+  return {
+    background: color,
+    borderColor: selected ? '#ffffff' : '#0a0a0a',
+    boxShadow: selected ? `0 0 8px ${color}` : 'none',
+    width: 9,
+    height: 9,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderStyle: 'solid',
+    transition: 'opacity 200ms, transform 200ms, box-shadow 200ms',
+    opacity: selected ? 1 : 0,
+    zIndex: 50,
+  };
 }
 
+// 8 named handles per node. Layout:
+//   top edge:    pwr-top (target, orange) | fb-top (source, green)
+//   bottom edge: pwr-bottom (source, orange) | fb-bottom (target, green)
+//   left edge:   safe-left (target, red) | net-left (target, blue)
+//   right edge:  safe-right (source, red) | net-right (source, blue)
+//
+// Each handle gets `style={{ left/top: pct }}` so they don't pile up at
+// the midpoint. The wrapping component should add `group` on hover so
+// handles fade in only when the user is interacting with the node.
 export function NodeHandles({ selected }: { selected?: boolean }) {
+  const baseClass =
+    'group-hover:!opacity-100 hover:!opacity-100 hover:!scale-150';
   return (
     <>
-      <Handle type="target" position={Position.Top} id="in-top" className={handleClass(selected)} />
-      <Handle type="source" position={Position.Right} id="out" className={handleClass(selected)} />
-      <Handle type="source" position={Position.Bottom} id="out-bottom" className={handleClass(selected)} />
-      <Handle type="target" position={Position.Left} id="in" className={handleClass(selected)} />
+      {/* Top edge — power in (target) + feedback out (source) */}
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="pwr-top"
+        className={baseClass}
+        style={{ ...handleStyle('power', selected), left: '30%' }}
+      />
+      <Handle
+        type="source"
+        position={Position.Top}
+        id="fb-top"
+        className={baseClass}
+        style={{ ...handleStyle('feedback', selected), left: '70%' }}
+      />
+
+      {/* Right edge — network out (source) + safety out (source) */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="net-right"
+        className={baseClass}
+        style={{ ...handleStyle('network', selected), top: '35%' }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="safe-right"
+        className={baseClass}
+        style={{ ...handleStyle('safety', selected), top: '70%' }}
+      />
+
+      {/* Bottom edge — power out (source) + feedback in (target) */}
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="pwr-bottom"
+        className={baseClass}
+        style={{ ...handleStyle('power', selected), left: '30%' }}
+      />
+      <Handle
+        type="target"
+        position={Position.Bottom}
+        id="fb-bottom"
+        className={baseClass}
+        style={{ ...handleStyle('feedback', selected), left: '70%' }}
+      />
+
+      {/* Left edge — network in (target) + safety in (target) */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="net-left"
+        className={baseClass}
+        style={{ ...handleStyle('network', selected), top: '35%' }}
+      />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="safe-left"
+        className={baseClass}
+        style={{ ...handleStyle('safety', selected), top: '70%' }}
+      />
     </>
   );
 }

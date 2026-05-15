@@ -55,34 +55,35 @@ function edgeToYMap(edge: EdgeData): Y.Map<any> {
   m.set('source', edge.source);
   m.set('target', edge.target);
   m.set('protocol', edge.protocol);
+  if (edge.sourceHandle) m.set('sourceHandle', edge.sourceHandle);
+  if (edge.targetHandle) m.set('targetHandle', edge.targetHandle);
+  if (edge.category) m.set('category', edge.category);
   return m;
 }
 
 function yMapToEdge(m: Y.Map<any>): EdgeData {
+  const sh = m.get('sourceHandle');
+  const th = m.get('targetHandle');
+  const cat = m.get('category');
   return {
     id: m.get('id'),
     source: m.get('source'),
     target: m.get('target'),
     protocol: m.get('protocol'),
+    ...(sh ? { sourceHandle: sh } : {}),
+    ...(th ? { targetHandle: th } : {}),
+    ...(cat ? { category: cat } : {}),
   };
 }
 
-// ── AI topology merge (preserves user x,y) ──
+// ── AI topology merge (incremental, preserves user x,y) ──
 
 export function mergeAITopology(aiNodes: NodeData[], aiEdges: EdgeData[]): void {
   ydoc.transact(() => {
-    const aiNodeIds = new Set(aiNodes.map((n) => n.id));
-
-    // Remove nodes no longer in AI result (iterate backwards)
-    let i = yNodes.length;
-    while (i-- > 0) {
-      if (!aiNodeIds.has(yNodes.get(i).get('id'))) {
-        yNodes.delete(i);
-      }
-    }
-
-    // Upsert: new nodes added in full; existing nodes get type/label/status
+    // Upsert nodes: new nodes added; existing nodes get type/label/status
     // updated but x,y preserved to avoid interrupting user drags.
+    // Nodes NOT in the AI result are KEPT — this supports incremental
+    // updates from chat where the AI returns only new/modified components.
     for (const aiNode of aiNodes) {
       const idx = yNodes.toArray().findIndex((n) => n.get('id') === aiNode.id);
       if (idx >= 0) {
@@ -90,15 +91,27 @@ export function mergeAITopology(aiNodes: NodeData[], aiEdges: EdgeData[]): void 
         existing.set('type', aiNode.type);
         existing.set('label', aiNode.label);
         if (aiNode.status) existing.set('status', aiNode.status);
-        // x, y intentionally NOT set — CRDT merges concurrent user drags
+        // x, y intentionally NOT set — preserve user drags
       } else {
         yNodes.push([nodeToYMap(aiNode)]);
       }
     }
 
-    // Edges: full replace (no interactive position state to preserve)
-    yEdges.delete(0, yEdges.length);
-    yEdges.push(aiEdges.map(edgeToYMap));
+    // Edges: upsert — add new edges, keep existing ones
+    for (const aiEdge of aiEdges) {
+      const idx = yEdges.toArray().findIndex((e) => e.get('id') === aiEdge.id);
+      if (idx >= 0) {
+        const existing = yEdges.get(idx);
+        existing.set('source', aiEdge.source);
+        existing.set('target', aiEdge.target);
+        existing.set('protocol', aiEdge.protocol);
+        if (aiEdge.sourceHandle) existing.set('sourceHandle', aiEdge.sourceHandle);
+        if (aiEdge.targetHandle) existing.set('targetHandle', aiEdge.targetHandle);
+        if (aiEdge.category) existing.set('category', aiEdge.category);
+      } else {
+        yEdges.push([edgeToYMap(aiEdge)]);
+      }
+    }
   });
 }
 

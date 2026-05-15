@@ -1,7 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useStore } from '../models/store';
-
-const HISTORY_KEY = 'volta-chat-history';
+import { CHAT_HISTORY_KEY, CONVERSATIONS_KEY } from '../services/conversations';
 
 export function useChatHistory() {
   const project = useStore((s) => s.project);
@@ -9,15 +8,16 @@ export function useChatHistory() {
   const loadChatHistory = useStore((s) => s.loadChatHistory);
   const saveChatHistory = useStore((s) => s.saveChatHistory);
 
-  // Load history on mount (restores project + messages from localStorage)
+  // Load history on mount (restores project + messages — server-first
+  // with localStorage fallback, see store.loadChatHistory).
   useEffect(() => {
-    loadChatHistory();
+    void loadChatHistory();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load history when project changes (e.g., user creates or switches project)
   useEffect(() => {
     if (project) {
-      loadChatHistory();
+      void loadChatHistory(project.id);
     }
   }, [project?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -30,7 +30,8 @@ export function useChatHistory() {
 
   const clearAllHistory = useCallback(() => {
     try {
-      localStorage.removeItem(HISTORY_KEY);
+      localStorage.removeItem(CHAT_HISTORY_KEY);
+      localStorage.removeItem(CONVERSATIONS_KEY);
     } catch {}
   }, []);
 

@@ -4,9 +4,13 @@ export type TranslationDict = typeof zh;
 const zh = {
   app: { name: 'Volta', tagline: '电气工程智能设计平台' },
   header: {
+    info: '概览',
     topology: '拓扑图',
+    wiring: '接线表',
     bom: '物料清单',
     code: 'ST 代码',
+    guide: '调试指引',
+    cabinet: '控制柜',
     version: 'v2.0.0',
   },
   chat: {
@@ -32,6 +36,8 @@ const zh = {
     syncing: '同步中...',
     exportSvg: '导出 SVG',
     delete: '删除选中',
+    empty: '暂无拓扑图',
+    emptyHint: '在对话中输入工程需求，AI 将自动生成拓扑图。生成后您可在此编辑调整。',
   },
   bom: {
     title: '物料清单',
@@ -74,6 +80,20 @@ const zh = {
     title: '文档库',
     search: '搜索规格、文档...',
     upload: '上传文档',
+    uploadMulti: '上传 / 拖拽文件',
+    dropHint: '支持 PDF · TXT · MD · HTML · DOCX',
+    dropActive: '松开以上传',
+    skippedUnsupported: (n: number) =>
+      `已跳过 ${n} 个不支持的文件（仅支持 PDF/TXT/MD/HTML/DOCX）`,
+    oversizedFiles: (n: number, maxBytes: number) =>
+      `已跳过 ${n} 个超过 ${Math.round(maxBytes / 1024 / 1024)}MB 的文件`,
+    urlPlaceholder: 'https://example.com/datasheet.html',
+    addUrl: '添加 URL',
+    urlInvalid: '请输入以 http(s) 开头的 URL',
+    uploadFailed: '上传失败',
+    queueProgress: (done: number, total: number) => `上传中 ${done}/${total}`,
+    queueSummary: (ok: number, fail: number) => `成功 ${ok} · 失败 ${fail}`,
+    cancel: '取消',
     select: '选择',
     exitSelect: '取消选择',
     selectAll: '全选',
@@ -109,9 +129,13 @@ const zh = {
 const en: TranslationDict = {
   app: { name: 'Volta', tagline: 'Electrical Engineering AI Design Platform' },
   header: {
+    info: 'Overview',
     topology: 'Topology',
+    wiring: 'Wiring',
     bom: 'BOM',
     code: 'ST Code',
+    guide: 'Commissioning',
+    cabinet: 'Cabinet',
     version: 'v2.0.0',
   },
   chat: {
@@ -137,6 +161,8 @@ const en: TranslationDict = {
     syncing: 'Syncing...',
     exportSvg: 'Export SVG',
     delete: 'Delete Selected',
+    empty: 'No Topology Yet',
+    emptyHint: 'Enter engineering requirements in the chat and AI will auto-generate the topology. You can then edit and refine it here.',
   },
   bom: {
     title: 'Bill of Materials',
@@ -179,6 +205,20 @@ const en: TranslationDict = {
     title: 'Document Library',
     search: 'Search specs, docs...',
     upload: 'Upload Document',
+    uploadMulti: 'Upload / Drop files',
+    dropHint: 'PDF · TXT · MD · HTML · DOCX',
+    dropActive: 'Release to upload',
+    skippedUnsupported: (n: number) =>
+      `Skipped ${n} unsupported file(s) (PDF/TXT/MD/HTML/DOCX only)`,
+    oversizedFiles: (n: number, maxBytes: number) =>
+      `Skipped ${n} file(s) larger than ${Math.round(maxBytes / 1024 / 1024)}MB`,
+    urlPlaceholder: 'https://example.com/datasheet.html',
+    addUrl: 'Add URL',
+    urlInvalid: 'URL must start with http:// or https://',
+    uploadFailed: 'Upload failed',
+    queueProgress: (done: number, total: number) => `Uploading ${done}/${total}`,
+    queueSummary: (ok: number, fail: number) => `${ok} ok · ${fail} failed`,
+    cancel: 'Cancel',
     select: 'Select',
     exitSelect: 'Cancel',
     selectAll: 'Select All',

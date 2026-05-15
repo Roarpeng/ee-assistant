@@ -5,6 +5,7 @@ import {
   getTopologySnapshot,
   resetYjsDoc,
 } from './yjsStore';
+import type { OrgInfo, OrgPreference } from '../services/orgClient';
 
 // ===== Topology Types =====
 export type NodeData = {
@@ -17,11 +18,23 @@ export type NodeData = {
   details?: Record<string, string>;
 };
 
+// Electrical-circuit category — drives handle pair selection + edge color.
+// 'power'   = main + control voltages (top↓bottom, orange)
+// 'safety'  = STO/E-stop/safety bus    (left→right, red)
+// 'network' = field network protocols  (left→right, blue)
+// 'feedback'= sensor/IO/encoder return (bottom↑top, green)
+export type EdgeCategory = 'power' | 'safety' | 'network' | 'feedback';
+
 export type EdgeData = {
   id: string;
   source: string;
   target: string;
   protocol: string;
+  // Optional handle IDs from CustomNodes.tsx (8 named handles per node).
+  // When absent, TopologyPanel falls back to a protocol→side classifier.
+  sourceHandle?: string;
+  targetHandle?: string;
+  category?: EdgeCategory;
 };
 
 // ===== BOM Types =====
@@ -44,6 +57,8 @@ export type KnowledgeDocStatus =
   | 'ready'
   | 'error';
 
+export type KnowledgeSourceType = 'pdf' | 'txt' | 'md' | 'html' | 'docx' | 'url';
+
 export interface KnowledgeDoc {
   id: string;
   filename: string;
@@ -51,6 +66,8 @@ export interface KnowledgeDoc {
   category_tags: string[];
   chunk_count: number;
   status: KnowledgeDocStatus;
+  source_type?: KnowledgeSourceType;
+  source_url?: string | null;
   uploaded_at: string;
 }
 
@@ -74,7 +91,12 @@ export interface ChatMessage {
   content: string;
   timestamp: number;
   context?: ChatContext & { componentSummary?: string };
+  // Optional structured clarification card. When present, ChatPanel renders
+  // a chip-picker below the message bubble; absent → plain text rendering.
+  options?: Array<{ key: string; label: string; choices: string[] }>;
 }
+
+export type NewConversationMode = 'clear-canvas' | 'keep-canvas';
 
 // ===== LLM Settings =====
 export interface LLMSettings {
@@ -114,8 +136,27 @@ interface AppState {
   project: { id: string; name: string } | null;
   stage: AnalysisStage;
   messages: ChatMessage[];
-  activeCanvasTab: 'topology' | 'bom' | 'code';
-  theme: 'light' | 'dark';
+  activeCanvasTab:
+    | 'info'
+    | 'topology'
+    | 'wiring'
+    | 'bom'
+    | 'code'
+    | 'guide'
+    | 'cabinet';
+  theme: 'light' | 'dark' | 'engineering';
+  ioItems: Array<{ tag: string; signal: string; from: string; to: string; wire: string }>;
+  commissioningSteps: Array<{ title: string; body: string }>;
+  // Optional snapshot of PLC capacity + signal-bearing items for the live
+  // budget bar on the topology canvas. When empty, the bar hides itself.
+  budgetItems: Array<{
+    type?: string;
+    signal?: 'di' | 'do_' | 'ai' | 'ao' | 'none';
+    model?: string;
+    capacity?: { di?: number; do_?: number; ai?: number; ao?: number };
+  }>;
+  bomCost?: number;
+  safetyLevel?: string;
   language: Lang;
   settings: AppSettings;
   knowledgeDocs: KnowledgeDoc[];
@@ -125,15 +166,33 @@ interface AppState {
   chatContext: ChatContext | null;
   previewNodeId: string | null;
   unreadChatCount: number;
+  // M1: Organization identity. `org` is null until `bootstrapOrg` resolves
+  // (server round-trip on first mount). `preferences` mirrors the server-
+  // side org_preferences table; refreshed after every clarify writeback.
+  org: OrgInfo | null;
+  preferences: OrgPreference[];
 
   setTopology: (nodes: NodeData[], edges: EdgeData[], source?: 'ai' | 'user') => void;
   syncTopologyFromYjs: () => void;
   setBOM: (bom: BOMItem[]) => void;
   setSCLCode: (code: string) => void;
+  setProjectMeta: (meta: { safetyLevel?: string; bomCost?: number }) => void;
+  setIOItems: (items: AppState['ioItems']) => void;
+  setCommissioningSteps: (steps: AppState['commissioningSteps']) => void;
+  setBudgetItems: (items: AppState['budgetItems']) => void;
   setProject: (p: { id: string; name: string }) => void;
   setStage: (s: AnalysisStage) => void;
   addMessage: (m: ChatMessage) => void;
-  setActiveCanvasTab: (tab: 'topology' | 'bom' | 'code') => void;
+  setActiveCanvasTab: (
+    tab:
+      | 'info'
+      | 'topology'
+      | 'wiring'
+      | 'bom'
+      | 'code'
+      | 'guide'
+      | 'cabinet',
+  ) => void;
   toggleTheme: () => void;
   toggleLanguage: () => void;
   updateSettings: (s: AppSettings) => void;
@@ -145,18 +204,32 @@ interface AppState {
   setKnowledgeLoading: (loading: boolean) => void;
   setChatContext: (ctx: ChatContext | null) => void;
   setPreviewNodeId: (id: string | null) => void;
-  newProject: () => Promise<void>;
+  newProject: (options?: { preserveCanvas?: boolean; seedPrompt?: string }) => Promise<void>;
   clearChat: () => void;
   resetCanvasWorkspace: () => void;
   incrementUnread: () => void;
   resetUnread: () => void;
   saveChatHistory: () => void;
-  loadChatHistory: () => void;
+  loadChatHistory: (projectId?: string) => Promise<void>;
+  bootstrapOrg: () => Promise<void>;
+  refreshPreferences: () => Promise<void>;
 }
 
 let msgCounter = 0;
 
-export const useStore = create<AppState>((set) => ({
+// One-shot seed prompt handed off from HeroLanding/Templates to ChatPanel.
+// Module-level (not in the store) so its existence doesn't widen AppState typing.
+let _pendingSeedPrompt: string | null = null;
+export function setPendingSeedPrompt(p: string | null) {
+  _pendingSeedPrompt = p;
+}
+export function consumePendingSeedPrompt(): string | null {
+  const p = _pendingSeedPrompt;
+  _pendingSeedPrompt = null;
+  return p;
+}
+
+export const useStore = create<AppState>((set, get) => ({
   topology: {
     nodes: [],
     edges: [],
@@ -168,8 +241,11 @@ export const useStore = create<AppState>((set) => ({
   project: null,
   stage: 'idle',
   messages: [],
-  activeCanvasTab: 'topology',
-  theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'dark',
+  activeCanvasTab: 'info',
+  ioItems: [],
+  commissioningSteps: [],
+  budgetItems: [],
+  theme: (localStorage.getItem('theme') as 'light' | 'dark' | 'engineering') || 'engineering',
   language: getInitialLang(),
   settings: loadSettings(),
   knowledgeDocs: [],
@@ -179,6 +255,8 @@ export const useStore = create<AppState>((set) => ({
   chatContext: null,
   previewNodeId: null,
   unreadChatCount: 0,
+  org: null,
+  preferences: [],
 
   setTopology: (nodes, edges, source = 'user') => {
     if (source === 'ai') {
@@ -204,19 +282,52 @@ export const useStore = create<AppState>((set) => ({
   },
   setBOM: (bom) => set({ bom }),
   setSCLCode: (sclCode) => set({ sclCode }),
+  setProjectMeta: ({ safetyLevel, bomCost }) =>
+    set((s) => ({
+      safetyLevel: safetyLevel !== undefined ? safetyLevel : s.safetyLevel,
+      bomCost: bomCost !== undefined ? bomCost : s.bomCost,
+    })),
+  setIOItems: (ioItems) => set({ ioItems }),
+  setCommissioningSteps: (commissioningSteps) => set({ commissioningSteps }),
+  setBudgetItems: (budgetItems) => set({ budgetItems }),
   setProject: (p) => {
     try { localStorage.setItem('volta-last-project', JSON.stringify(p)); } catch {}
     set({ project: p });
   },
   setStage: (stage) => set({ stage }),
-  addMessage: (m) =>
-    set((s) => ({
-      messages: [...s.messages, { ...m, id: String(++msgCounter), timestamp: Date.now() }],
-    })),
+  addMessage: (m) => {
+    const id = m.id || String(++msgCounter);
+    const final: ChatMessage = { ...m, id, timestamp: m.timestamp || Date.now() };
+    set((s) => ({ messages: [...s.messages, final] }));
+    // Fire-and-forget server persistence so chat history survives a
+    // docker compose restart (M0 Track B). localStorage stays as the
+    // offline cache; server failures are intentionally swallowed.
+    const project = get().project;
+    if (
+      project &&
+      final.content &&
+      (final.role === 'user' || final.role === 'assistant')
+    ) {
+      void import('../services/api').then(({ api }) => {
+        api
+          .appendMessage(project.id, {
+            role: final.role,
+            content: final.content,
+            options: final.options,
+          })
+          .catch(() => {});
+      });
+    }
+  },
   setActiveCanvasTab: (tab) => set({ activeCanvasTab: tab }),
   toggleTheme: () =>
     set((s) => {
-      const next = s.theme === 'light' ? 'dark' : 'light';
+      const cycle: Record<typeof s.theme, typeof s.theme> = {
+        light: 'dark',
+        dark: 'engineering',
+        engineering: 'light',
+      };
+      const next = cycle[s.theme];
       localStorage.setItem('theme', next);
       document.documentElement.setAttribute('data-theme', next);
       return { theme: next };
@@ -281,8 +392,17 @@ export const useStore = create<AppState>((set) => ({
     set({ messages: [], chatContext: null });
   },
 
-  newProject: async () => {
-    const s = useStore.getState();
+  newProject: async (options) => {
+    const s = get();
+    const preserveCanvas = options?.preserveCanvas ?? false;
+    setPendingSeedPrompt(options?.seedPrompt ?? null);
+    const preservedCanvas = {
+      topology: s.topology,
+      yTopologyVersion: s.yTopologyVersion,
+      bom: s.bom,
+      sclCode: s.sclCode,
+      activeCanvasTab: s.activeCanvasTab,
+    };
     if (s.project) {
       try {
         const raw = localStorage.getItem('volta-chat-history');
@@ -293,34 +413,40 @@ export const useStore = create<AppState>((set) => ({
     }
     try {
       const { api } = await import('../services/api');
-      const p = await api.createProject('New Project');
-      resetYjsDoc();
+      const { deriveConversationTitle } = await import('../services/conversations');
+      const projectName = preserveCanvas
+        ? `继续：${deriveConversationTitle(s.messages, '当前画布')}`
+        : 'New Project';
+      const p = await api.createProject(projectName);
+      if (!preserveCanvas) resetYjsDoc();
       set({
         project: p,
-        topology: { nodes: [], edges: [] },
-        yTopologyVersion: 0,
-        bom: [],
-        sclCode: '',
+        topology: preserveCanvas ? preservedCanvas.topology : { nodes: [], edges: [] },
+        yTopologyVersion: preserveCanvas ? preservedCanvas.yTopologyVersion : 0,
+        bom: preserveCanvas ? preservedCanvas.bom : [],
+        sclCode: preserveCanvas ? preservedCanvas.sclCode : '',
         messages: [],
         chatContext: null,
         previewNodeId: null,
         stage: 'idle',
         unreadChatCount: 0,
+        activeCanvasTab: preserveCanvas ? preservedCanvas.activeCanvasTab : 'topology',
       });
     } catch {
-      resetYjsDoc();
+      if (!preserveCanvas) resetYjsDoc();
       const fallbackId = 'proj_' + Date.now();
       set({
-        project: { id: fallbackId, name: 'New Project' },
-        topology: { nodes: [], edges: [] },
-        yTopologyVersion: 0,
-        bom: [],
-        sclCode: '',
+        project: { id: fallbackId, name: preserveCanvas ? '继续当前画布' : 'New Project' },
+        topology: preserveCanvas ? preservedCanvas.topology : { nodes: [], edges: [] },
+        yTopologyVersion: preserveCanvas ? preservedCanvas.yTopologyVersion : 0,
+        bom: preserveCanvas ? preservedCanvas.bom : [],
+        sclCode: preserveCanvas ? preservedCanvas.sclCode : '',
         messages: [],
         chatContext: null,
         previewNodeId: null,
         stage: 'idle',
         unreadChatCount: 0,
+        activeCanvasTab: preserveCanvas ? preservedCanvas.activeCanvasTab : 'topology',
       });
     }
   },
@@ -339,22 +465,49 @@ export const useStore = create<AppState>((set) => ({
     } catch {}
   },
 
-  loadChatHistory: () => {
-    const s = useStore.getState();
-    // If no project in state, try to restore last project from localStorage
-    if (!s.project) {
-      try {
-        const saved = localStorage.getItem('volta-last-project');
-        if (saved) {
-          const p = JSON.parse(saved);
-          if (p && p.id) {
-            set({ project: p });
+  loadChatHistory: async (projectId?: string) => {
+    // Resolve which project we're loading messages for. Cold-boot path
+    // (App.tsx mount with no project in state) restores the last project
+    // from localStorage so reloads don't kick the user back to Hero.
+    let pid = projectId;
+    if (!pid) {
+      const s = useStore.getState();
+      if (s.project?.id) {
+        pid = s.project.id;
+      } else {
+        try {
+          const saved = localStorage.getItem('volta-last-project');
+          if (saved) {
+            const p = JSON.parse(saved);
+            if (p && p.id) {
+              set({ project: p });
+              pid = p.id;
+            }
           }
-        }
-      } catch {}
+        } catch {}
+      }
     }
-    const pid = s.project?.id;
     if (!pid) return;
+
+    // Server is the source of truth (M0 Track B). On any network /
+    // API failure we silently fall back to the localStorage cache so
+    // the UX degrades gracefully when offline.
+    try {
+      const { api } = await import('../services/api');
+      const serverMsgs = await api.listMessages(pid);
+      const messages: ChatMessage[] = serverMsgs.map((m) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        timestamp: new Date(m.created_at).getTime(),
+        options: m.options ?? undefined,
+      }));
+      set({ messages });
+      return;
+    } catch {}
+
+    // Offline fallback: shared 'volta-chat-history' cache that
+    // conversations.ts also writes to.
     try {
       const raw = localStorage.getItem('volta-chat-history');
       if (!raw) return;
@@ -362,9 +515,52 @@ export const useStore = create<AppState>((set) => ({
       const msgs = all[pid];
       if (msgs && msgs.length > 0) {
         set({ messages: msgs });
-        const maxId = msgs.reduce((max: number, m: any) => Math.max(max, parseInt(m.id) || 0), 0);
+        const maxId = msgs.reduce(
+          (max: number, m: any) => Math.max(max, parseInt(m.id) || 0),
+          0,
+        );
         msgCounter = maxId;
       }
+    } catch {}
+  },
+
+  // M1: bootstrap or restore the org identity. Idempotent — if a
+  // valid token already lives in localStorage we skip POST /api/orgs
+  // and just call /api/orgs/me to hydrate. On a stale/invalid token
+  // we wipe + re-bootstrap once. Always refreshes the prefs cache
+  // afterwards so OrgSettingsPanel renders without a second round-trip.
+  bootstrapOrg: async () => {
+    try {
+      const { orgApi, getStoredToken, setStoredToken, clearStoredToken } =
+        await import('../services/orgClient');
+      const token = getStoredToken();
+      if (!token) {
+        const created = await orgApi.bootstrap('Default Org');
+        setStoredToken(created.token);
+        set({ org: { id: created.id, name: created.name, code: created.code } });
+      } else {
+        try {
+          const me = await orgApi.me();
+          set({ org: me });
+        } catch {
+          clearStoredToken();
+          const created = await orgApi.bootstrap('Default Org');
+          setStoredToken(created.token);
+          set({ org: { id: created.id, name: created.name, code: created.code } });
+        }
+      }
+      await get().refreshPreferences();
+    } catch {
+      // Backend unavailable or non-2xx everywhere; degrade silently
+      // so the SPA still renders. UI surfaces "未连接" via `org === null`.
+    }
+  },
+
+  refreshPreferences: async () => {
+    try {
+      const { orgApi } = await import('../services/orgClient');
+      const prefs = await orgApi.listPreferences();
+      set({ preferences: prefs });
     } catch {}
   },
 }));
