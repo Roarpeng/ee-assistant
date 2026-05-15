@@ -99,6 +99,19 @@ export interface ChatMessage {
 export type NewConversationMode = 'clear-canvas' | 'keep-canvas';
 
 // ===== LLM Settings =====
+// Canonical provider ids the backend recognises. Mirrors the
+// `ProviderId` literal in `services/llmProviders.ts` and the backend
+// `app/core/llm_providers.py` registry.
+export type ProviderId =
+  | 'openai'
+  | 'anthropic'
+  | 'deepseek'
+  | 'siliconflow'
+  | 'dashscope'
+  | 'volcengine'
+  | 'ollama'
+  | 'custom';
+
 export interface LLMSettings {
   apiKey: string;
   baseUrl: string;
@@ -106,6 +119,9 @@ export interface LLMSettings {
   maxTokens?: number;
   temperature?: number;
   dimension?: number;
+  // Optional explicit provider id. When undefined (e.g. settings stored
+  // before this field existed) the SettingsModal infers it from `baseUrl`.
+  provider?: ProviderId;
 }
 
 export interface AppSettings {
@@ -116,11 +132,33 @@ export interface AppSettings {
 function loadSettings(): AppSettings {
   try {
     const raw = localStorage.getItem('ee-settings');
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<AppSettings>;
+      // Merge against a fresh default so missing fields (incl. the new
+      // `provider`) don't break consumers; we deliberately leave the
+      // provider undefined so SettingsModal can infer it from baseUrl.
+      return {
+        chat: { apiKey: '', baseUrl: '', model: '', ...(parsed.chat ?? {}) },
+        embedding: { apiKey: '', baseUrl: '', model: '', ...(parsed.embedding ?? {}) },
+      };
+    }
   } catch {}
   return {
-    chat: { apiKey: '', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o', maxTokens: 4096, temperature: 0.1 },
-    embedding: { apiKey: '', baseUrl: 'https://api.openai.com/v1', model: 'text-embedding-3-small', dimension: 4096 },
+    chat: {
+      apiKey: '',
+      baseUrl: 'https://api.openai.com/v1',
+      model: 'gpt-4o',
+      maxTokens: 4096,
+      temperature: 0.1,
+      provider: 'custom',
+    },
+    embedding: {
+      apiKey: '',
+      baseUrl: 'https://api.openai.com/v1',
+      model: 'text-embedding-3-small',
+      dimension: 4096,
+      provider: 'custom',
+    },
   };
 }
 

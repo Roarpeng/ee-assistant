@@ -1,8 +1,30 @@
-import { useState, useEffect } from 'react';
-import { X, Cpu, Database, Eye, EyeOff, Key, Link, Box, Hash, Thermometer, Ruler, Zap, CheckCircle, XCircle } from 'lucide-react';
-import { useStore, type AppSettings } from '../../models/store';
+import { useState, useEffect, useMemo } from 'react';
+import {
+  X,
+  Cpu,
+  Database,
+  Eye,
+  EyeOff,
+  Key,
+  Link,
+  Box,
+  Hash,
+  Thermometer,
+  Ruler,
+  Zap,
+  CheckCircle,
+  XCircle,
+  Server,
+} from 'lucide-react';
+import { useStore, type AppSettings, type ProviderId } from '../../models/store';
 import { t } from '../../services/i18n';
 import { api } from '../../services/api';
+import {
+  fetchProviders,
+  detectProviderFromBaseUrl,
+  FALLBACK_PROVIDERS,
+  type ProviderPreset,
+} from '../../services/llmProviders';
 
 type Props = { isOpen: boolean; onClose: () => void };
 
@@ -12,6 +34,11 @@ export function SettingsModal({ isOpen, onClose }: Props) {
   const language = useStore((s) => s.language);
   const tr = t(language);
 
+  const [providers, setProviders] = useState<ProviderPreset[]>(FALLBACK_PROVIDERS);
+
+  const [chatProvider, setChatProvider] = useState<ProviderId>(
+    settings.chat.provider ?? 'custom',
+  );
   const [chatApiKey, setChatApiKey] = useState(settings.chat.apiKey);
   const [chatBaseUrl, setChatBaseUrl] = useState(settings.chat.baseUrl);
   const [chatModel, setChatModel] = useState(settings.chat.model);
@@ -19,6 +46,9 @@ export function SettingsModal({ isOpen, onClose }: Props) {
   const [chatTemperature, setChatTemperature] = useState(settings.chat.temperature ?? 0.1);
   const [showChatKey, setShowChatKey] = useState(false);
 
+  const [embProvider, setEmbProvider] = useState<ProviderId>(
+    settings.embedding.provider ?? 'custom',
+  );
   const [embApiKey, setEmbApiKey] = useState(settings.embedding.apiKey);
   const [embBaseUrl, setEmbBaseUrl] = useState(settings.embedding.baseUrl);
   const [embModel, setEmbModel] = useState(settings.embedding.model);
@@ -26,9 +56,34 @@ export function SettingsModal({ isOpen, onClose }: Props) {
   const [showEmbKey, setShowEmbKey] = useState(false);
 
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<null | { chat: any; embedding: any }>(null);
+  const [testResult, setTestResult] = useState<null | {
+    chat: { ok: boolean; error?: string; model?: string; provider?: string };
+    embedding: {
+      ok: boolean;
+      error?: string;
+      dimension?: number;
+      provider?: string;
+      sent_dimensions_kwarg?: boolean;
+    };
+  }>(null);
 
+  // Resolve presets for the two sections separately so each dropdown can
+  // surface its own metadata (model lists, native dim, locked dimensions).
+  const chatPreset = useMemo(
+    () => providers.find((p) => p.id === chatProvider) ?? null,
+    [providers, chatProvider],
+  );
+  const embPreset = useMemo(
+    () => providers.find((p) => p.id === embProvider) ?? null,
+    [providers, embProvider],
+  );
+
+  // Sync local form state whenever the modal opens or the saved settings
+  // change. We also refresh provider data from the backend on open so a
+  // running deployment can amend the recommended-model lists without
+  // forcing a frontend rebuild.
   useEffect(() => {
+    if (!isOpen) return;
     setChatApiKey(settings.chat.apiKey);
     setChatBaseUrl(settings.chat.baseUrl);
     setChatModel(settings.chat.model);
@@ -38,12 +93,69 @@ export function SettingsModal({ isOpen, onClose }: Props) {
     setEmbBaseUrl(settings.embedding.baseUrl);
     setEmbModel(settings.embedding.model);
     setEmbDimension(settings.embedding.dimension ?? 4096);
+
+    let cancelled = false;
+    void fetchProviders().then((list) => {
+      if (cancelled) return;
+      setProviders(list);
+      // Pre-select the saved provider, or infer it from the base URL for
+      // pre-existing user configs that never carried a `provider` field.
+      const initialChat: ProviderId =
+        settings.chat.provider ??
+        detectProviderFromBaseUrl(settings.chat.baseUrl, list) ??
+        'custom';
+      const initialEmb: ProviderId =
+        settings.embedding.provider ??
+        detectProviderFromBaseUrl(settings.embedding.baseUrl, list) ??
+        'custom';
+      setChatProvider(initialChat);
+      setEmbProvider(initialEmb);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [settings, isOpen]);
+
+  const handleSelectChatProvider = (id: ProviderId) => {
+    setChatProvider(id);
+    if (id === 'custom') return;
+    const preset = providers.find((p) => p.id === id);
+    if (!preset) return;
+    if (preset.default_chat_base_url) setChatBaseUrl(preset.default_chat_base_url);
+    if (preset.recommended_chat_models[0]) {
+      setChatModel(preset.recommended_chat_models[0]);
+    }
+  };
+
+  const handleSelectEmbProvider = (id: ProviderId) => {
+    setEmbProvider(id);
+    if (id === 'custom') return;
+    const preset = providers.find((p) => p.id === id);
+    if (!preset) return;
+    if (preset.default_embed_base_url) setEmbBaseUrl(preset.default_embed_base_url);
+    if (preset.recommended_embed_models[0]) {
+      setEmbModel(preset.recommended_embed_models[0]);
+    }
+    if (preset.embed_native_dim > 0) setEmbDimension(preset.embed_native_dim);
+  };
 
   const handleSave = () => {
     const next: AppSettings = {
-      chat: { apiKey: chatApiKey, baseUrl: chatBaseUrl, model: chatModel, maxTokens: chatMaxTokens, temperature: chatTemperature },
-      embedding: { apiKey: embApiKey, baseUrl: embBaseUrl, model: embModel, dimension: embDimension },
+      chat: {
+        apiKey: chatApiKey,
+        baseUrl: chatBaseUrl,
+        model: chatModel,
+        maxTokens: chatMaxTokens,
+        temperature: chatTemperature,
+        provider: chatProvider,
+      },
+      embedding: {
+        apiKey: embApiKey,
+        baseUrl: embBaseUrl,
+        model: embModel,
+        dimension: embDimension,
+        provider: embProvider,
+      },
     };
     updateSettings(next);
     onClose();
@@ -54,12 +166,26 @@ export function SettingsModal({ isOpen, onClose }: Props) {
     setTestResult(null);
     try {
       const result = await api.testConnectivity(
-        { api_key: chatApiKey, base_url: chatBaseUrl, model: chatModel },
-        { api_key: embApiKey, base_url: embBaseUrl, model: embModel, dimension: embDimension }
+        {
+          api_key: chatApiKey,
+          base_url: chatBaseUrl,
+          model: chatModel,
+          provider: chatProvider,
+        },
+        {
+          api_key: embApiKey,
+          base_url: embBaseUrl,
+          model: embModel,
+          dimension: embDimension,
+          provider: embProvider,
+        },
       );
       setTestResult(result);
     } catch {
-      setTestResult({ chat: { ok: false, error: 'Request failed' }, embedding: { ok: false, error: 'Request failed' } });
+      setTestResult({
+        chat: { ok: false, error: 'Request failed' },
+        embedding: { ok: false, error: 'Request failed' },
+      });
     } finally {
       setTesting(false);
     }
@@ -69,6 +195,12 @@ export function SettingsModal({ isOpen, onClose }: Props) {
 
   const inputClass =
     'w-full bg-neutral-950 border border-neutral-800 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-neutral-600';
+
+  const renderProviderLabel = (p: ProviderPreset) =>
+    language === 'zh' ? p.label : p.label_en || p.label;
+
+  const dimensionLocked =
+    embPreset !== null && embPreset.id !== 'custom' && !embPreset.embed_supports_dimensions;
 
   return (
     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -89,6 +221,34 @@ export function SettingsModal({ isOpen, onClose }: Props) {
             <div className="flex items-center gap-2 mb-1">
               <Cpu className="w-5 h-5 text-indigo-400" />
               <h3 className="text-sm font-bold text-neutral-200 uppercase tracking-wider">{tr.settings.chatModel}</h3>
+            </div>
+
+            {/* Provider dropdown */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="chat-provider"
+                className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider"
+              >
+                <Server className="w-3 h-3" /> {tr.settings.provider}
+              </label>
+              <select
+                id="chat-provider"
+                name="chat-provider"
+                value={chatProvider}
+                onChange={(e) => handleSelectChatProvider(e.target.value as ProviderId)}
+                className={inputClass}
+              >
+                {providers.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {renderProviderLabel(p)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] text-neutral-500 leading-snug">
+                {chatPreset?.notes && chatProvider !== 'custom'
+                  ? chatPreset.notes
+                  : tr.settings.providerHint}
+              </p>
             </div>
 
             <div className="space-y-1.5">
@@ -163,6 +323,35 @@ export function SettingsModal({ isOpen, onClose }: Props) {
               </div>
             </div>
 
+            {/* Recommended chat models — one-click model swap */}
+            {chatPreset && chatPreset.recommended_chat_models.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
+                  {tr.settings.recommendedModels}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {chatPreset.recommended_chat_models.map((m) => {
+                    const active = m === chatModel;
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setChatModel(m)}
+                        className={
+                          'text-[11px] font-mono px-2 py-1 rounded-md border transition-colors ' +
+                          (active
+                            ? 'bg-indigo-500/15 border-indigo-500/40 text-indigo-300'
+                            : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-neutral-200')
+                        }
+                      >
+                        {m}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <label htmlFor="chat-temp" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
                 <Thermometer className="w-3 h-3" /> {tr.settings.temperature}
@@ -195,6 +384,34 @@ export function SettingsModal({ isOpen, onClose }: Props) {
             <div className="flex items-center gap-2 mb-1">
               <Database className="w-5 h-5 text-emerald-400" />
               <h3 className="text-sm font-bold text-neutral-200 uppercase tracking-wider">{tr.settings.embeddingModel}</h3>
+            </div>
+
+            {/* Provider dropdown */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="emb-provider"
+                className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider"
+              >
+                <Server className="w-3 h-3" /> {tr.settings.provider}
+              </label>
+              <select
+                id="emb-provider"
+                name="emb-provider"
+                value={embProvider}
+                onChange={(e) => handleSelectEmbProvider(e.target.value as ProviderId)}
+                className={inputClass}
+              >
+                {providers.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {renderProviderLabel(p)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] text-neutral-500 leading-snug">
+                {embPreset?.notes && embProvider !== 'custom'
+                  ? embPreset.notes
+                  : tr.settings.providerHint}
+              </p>
             </div>
 
             <div className="space-y-1.5">
@@ -249,8 +466,17 @@ export function SettingsModal({ isOpen, onClose }: Props) {
                   step={128}
                   value={embDimension}
                   onChange={(e) => setEmbDimension(Number(e.target.value))}
-                  className={inputClass}
+                  disabled={dimensionLocked}
+                  className={
+                    inputClass +
+                    (dimensionLocked ? ' opacity-50 cursor-not-allowed' : '')
+                  }
                 />
+                {dimensionLocked && embPreset && (
+                  <p className="text-[10px] text-amber-400/80 leading-snug">
+                    {tr.settings.dimensionLocked(embPreset.embed_native_dim)}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -268,6 +494,36 @@ export function SettingsModal({ isOpen, onClose }: Props) {
                 className={inputClass}
               />
             </div>
+
+            {/* Recommended embedding models */}
+            {embPreset && embPreset.recommended_embed_models.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
+                  {tr.settings.recommendedModels}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {embPreset.recommended_embed_models.map((m) => {
+                    const active = m === embModel;
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setEmbModel(m)}
+                        className={
+                          'text-[11px] font-mono px-2 py-1 rounded-md border transition-colors ' +
+                          (active
+                            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                            : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-neutral-200')
+                        }
+                      >
+                        {m}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <p className="text-xs text-neutral-500 font-medium">{tr.settings.embedDesc}</p>
           </section>
         </div>

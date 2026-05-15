@@ -64,12 +64,14 @@ export const api = {
           model: settings.chat.model,
           max_tokens: settings.chat.maxTokens ?? 4096,
           temperature: settings.chat.temperature ?? 0.1,
+          provider: settings.chat.provider,
         },
         embedding_config: {
           api_key: settings.embedding.apiKey,
           base_url: settings.embedding.baseUrl,
           model: settings.embedding.model,
           dimension: settings.embedding.dimension ?? 4096,
+          provider: settings.embedding.provider,
         },
       }),
     });
@@ -91,12 +93,14 @@ export const api = {
           model: settings.chat.model,
           max_tokens: settings.chat.maxTokens ?? 4096,
           temperature: settings.chat.temperature ?? 0.1,
+          provider: settings.chat.provider,
         },
         embedding_config: {
           api_key: settings.embedding.apiKey,
           base_url: settings.embedding.baseUrl,
           model: settings.embedding.model,
           dimension: settings.embedding.dimension ?? 4096,
+          provider: settings.embedding.provider,
         },
       }),
     });
@@ -123,6 +127,7 @@ export const api = {
           model: settings.chat.model,
           max_tokens: settings.chat.maxTokens ?? 4096,
           temperature: settings.chat.temperature ?? 0.1,
+          provider: settings.chat.provider,
         },
       }),
     });
@@ -150,6 +155,7 @@ export const api = {
           model: settings.chat.model,
           max_tokens: settings.chat.maxTokens ?? 4096,
           temperature: settings.chat.temperature ?? 0.1,
+          provider: settings.chat.provider,
         },
       }),
     });
@@ -173,6 +179,7 @@ export const api = {
           base_url: settings.embedding.baseUrl,
           model: settings.embedding.model,
           dimension: settings.embedding.dimension ?? 4096,
+          provider: settings.embedding.provider,
         },
       }),
     });
@@ -194,12 +201,14 @@ export const api = {
           model: settings.chat.model,
           max_tokens: settings.chat.maxTokens ?? 4096,
           temperature: settings.chat.temperature ?? 0.1,
+          provider: settings.chat.provider,
         },
         embedding_config: {
           api_key: settings.embedding.apiKey,
           base_url: settings.embedding.baseUrl,
           model: settings.embedding.model,
           dimension: settings.embedding.dimension ?? 4096,
+          provider: settings.embedding.provider,
         },
       }),
     });
@@ -227,22 +236,33 @@ export const api = {
           model: settings.chat.model,
           max_tokens: settings.chat.maxTokens ?? 4096,
           temperature: settings.chat.temperature ?? 0.1,
+          provider: settings.chat.provider,
         },
         embedding_config: {
           api_key: settings.embedding.apiKey,
           base_url: settings.embedding.baseUrl,
           model: settings.embedding.model,
           dimension: settings.embedding.dimension ?? 4096,
+          provider: settings.embedding.provider,
         },
       }),
     });
   },
 
   testConnectivity: (chat: any, embedding: any) =>
-    request<{ chat: { ok: boolean; error?: string; model?: string }; embedding: { ok: boolean; error?: string; dimension?: number } }>(
-      `/test-connectivity`,
-      { method: 'POST', body: JSON.stringify({ chat, embedding }) }
-    ),
+    request<{
+      chat: { ok: boolean; error?: string; model?: string; provider?: string };
+      embedding: {
+        ok: boolean;
+        error?: string;
+        dimension?: number;
+        provider?: string;
+        sent_dimensions_kwarg?: boolean;
+      };
+    }>(`/test-connectivity`, {
+      method: 'POST',
+      body: JSON.stringify({ chat, embedding }),
+    }),
 
   // Chat messages — server-side persistence (M0 Track B). The store
   // calls these so chat history survives a docker restart and is
