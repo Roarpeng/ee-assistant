@@ -191,6 +191,12 @@ class KnowledgeChunkOut(BaseModel):
 class ProjectOut(BaseModel):
     id: str
     name: str
+    # Conversation-workspace surface (alembic 008): short LLM-derived title
+    # for the project list, topic_tags drive the cluster sidebar. Default
+    # to safe empties so legacy Project rows that pre-date 008 still
+    # validate via from_attributes.
+    title: str | None = None
+    topic_tags: list[str] = Field(default_factory=list)
     status: ProjectStatus
     created_at: datetime
     updated_at: datetime
@@ -199,6 +205,44 @@ class ProjectOut(BaseModel):
     schematic: SchematicOut | None = None
     code_modules: list[STModuleOut] = Field(default_factory=list)
     model_config = {"from_attributes": True}
+
+
+# ---------------------------------------------------------------------------
+# Conversation-workspace: search + clustering
+# ---------------------------------------------------------------------------
+
+
+class ProjectSearchInput(BaseModel):
+    """Body for POST /api/projects/search — full-text-ish project lookup."""
+    query: str
+    limit: int = 20
+
+
+class ClusterProjectItem(BaseModel):
+    """Slim projection of a Project, suitable for the cluster sidebar.
+
+    We deliberately omit heavy relations (bom_items, schematic, code_modules)
+    so a 200-project list stays cheap to serialize.
+    """
+    id: str
+    name: str
+    title: str | None = None
+    topic_tags: list[str] = Field(default_factory=list)
+    updated_at: datetime
+    model_config = {"from_attributes": True}
+
+
+class ClusterGroup(BaseModel):
+    """A coherent group of related projects produced by the cluster engine."""
+    label: str
+    project_ids: list[str] = Field(default_factory=list)
+    projects: list[ClusterProjectItem] = Field(default_factory=list)
+
+
+class ClusterResponse(BaseModel):
+    """Full cluster sidebar payload: grouped + leftover projects."""
+    clusters: list[ClusterGroup] = Field(default_factory=list)
+    unclustered: list[ClusterProjectItem] = Field(default_factory=list)
 
 
 class ConnectivityTestInput(BaseModel):
