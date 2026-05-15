@@ -4,6 +4,7 @@ import httpx
 from openai import AsyncOpenAI, APIConnectionError, APITimeoutError, RateLimitError, InternalServerError
 from anthropic import AsyncAnthropic
 from app.config import settings
+from app.core.llm_providers import detect_provider
 
 
 # Stream 模式下 read timeout 是 *相邻 chunk 之间* 的最大间隔,不是整个响应总时长。
@@ -89,6 +90,20 @@ class LLMService:
         if cfg and cfg.get("model"):
             return cfg["model"]
         return settings.effective_chat_model()
+
+    def get_active_provider_id(self) -> str:
+        """Best-effort provider id for the chat path (logging / future cost tracking).
+
+        Order: explicit ``provider`` in runtime config → detect from configured
+        base_url → detect from settings.effective_chat_base_url() → ``"custom"``.
+        """
+        cfg = self._chat_config or {}
+        explicit = cfg.get("provider")
+        if explicit:
+            return str(explicit)
+        base = cfg.get("base_url") or settings.effective_chat_base_url()
+        preset = detect_provider(base)
+        return preset.id if preset else "custom"
 
     @staticmethod
     async def _close_client_quietly(client) -> None:

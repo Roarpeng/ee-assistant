@@ -6,6 +6,7 @@ from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, Fi
 from openai import AsyncOpenAI
 
 from app.config import settings
+from app.core.llm_providers import detect_provider, get_provider
 
 
 def _build_httpx_client() -> httpx.AsyncClient:
@@ -29,6 +30,9 @@ class RAGEngine:
         self._embed_model: str = settings.effective_embed_model()
         self._embed_dim: int = settings.embedding_dim
         self.collection = settings.qdrant_collection
+        # Optional provider hint set by configure_provider(); takes precedence
+        # over base_url-based auto-detection in embed().
+        self._provider_id: str | None = None
 
     def _get_embed_client(self) -> AsyncOpenAI:
         if self._embed_client:
@@ -50,6 +54,34 @@ class RAGEngine:
             self._embed_model = model
         if dimensions:
             self._embed_dim = dimensions
+
+    def configure_provider(self, provider_id: str | None) -> None:
+        """Pin the provider id, overriding base_url auto-detection in embed().
+
+        Useful when a caller has the provider hint from the frontend and we
+        want to avoid the substring-match heuristic in ``detect_provider()``.
+        """
+        self._provider_id = provider_id or None
+
+    def _resolve_embed_provider(self):
+        """Pick a ProviderPreset for the current embedding configuration.
+
+        Priority: explicit ``configure_provider()`` hint → detect from the
+        active ``AsyncOpenAI.base_url`` → detect from settings. Returns None
+        if nothing matches; the caller falls back to the legacy
+        "model name contains text-embedding-3" heuristic.
+        """
+        if self._provider_id:
+            preset = get_provider(self._provider_id)
+            if preset:
+                return preset
+        base_url = ""
+        if self._embed_client is not None:
+            client_base = getattr(self._embed_client, "base_url", "")
+            base_url = str(client_base) if client_base else ""
+        if not base_url:
+            base_url = settings.effective_embed_base_url()
+        return detect_provider(base_url)
 
     async def init_collection(self):
         cols = await self.qdrant.get_collections()
@@ -73,19 +105,36 @@ class RAGEngine:
     async def embed(self, texts: list[str], batch_size: int = 20) -> list[list[float]]:
         client = self._get_embed_client()
         all_embeddings = []
-        
+
         # Guard against empty input
         if not texts:
             return []
-            
+
+        # Decide once per call whether to send `dimensions=`. The legacy
+        # heuristic "send only when model contains text-embedding-3" silently
+        # broke whenever a user configured Volcengine / SiliconFlow with a
+        # custom dim — those providers 400 if they see `dimensions=`. The
+        # provider registry is now the source of truth; we only fall back
+        # to the OpenAI-v3 substring check when no preset matches.
+        preset = self._resolve_embed_provider()
+        if preset is not None:
+            supports_dim = preset.embed_supports_dimensions
+        else:
+            supports_dim = "text-embedding-3" in self._embed_model
+
+        effective_dim = self._embed_dim
+        # DashScope text-embedding-v3 caps at 1024 — clamp so callers that set
+        # the global embedding_dim to e.g. 1536 (OpenAI default) still work
+        # when they switch the provider to DashScope without resetting the dim.
+        if supports_dim and preset is not None and preset.id == "dashscope" and effective_dim > 1024:
+            effective_dim = 1024
+
         for i in range(0, len(texts), batch_size):
             batch = texts[i : i + batch_size]
-            # Some providers (e.g. SiliconFlow, local models) don't support 'dimensions'
-            # Only send it for OpenAI's v3 models if configured
             kwargs: dict = dict(model=self._embed_model, input=batch)
-            if self._embed_dim and "text-embedding-3" in self._embed_model:
-                kwargs["dimensions"] = self._embed_dim
-            
+            if supports_dim and effective_dim:
+                kwargs["dimensions"] = effective_dim
+
             # Simple retry logic for API flakiness
             for attempt in range(3):
                 try:
@@ -97,7 +146,7 @@ class RAGEngine:
                     if attempt == 2:
                         raise e
                     await asyncio.sleep(1 * (attempt + 1))
-                    
+
         return all_embeddings
 
     async def index_chunks(self, chunks: list[dict], doc_id: str, metadata: dict):

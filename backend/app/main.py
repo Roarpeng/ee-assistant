@@ -7,6 +7,12 @@ from app.config import settings
 from app.db.models import Base
 from app.db.repository import engine
 from app.core.schemas import ConnectivityTestInput
+from app.core.llm_providers import (
+    PROVIDERS,
+    detect_provider,
+    get_provider,
+    provider_to_dict,
+)
 from app.api.projects import router as projects_router
 from app.api.analysis import router as analysis_router
 from app.api.selection import router as selection_router
@@ -66,12 +72,39 @@ async def health():
     return {"status": "ok"}
 
 
+def _resolve_preset(explicit_provider: str | None, base_url: str | None):
+    """Pick a ProviderPreset using explicit hint first, base_url fallback.
+
+    Both args are optional / nullable so callers can pass raw user input.
+    Returns ``None`` when nothing resolves so the caller can fall back to
+    legacy behaviour.
+    """
+    preset = get_provider(explicit_provider) if explicit_provider else None
+    if preset is None:
+        preset = detect_provider(base_url)
+    return preset
+
+
+@app.get("/api/llm-providers")
+async def list_llm_providers():
+    """Return the canonical LLM provider registry as JSON.
+
+    Used by the frontend on mount so the provider dropdown / autofilled
+    base URLs / recommended model lists always match the backend's view of
+    what's supported. Keeping a single source of truth here avoids the
+    (常见) bug of frontend-only enums drifting from the actual quirks
+    encoded in `rag_engine.embed()`.
+    """
+    return {"providers": [provider_to_dict(p) for p in PROVIDERS.values()]}
+
+
 @app.post("/api/test-connectivity")
 async def test_connectivity(body: ConnectivityTestInput):
-    results = {}
+    results: dict = {}
 
-    # Test chat LLM
+    # ── Chat probe ────────────────────────────────────────────────────────
     chat = body.chat
+    chat_preset = _resolve_preset(chat.get("provider"), chat.get("base_url"))
     if chat.get("api_key") and chat.get("base_url"):
         try:
             client = AsyncOpenAI(api_key=chat["api_key"], base_url=chat["base_url"])
@@ -80,27 +113,73 @@ async def test_connectivity(body: ConnectivityTestInput):
                 messages=[{"role": "user", "content": "Hi"}],
                 max_tokens=5,
             )
-            results["chat"] = {"ok": True, "model": r.model, "tokens": r.usage.total_tokens if r.usage else 0}
+            results["chat"] = {
+                "ok": True,
+                "model": r.model,
+                "tokens": r.usage.total_tokens if r.usage else 0,
+                "provider": chat_preset.id if chat_preset else "custom",
+            }
         except Exception as e:
-            results["chat"] = {"ok": False, "error": str(e)[:200]}
+            results["chat"] = {
+                "ok": False,
+                "error": str(e)[:200],
+                "provider": chat_preset.id if chat_preset else "custom",
+            }
     else:
-        results["chat"] = {"ok": False, "error": "API Key or Base URL missing"}
+        results["chat"] = {
+            "ok": False,
+            "error": "API Key or Base URL missing",
+            "provider": chat_preset.id if chat_preset else "custom",
+        }
 
-    # Test embedding
+    # ── Embedding probe ───────────────────────────────────────────────────
     emb = body.embedding
+    emb_preset = _resolve_preset(emb.get("provider"), emb.get("base_url"))
     if emb.get("api_key") and emb.get("base_url"):
         try:
             client = AsyncOpenAI(api_key=emb["api_key"], base_url=emb["base_url"])
-            r = await client.embeddings.create(
-                model=emb.get("model", "text-embedding-3-small"),
-                input="test",
-                dimensions=emb.get("dimension", 1536),
+
+            kwargs: dict = {
+                "model": emb.get("model", "text-embedding-3-small"),
+                "input": "test",
+            }
+            # Decide whether to send `dimensions=`. Default to legacy behaviour
+            # (always send) when we have no preset, matching the previous code
+            # path so OpenAI/SiliconFlow probes stay backward-compatible.
+            supports_dim = (
+                emb_preset.embed_supports_dimensions if emb_preset is not None else True
             )
-            results["embedding"] = {"ok": True, "dimension": len(r.data[0].embedding)}
+            if supports_dim:
+                requested_dim = emb.get("dimension", 1536)
+                # DashScope text-embedding-v3 caps at 1024 — clamp.
+                if (
+                    emb_preset is not None
+                    and emb_preset.id == "dashscope"
+                    and isinstance(requested_dim, int)
+                    and requested_dim > 1024
+                ):
+                    requested_dim = 1024
+                kwargs["dimensions"] = requested_dim
+
+            r = await client.embeddings.create(**kwargs)
+            results["embedding"] = {
+                "ok": True,
+                "dimension": len(r.data[0].embedding),
+                "provider": emb_preset.id if emb_preset else "custom",
+                "sent_dimensions_kwarg": "dimensions" in kwargs,
+            }
         except Exception as e:
-            results["embedding"] = {"ok": False, "error": str(e)[:200]}
+            results["embedding"] = {
+                "ok": False,
+                "error": str(e)[:200],
+                "provider": emb_preset.id if emb_preset else "custom",
+            }
     else:
-        results["embedding"] = {"ok": False, "error": "API Key or Base URL missing"}
+        results["embedding"] = {
+            "ok": False,
+            "error": "API Key or Base URL missing",
+            "provider": emb_preset.id if emb_preset else "custom",
+        }
 
     return results
 
