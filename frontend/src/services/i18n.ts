@@ -75,6 +75,11 @@ const zh = {
     testing: '测试中...',
     testOk: '连接成功',
     testFail: '连接失败',
+    provider: '厂商',
+    providerHint: '选择厂商后将自动填充 Base URL 与推荐模型',
+    recommendedModels: '推荐模型',
+    dimensionLocked: (n: number) =>
+      `本厂商不接受自定义维度 (使用原生 ${n}d)`,
   },
   knowledge: {
     title: '文档库',
@@ -200,6 +205,12 @@ const en: TranslationDict = {
     testing: 'Testing...',
     testOk: 'Connected',
     testFail: 'Failed',
+    provider: 'Provider',
+    providerHint:
+      'Selecting a provider auto-fills Base URL and recommended models',
+    recommendedModels: 'Recommended Models',
+    dimensionLocked: (n: number) =>
+      `Provider doesn't accept a custom dimension (uses native ${n}d)`,
   },
   knowledge: {
     title: 'Document Library',

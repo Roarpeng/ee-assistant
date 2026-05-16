@@ -246,8 +246,13 @@ class ClusterResponse(BaseModel):
 
 
 class ConnectivityTestInput(BaseModel):
-    chat: dict  # {api_key, base_url, model}
-    embedding: dict  # {api_key, base_url, model, dimension}
+    # chat:      {api_key, base_url, model, provider?}
+    # embedding: {api_key, base_url, model, dimension, provider?}
+    # `provider` is an optional canonical id (see app.core.llm_providers.PROVIDERS)
+    # used to pick the right embedding-dimensions behaviour without relying on
+    # base_url substring matching.
+    chat: dict
+    embedding: dict
 
 
 class ProgressEvent(BaseModel):
