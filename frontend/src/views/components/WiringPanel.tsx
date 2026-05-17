@@ -1,3 +1,15 @@
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+  Box,
+} from '@mui/material';
+
 // M2 memory-flywheel hook (Track C):
 //   When inline editing of wire spec / terminal / signal lands, call
 //   `postEditFeedback(projectId, { target: 'wiring', before, after })`
@@ -23,42 +35,99 @@ interface Props {
 export function WiringPanel({ ioItems }: Props) {
   if (ioItems.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-app-text-tertiary text-sm font-mono">
+      <Box
+        sx={{
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'text.disabled',
+          typography: 'bodyMedium',
+          fontFamily: '"JetBrains Mono", monospace',
+        }}
+      >
         未生成接线表 — 完成选型后将自动产出 I/O 端子表。
-      </div>
+      </Box>
     );
   }
   return (
-    <div className="h-full overflow-auto p-6 custom-scrollbar">
-      <div className="text-[10px] font-mono tracking-widest text-app-text-tertiary uppercase mb-2">
-        [ fig.04 ] terminal · wiring list
-      </div>
-      <h2 className="text-2xl font-bold mb-4 tracking-tight">接线表</h2>
-      <table className="w-full text-xs font-mono border border-app-border">
-        <thead>
-          <tr className="bg-app-bg-tertiary text-app-text-secondary uppercase tracking-wider">
-            <th className="text-left px-3 py-2 border-b border-app-border">Tag</th>
-            <th className="text-left px-3 py-2 border-b border-app-border">Signal</th>
-            <th className="text-left px-3 py-2 border-b border-app-border">From</th>
-            <th className="text-left px-3 py-2 border-b border-app-border">To</th>
-            <th className="text-left px-3 py-2 border-b border-app-border">Wire</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ioItems.map((item, idx) => (
-            <tr
-              key={`${item.tag}-${idx}`}
-              className={idx % 2 === 0 ? 'bg-app-bg-secondary' : 'bg-app-bg-primary'}
+    <Box sx={{ height: '100%', overflow: 'auto', p: 3 }} className="custom-scrollbar">
+      <Typography
+        variant="labelSmall"
+        sx={{
+          fontFamily: '"JetBrains Mono", monospace',
+          letterSpacing: '0.1em',
+          color: 'text.disabled',
+          textTransform: 'uppercase',
+          mb: 1,
+          display: 'block',
+        }}
+      >
+        [ fig.04 ] terminal &middot; wiring list
+      </Typography>
+      <Typography variant="headlineSmall" sx={{ mb: 3, fontWeight: 700 }}>
+        接线表
+      </Typography>
+      <TableContainer
+        component={Paper}
+        variant="outlined"
+        sx={{ borderRadius: 2 }}
+      >
+        <Table size="small" sx={{ fontFamily: '"JetBrains Mono", monospace' }}>
+          <TableHead>
+            <TableRow
+              sx={(theme) => ({
+                bgcolor: theme.palette.surfaceContainer || 'action.hover',
+                '& th': {
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  color: 'text.secondary',
+                  fontWeight: 700,
+                  fontSize: 11,
+                  px: 2,
+                  py: 1.5,
+                },
+              })}
             >
-              <td className="px-3 py-1.5 border-b border-app-border-light">{item.tag}</td>
-              <td className="px-3 py-1.5 border-b border-app-border-light">{item.signal}</td>
-              <td className="px-3 py-1.5 border-b border-app-border-light text-app-text-secondary">{item.from}</td>
-              <td className="px-3 py-1.5 border-b border-app-border-light text-app-text-secondary">{item.to}</td>
-              <td className="px-3 py-1.5 border-b border-app-border-light text-app-text-tertiary">{item.wire}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+              <TableCell>Tag</TableCell>
+              <TableCell>Signal</TableCell>
+              <TableCell>From</TableCell>
+              <TableCell>To</TableCell>
+              <TableCell>Wire</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {ioItems.map((item, idx) => (
+              <TableRow
+                key={`${item.tag}-${idx}`}
+                sx={{
+                  bgcolor: idx % 2 === 0 ? 'background.paper' : 'action.hover',
+                  '& td': {
+                    px: 2,
+                    py: 1,
+                    fontSize: 12,
+                    fontFamily: '"JetBrains Mono", monospace',
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                  },
+                }}
+              >
+                <TableCell>{item.tag}</TableCell>
+                <TableCell>{item.signal}</TableCell>
+                <TableCell sx={{ color: 'text.secondary' }}>
+                  {item.from}
+                </TableCell>
+                <TableCell sx={{ color: 'text.secondary' }}>
+                  {item.to}
+                </TableCell>
+                <TableCell sx={{ color: 'text.disabled' }}>
+                  {item.wire}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 }

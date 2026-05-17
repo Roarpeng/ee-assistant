@@ -33,3 +33,4 @@ aiosqlite>=0.20.0
 networkx>=3.0
 python-louvain>=0.16
 minio>=7.2.0
+dashscope>=1.20.0

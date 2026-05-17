@@ -78,6 +78,54 @@ def _extract_pdf(content: bytes) -> str:
     return "".join(text_parts)
 
 
+def extract_pdf_page_images(
+    content: bytes,
+    max_pages: int = 50,
+    dpi: int = 150,
+) -> list[dict]:
+    """Extract page images from a PDF for multimodal embedding.
+
+    Returns a list of dicts, each with:
+        - ``page``: 0-based page index
+        - ``image_base64``: base64-encoded PNG data URI
+        - ``text``: any extractable text on the page (may be empty)
+
+    Useful for scanned/image-only PDFs where ``_extract_pdf`` returns empty text.
+    Uses PyMuPDF to render each page to a PNG image.
+    """
+    import fitz  # type: ignore
+
+    try:
+        doc = fitz.open(stream=content, filetype="pdf")
+    except Exception as exc:
+        raise ExtractionError(f"PyMuPDF failed to open PDF: {exc}") from exc
+
+    pages: list[dict] = []
+    try:
+        for i, page in enumerate(doc):
+            if i >= max_pages:
+                break
+            # Render page to pixmap at requested DPI
+            pix = page.get_pixmap(dpi=dpi)
+            png_bytes = pix.tobytes("png")
+            b64 = _encode_image_base64(png_bytes)
+            text = page.get_text() or ""
+            pages.append({
+                "page": i,
+                "image_base64": f"data:image/png;base64,{b64}",
+                "text": text.strip(),
+            })
+    finally:
+        doc.close()
+
+    return pages
+
+
+def _encode_image_base64(image_bytes: bytes) -> str:
+    import base64
+    return base64.b64encode(image_bytes).decode("ascii")
+
+
 def _decode_text_bytes(content: bytes) -> str:
     """Decode arbitrary bytes to str.
 

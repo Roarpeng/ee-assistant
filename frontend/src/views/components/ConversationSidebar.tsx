@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useStore } from '../../models/store';
 import {
   deleteConversationHistory,
@@ -10,6 +10,30 @@ import {
 } from '../../services/conversations';
 import { listTemplates, type Template } from '../../services/templates';
 import { OrgSettingsPanel } from './OrgSettingsPanel';
+import {
+  Box,
+  Typography,
+  IconButton,
+  Button,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  TextField,
+  InputAdornment,
+  Divider,
+  Paper,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+} from '@mui/material';
+import ChatIcon from '@mui/icons-material/Chat';
+import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
+import SettingsIcon from '@mui/icons-material/Settings';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 function formatRelativeTime(timestamp: number) {
   const diff = Date.now() - timestamp;
@@ -30,6 +54,7 @@ export function ConversationSidebar() {
   const [search, setSearch] = useState('');
   const [showNewMenu, setShowNewMenu] = useState(false);
   const [showOrgSettings, setShowOrgSettings] = useState(false);
+  const newButtonRef = useRef<HTMLButtonElement>(null);
 
   // Update conversation list when messages change
   useEffect(() => {
@@ -97,154 +122,418 @@ export function ConversationSidebar() {
 
   if (collapsed) {
     return (
-      <div className="w-10 flex-shrink-0 flex flex-col items-center pt-4 gap-2 bg-app-bg-secondary border-r border-app-border">
-        <button
+      <Box
+        sx={{
+          width: 40,
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          pt: 2,
+          gap: 1,
+          bgcolor: 'surfaceContainer',
+          borderRight: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <IconButton
           onClick={() => setCollapsed(false)}
-          className="w-7 h-7 rounded-lg bg-app-bg-tertiary hover:bg-app-bg-tertiary text-app-text-secondary text-xs"
+          size="small"
           title="展开对话列表"
+          sx={{
+            width: 28,
+            height: 28,
+            bgcolor: 'surfaceContainerHigh',
+            color: 'text.secondary',
+            fontSize: '0.75rem',
+            borderRadius: 1,
+            '&:hover': { bgcolor: 'surfaceContainerHigh' },
+          }}
         >
-          &gt;
-        </button>
-        <button
+          <ChevronRightIcon sx={{ fontSize: 14 }} />
+        </IconButton>
+        <IconButton
           onClick={() => handleNewConversation(false)}
-          className="w-7 h-7 rounded-lg bg-app-accent hover:bg-app-accent-hover text-app-text-primary text-sm font-bold"
+          size="small"
           title="新对话"
+          sx={{
+            width: 28,
+            height: 28,
+            bgcolor: 'primary.main',
+            color: 'primary.contrastText',
+            fontWeight: 700,
+            fontSize: '0.875rem',
+            borderRadius: 1,
+            '&:hover': { bgcolor: 'primary.dark' },
+          }}
         >
-          +
-        </button>
-      </div>
+          <AddIcon sx={{ fontSize: 14 }} />
+        </IconButton>
+      </Box>
     );
   }
 
   return (
-    <div className="w-64 flex-shrink-0 flex flex-col bg-app-bg-secondary border-r border-app-border overflow-hidden">
+    <Box
+      sx={{
+        width: 256,
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: 'surfaceContainer',
+        borderRight: 1,
+        borderColor: 'divider',
+        overflow: 'hidden',
+      }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-3 border-b border-app-border shrink-0">
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-app-text-tertiary">历史对话</span>
-          <div className="text-[10px] text-app-text-tertiary mt-0.5">可搜索、自动命名、继续上下文</div>
-        </div>
-        <button
-          onClick={() => setCollapsed(true)}
-          className="text-app-text-tertiary hover:text-app-text-secondary text-xs"
-          title="收起"
-        >
-          &lt;
-        </button>
-      </div>
-
-      {/* New Conversation Button */}
-      <div className="p-2 shrink-0 border-b border-app-border/70">
-        <div className="relative">
-          <button
-            onClick={() => setShowNewMenu((v) => !v)}
-            className="w-full py-2.5 text-xs font-bold bg-app-accent hover:bg-app-accent-hover text-app-text-primary rounded-xl transition-colors shadow-lg shadow-indigo-950/30"
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          px: 1.5,
+          py: 1.5,
+          borderBottom: 1,
+          borderColor: 'divider',
+          flexShrink: 0,
+        }}
+      >
+        <Box>
+          <Typography
+            variant="caption"
+            color="text.disabled"
+            sx={{
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              fontSize: '0.6875rem',
+              fontWeight: 500,
+            }}
           >
-            + 新对话
-          </button>
-          {showNewMenu && (
-            <div className="absolute z-20 top-11 left-0 right-0 rounded-md border border-app-border bg-app-bg-primary shadow-2xl p-1.5 max-h-[60vh] overflow-y-auto custom-scrollbar">
-              <button
-                onClick={() => handleNewConversation(false)}
-                className="w-full text-left px-3 py-2 rounded-md hover:bg-app-bg-tertiary transition-colors"
+            历史对话
+          </Typography>
+          <Typography
+            variant="caption"
+            color="text.disabled"
+            sx={{ fontSize: '0.625rem', mt: 0.25, display: 'block' }}
+          >
+            可搜索、自动命名、继续上下文
+          </Typography>
+        </Box>
+        <IconButton
+          onClick={() => setCollapsed(true)}
+          size="small"
+          title="收起"
+          sx={{ color: 'text.disabled', '&:hover': { color: 'text.secondary' }, fontSize: '0.75rem' }}
+        >
+          <ChevronLeftIcon sx={{ fontSize: 16 }} />
+        </IconButton>
+      </Box>
+
+      {/* New Conversation + Search */}
+      <Box sx={{ p: 1, borderBottom: 1, borderColor: 'divider', borderOpacity: 0.7, flexShrink: 0 }}>
+        <Box sx={{ position: 'relative' }}>
+          <Button
+            ref={newButtonRef}
+            onClick={() => setShowNewMenu((v) => !v)}
+            fullWidth
+            variant="contained"
+            startIcon={<AddIcon />}
+            sx={{
+              py: 1.25,
+              fontWeight: 700,
+              fontSize: '0.75rem',
+              borderRadius: 3,
+              boxShadow: '0 4px 6px -1px rgba(79,70,229,0.15)',
+              textTransform: 'none',
+              justifyContent: 'flex-start',
+              pl: 2,
+            }}
+          >
+            新对话
+          </Button>
+
+          {/* New conversation dropdown menu */}
+          <Menu
+            open={showNewMenu}
+            onClose={() => setShowNewMenu(false)}
+            anchorEl={newButtonRef.current}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+            slotProps={{
+              paper: {
+                sx: {
+                  mt: 0.5,
+                  width: newButtonRef.current?.offsetWidth ?? 224,
+                  maxHeight: '60vh',
+                  overflowY: 'auto',
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  boxShadow: 8,
+                  p: 0.75,
+                },
+              },
+            }}
+          >
+            <MenuItem
+              onClick={() => handleNewConversation(false)}
+              disableRipple
+              sx={{
+                display: 'block',
+                whiteSpace: 'normal',
+                borderRadius: 1,
+                px: 1.5,
+                py: 1,
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              <Typography variant="body2" fontWeight={700} color="text.primary">
+                清空画布开始
+              </Typography>
+              <Typography variant="caption" color="text.disabled" sx={{ mt: 0.25, display: 'block' }}>
+                新需求、新拓扑和新 BOM
+              </Typography>
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleNewConversation(true)}
+              disableRipple
+              sx={{
+                display: 'block',
+                whiteSpace: 'normal',
+                borderRadius: 1,
+                px: 1.5,
+                py: 1,
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              <Typography variant="body2" fontWeight={700} color="text.primary">
+                沿用当前画布继续
+              </Typography>
+              <Typography variant="caption" color="text.disabled" sx={{ mt: 0.25, display: 'block' }}>
+                保留拓扑、BOM 和代码，仅开启新对话
+              </Typography>
+            </MenuItem>
+            <Divider sx={{ my: 0.5 }} />
+            <Typography
+              variant="caption"
+              color="text.disabled"
+              sx={{
+                display: 'block',
+                px: 1.5,
+                py: 0.5,
+                fontFamily: '"JetBrains Mono", monospace',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                fontSize: '0.5625rem',
+              }}
+            >
+              从行业模板开始
+            </Typography>
+            {templates.map((tpl) => (
+              <MenuItem
+                key={tpl.id}
+                onClick={() => handleFromTemplate(tpl)}
+                disableRipple
+                sx={{
+                  display: 'block',
+                  whiteSpace: 'normal',
+                  borderRadius: 1,
+                  px: 1.5,
+                  py: 1,
+                  '&:hover': { bgcolor: 'action.hover' },
+                }}
               >
-                <div className="text-xs font-bold text-app-text-primary">清空画布开始</div>
-                <div className="text-[10px] text-app-text-tertiary mt-0.5">新需求、新拓扑和新 BOM</div>
-              </button>
-              <button
-                onClick={() => handleNewConversation(true)}
-                className="w-full text-left px-3 py-2 rounded-md hover:bg-app-bg-tertiary transition-colors"
-              >
-                <div className="text-xs font-bold text-app-text-primary">沿用当前画布继续</div>
-                <div className="text-[10px] text-app-text-tertiary mt-0.5">保留拓扑、BOM 和代码，仅开启新对话</div>
-              </button>
-              <div className="mt-1 pt-1 border-t border-app-border-light">
-                <div className="px-3 py-1 text-[9px] font-mono uppercase tracking-widest text-app-text-tertiary">
-                  从行业模板开始
-                </div>
-                {templates.map((tpl) => (
-                  <button
-                    key={tpl.id}
-                    onClick={() => handleFromTemplate(tpl)}
-                    className="w-full text-left px-3 py-2 rounded-md hover:bg-app-bg-tertiary transition-colors"
-                  >
-                    <div className="text-xs font-bold text-app-text-primary">{tpl.name}</div>
-                    <div className="text-[10px] text-app-text-tertiary mt-0.5 line-clamp-2">
-                      {tpl.summary}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="mt-2 relative">
-          <span className="absolute left-3 top-2.5 text-app-text-tertiary text-xs">⌕</span>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="搜索对话..."
-            className="w-full rounded-xl bg-app-bg-primary border border-app-border py-2 pl-7 pr-3 text-xs text-app-text-primary placeholder:text-app-text-tertiary focus:outline-none focus:border-indigo-500"
-          />
-        </div>
-      </div>
+                <Typography variant="body2" fontWeight={700} color="text.primary">
+                  {tpl.name}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.disabled"
+                  sx={{
+                    mt: 0.25,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {tpl.summary}
+                </Typography>
+              </MenuItem>
+            ))}
+          </Menu>
+        </Box>
+
+        {/* Search */}
+        <TextField
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="搜索对话..."
+          size="small"
+          fullWidth
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
+                </InputAdornment>
+              ),
+              sx: {
+                fontSize: '0.75rem',
+                borderRadius: 3,
+                bgcolor: 'background.default',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'divider',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'primary.main',
+                },
+                pl: 0.5,
+              },
+            },
+          }}
+          sx={{ mt: 1 }}
+        />
+      </Box>
 
       {/* Conversation List */}
-      <div className="flex-1 overflow-y-auto px-2 space-y-1 custom-scrollbar">
-        {filteredConversations.map((conv) => (
-          <div
-            key={conv.id}
-            onClick={() => handleSwitchConversation(conv)}
-            className={`group px-3 py-2 rounded-xl cursor-pointer transition-colors text-left w-full ${
-              project?.id === conv.id
-                ? 'bg-app-accent/10 border border-indigo-500/20'
-                : 'hover:bg-app-bg-tertiary border border-transparent'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-app-text-secondary truncate flex-1">
-                {conv.name}
-              </span>
-              <button
-                onClick={(e) => handleDelete(e, conv.id)}
-                className="opacity-0 group-hover:opacity-100 text-app-text-tertiary hover:text-rose-400 ml-1 shrink-0 text-[10px]"
-                title="删除"
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          px: 0.75,
+          '& > * + *': { mt: 0.25 },
+        }}
+      >
+        {filteredConversations.map((conv) => {
+          const isActive = project?.id === conv.id;
+          return (
+            <ListItemButton
+              key={conv.id}
+              onClick={() => handleSwitchConversation(conv)}
+              disableRipple
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'stretch',
+                px: 1.5,
+                py: 1,
+                borderRadius: 2,
+                cursor: 'pointer',
+                textAlign: 'left',
+                width: '100%',
+                border: 1,
+                borderColor: isActive ? 'primary.main' : 'transparent',
+                ...(isActive
+                  ? {
+                      bgcolor: (t) =>
+                        t.palette.mode === 'dark'
+                          ? 'rgba(129, 140, 248, 0.15)'
+                          : 'rgba(79, 70, 229, 0.1)',
+                      '&:hover': {
+                        bgcolor: (t) =>
+                          t.palette.mode === 'dark'
+                            ? 'rgba(129, 140, 248, 0.22)'
+                            : 'rgba(79, 70, 229, 0.16)',
+                      },
+                    }
+                  : {
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                      },
+                    }),
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <Typography
+                  variant="body2"
+                  fontWeight={isActive ? 700 : 500}
+                  color={isActive ? 'primary.main' : 'text.secondary'}
+                  noWrap
+                  sx={{ flex: 1, mr: 1 }}
+                >
+                  {conv.name}
+                </Typography>
+                <IconButton
+                  onClick={(e) => handleDelete(e, conv.id)}
+                  size="small"
+                  title="删除"
+                  sx={{
+                    opacity: 0,
+                    color: 'text.disabled',
+                    '&:hover': { color: 'error.main' },
+                    flexShrink: 0,
+                    fontSize: '0.625rem',
+                    p: 0.25,
+                    '.MuiListItemButton-root:hover &': { opacity: 1 },
+                  }}
+                >
+                  <DeleteIcon sx={{ fontSize: 14 }} />
+                </IconButton>
+              </Box>
+              <Typography
+                variant="caption"
+                color="text.disabled"
+                noWrap
+                sx={{ mt: 0.25, fontSize: '0.625rem', display: 'block' }}
               >
-                x
-              </button>
-            </div>
-            <div className="text-[10px] text-app-text-tertiary truncate mt-0.5">
-              {conv.lastMessage || '新对话'}
-            </div>
-            <div className="text-[9px] text-app-text-tertiary mt-0.5">
-              {formatRelativeTime(conv.updatedAt)}
-            </div>
-          </div>
-        ))}
+                {conv.lastMessage || '新对话'}
+              </Typography>
+              <Typography
+                variant="caption"
+                color="text.disabled"
+                sx={{ mt: 0.25, fontSize: '0.5625rem', display: 'block' }}
+              >
+                {formatRelativeTime(conv.updatedAt)}
+              </Typography>
+            </ListItemButton>
+          );
+        })}
         {filteredConversations.length === 0 && (
-          <div className="text-[10px] text-app-text-tertiary text-center py-8 px-2">
-            {search ? '没有匹配的历史对话。' : <>暂无历史对话。<br/>点击"+ 新对话"开始</>}
-          </div>
+          <Typography
+            variant="caption"
+            color="text.disabled"
+            sx={{ textAlign: 'center', py: 4, px: 1, fontSize: '0.625rem', display: 'block' }}
+          >
+            {search ? '没有匹配的历史对话。' : <>暂无历史对话。<br />点击"+ 新对话"开始</>}
+          </Typography>
         )}
-      </div>
+      </Box>
 
       {/* Footer — org settings entry. Anchored at the bottom of the
           sidebar so it survives long conversation lists scrolling. */}
-      <div className="shrink-0 border-t border-app-border p-2">
-        <button
-          type="button"
+      <Box sx={{ flexShrink: 0, borderTop: 1, borderColor: 'divider', p: 1 }}>
+        <ListItemButton
           onClick={() => setShowOrgSettings(true)}
-          className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-app-text-secondary hover:bg-app-bg-tertiary hover:text-app-text-primary transition-colors flex items-center justify-between"
+          disableRipple
+          sx={{
+            px: 1.5,
+            py: 1,
+            borderRadius: 2,
+            color: 'text.secondary',
+            fontWeight: 700,
+            fontSize: '0.75rem',
+            '&:hover': {
+              bgcolor: 'action.hover',
+              color: 'text.primary',
+            },
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
         >
-          <span>组织设置</span>
-          <span className="text-app-text-tertiary text-[10px]">⚙</span>
-        </button>
-      </div>
+          <Typography variant="body2" fontWeight={700} color="inherit" sx={{ fontSize: '0.75rem' }}>
+            组织设置
+          </Typography>
+          <SettingsIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
+        </ListItemButton>
+      </Box>
 
       <OrgSettingsPanel
         open={showOrgSettings}
         onClose={() => setShowOrgSettings(false)}
       />
-    </div>
+    </Box>
   );
 }

@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     embedding_model: str = ""
     embedding_dim: int = 4096
 
+    # Multimodal embedding model (DashScope native SDK — tongyi-embedding-vision-plus)
+    multimodal_embed_model: str = ""
+
     # Vendor-specific aliases (fallback,向后兼容)
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com"

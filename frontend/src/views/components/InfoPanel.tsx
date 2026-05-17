@@ -1,3 +1,5 @@
+import { Box, Card, CardContent, Typography, Stack } from '@mui/material';
+
 interface Props {
   projectName: string;
   safetyLevel?: string;
@@ -13,12 +15,34 @@ function fmtNum(n?: number): string {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-app-border rounded-md p-3 bg-app-bg-secondary">
-      <div className="text-[10px] uppercase tracking-widest text-app-text-tertiary font-mono">
+    <Box
+      sx={(theme) => ({
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 1.5,
+        p: 2,
+        bgcolor: theme.palette.surfaceContainer || 'background.paper',
+      })}
+    >
+      <Typography
+        variant="labelSmall"
+        sx={{
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+          fontFamily: '"JetBrains Mono", monospace',
+          color: 'text.disabled',
+          display: 'block',
+        }}
+      >
         {label}
-      </div>
-      <div className="text-xl font-bold mt-1 tracking-tight">{value}</div>
-    </div>
+      </Typography>
+      <Typography
+        variant="headlineSmall"
+        sx={{ mt: 0.5, fontWeight: 700 }}
+      >
+        {value}
+      </Typography>
+    </Box>
   );
 }
 
@@ -34,47 +58,105 @@ export function InfoPanel({
 
   if (empty) {
     return (
-      <div className="h-full flex items-center justify-center text-app-text-tertiary text-sm font-mono">
+      <Box
+        sx={{
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'text.disabled',
+          typography: 'bodyMedium',
+          fontFamily: '"JetBrains Mono", monospace',
+        }}
+      >
         尚未生成项目概览 — 在左侧对话中描述需求即可。
-      </div>
+      </Box>
     );
   }
 
   return (
-    <div className="h-full overflow-auto p-8 max-w-3xl mx-auto custom-scrollbar">
-      <div className="text-[10px] font-mono tracking-widest text-app-text-tertiary uppercase mb-2">
-        [ fig.00 ] project overview · rev a
-      </div>
-      <h2 className="text-3xl font-bold mb-6 tracking-tight">
+    <Box
+      sx={{
+        height: '100%',
+        overflow: 'auto',
+        p: 4,
+        maxWidth: 768,
+        mx: 'auto',
+      }}
+      className="custom-scrollbar"
+    >
+      <Typography
+        variant="labelSmall"
+        sx={{
+          fontFamily: '"JetBrains Mono", monospace',
+          letterSpacing: '0.1em',
+          color: 'text.disabled',
+          textTransform: 'uppercase',
+          mb: 1,
+          display: 'block',
+        }}
+      >
+        [ fig.00 ] project overview &middot; rev a
+      </Typography>
+      <Typography variant="headlineMedium" sx={{ mb: 3, fontWeight: 700 }}>
         {projectName || '未命名项目'}
-      </h2>
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      </Typography>
+      <Stack direction="row" spacing={2} sx={{ mb: 4 }}>
         <Stat label="安全等级" value={safetyLevel ?? '—'} />
         <Stat label="估价 (CNY)" value={fmtNum(bomCost)} />
         <Stat label="元器件数" value={String(components.length)} />
-      </div>
-      <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-app-text-secondary mb-3">
+      </Stack>
+      <Typography
+        variant="labelMedium"
+        sx={{
+          fontFamily: '"JetBrains Mono", monospace',
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+          color: 'text.secondary',
+          mb: 2,
+          display: 'block',
+        }}
+      >
         元器件清单 ({components.length})
-      </h3>
+      </Typography>
       {components.length === 0 ? (
-        <div className="text-xs font-mono text-app-text-tertiary">
+        <Typography
+          variant="bodyMedium"
+          sx={{ fontFamily: '"JetBrains Mono", monospace', color: 'text.disabled' }}
+        >
           尚未选型,请向 Volta 描述工艺需求。
-        </div>
+        </Typography>
       ) : (
-        <ul className="space-y-0 text-sm font-mono">
+        <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
           {components.map((c) => (
-            <li
+            <Box
+              component="li"
               key={c.id}
-              className="flex justify-between border-b border-app-border-light py-1.5"
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                borderBottom: 1,
+                borderColor: 'divider',
+                py: 1.5,
+              }}
             >
-              <span>{c.label}</span>
-              <span className="text-app-text-tertiary uppercase tracking-wide text-xs">
+              <Typography
+                variant="bodyMedium"
+                sx={{ fontFamily: '"JetBrains Mono", monospace' }}
+              >
+                {c.label}
+              </Typography>
+              <Typography
+                variant="labelSmall"
+                sx={{ color: 'text.disabled', textTransform: 'uppercase' }}
+              >
                 {c.type}
-              </span>
-            </li>
+              </Typography>
+            </Box>
           ))}
-        </ul>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }

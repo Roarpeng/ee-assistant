@@ -4,7 +4,7 @@ import { HeroLanding } from './HeroLanding';
 
 describe('HeroLanding', () => {
   it('renders the prompt input and example chips', () => {
-    render(<HeroLanding onSubmit={() => {}} examples={['e1', 'e2']} />);
+    render(<HeroLanding onOpenKnowledge={() => {}} onSubmit={() => {}} examples={['e1', 'e2']} />);
     expect(screen.getByRole('textbox')).toBeInTheDocument();
     expect(screen.getByText('e1')).toBeInTheDocument();
     expect(screen.getByText('e2')).toBeInTheDocument();
@@ -12,7 +12,7 @@ describe('HeroLanding', () => {
 
   it('fires onSubmit with the typed text', () => {
     const fn = vi.fn();
-    render(<HeroLanding onSubmit={fn} examples={[]} />);
+    render(<HeroLanding onOpenKnowledge={() => {}} onSubmit={fn} examples={[]} />);
     const input = screen.getByRole('textbox') as HTMLTextAreaElement;
     fireEvent.change(input, { target: { value: '3 轴伺服' } });
     fireEvent.click(screen.getByRole('button', { name: /开始/ }));
@@ -21,14 +21,14 @@ describe('HeroLanding', () => {
 
   it('fires onSubmit when an example chip is clicked', () => {
     const fn = vi.fn();
-    render(<HeroLanding onSubmit={fn} examples={['传送带 VFD']} />);
+    render(<HeroLanding onOpenKnowledge={() => {}} onSubmit={fn} examples={['传送带 VFD']} />);
     fireEvent.click(screen.getByText('传送带 VFD'));
     expect(fn).toHaveBeenCalledWith('传送带 VFD');
   });
 
   it('ignores empty submissions', () => {
     const fn = vi.fn();
-    render(<HeroLanding onSubmit={fn} examples={[]} />);
+    render(<HeroLanding onOpenKnowledge={() => {}} onSubmit={fn} examples={[]} />);
     fireEvent.click(screen.getByRole('button', { name: /开始/ }));
     expect(fn).not.toHaveBeenCalled();
   });

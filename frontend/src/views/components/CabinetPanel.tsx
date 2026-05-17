@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Paper, Box, Typography, alpha, useTheme } from '@mui/material';
 import { footprintFor, packCabinet, type Placed } from '../../services/cabinet';
 
 interface CabinetSpec {
@@ -11,8 +12,7 @@ interface Props {
   components: Array<{ id: string; type: string; label: string }>;
 }
 
-// Tailwind-known accent strokes per component type. Centralised so the
-// legend and the rectangles stay in sync.
+// Accent strokes per component type.
 const TYPE_COLOR: Record<string, string> = {
   plc: '#4ec9ff',
   hmi: '#c084fc',
@@ -50,9 +50,19 @@ export function CabinetPanel({
 
   if (components.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-app-text-tertiary text-sm font-mono">
+      <Box
+        sx={{
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'text.disabled',
+          typography: 'bodyMedium',
+          fontFamily: '"JetBrains Mono", monospace',
+        }}
+      >
         未生成布局 — 完成选型后将自动估算控制柜俯视图。
-      </div>
+      </Box>
     );
   }
 
@@ -60,70 +70,97 @@ export function CabinetPanel({
   const maxX = Math.max(...placed.map((p) => p.x + p.w), cabinet.width);
   const maxY = Math.max(...placed.map((p) => p.y + p.h), cabinet.height);
   const labels = new Map(components.map((c) => [c.id, c.label]));
+  const theme = useTheme();
 
   return (
-    <div className="h-full overflow-auto p-6 custom-scrollbar">
-      <div className="text-[10px] font-mono tracking-widest text-app-text-tertiary uppercase mb-2">
-        [ fig.07 ] cabinet · top-down layout (mm)
-      </div>
-      <div className="flex items-baseline justify-between mb-4">
-        <h2 className="text-2xl font-bold tracking-tight">控制柜布局</h2>
-        <span className="text-[10px] font-mono text-app-text-tertiary">
-          {cabinet.width} × {cabinet.height} mm
-        </span>
-      </div>
-      <svg
-        viewBox={`-20 -20 ${maxX + 40} ${maxY + 40}`}
-        className="w-full max-w-3xl border border-app-border bg-app-bg-secondary rounded-md"
+    <Box sx={{ height: '100%', overflow: 'auto', p: 3 }} className="custom-scrollbar">
+      <Typography
+        variant="labelSmall"
+        sx={{
+          fontFamily: '"JetBrains Mono", monospace',
+          letterSpacing: '0.1em',
+          color: 'text.disabled',
+          textTransform: 'uppercase',
+          mb: 1,
+          display: 'block',
+        }}
       >
-        <rect
-          x={0}
-          y={0}
-          width={cabinet.width}
-          height={cabinet.height}
-          fill="none"
-          stroke="var(--color-border)"
-          strokeWidth={2}
-          strokeDasharray="4 4"
-        />
-        {placed.map((p) => {
-          const c = colourFor(p.type);
-          return (
-            <g key={p.id}>
-              <rect
-                x={p.x}
-                y={p.y}
-                width={p.w}
-                height={p.h}
-                fill={`${c}1a`}
-                stroke={c}
-                strokeWidth={1.5}
-              />
-              <text
-                x={p.x + p.w / 2}
-                y={p.y + p.h / 2}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontSize={Math.max(9, Math.min(p.w, p.h) / 6)}
-                fill="var(--color-text-primary)"
-                fontFamily="JetBrains Mono, monospace"
-              >
-                {labels.get(p.id) ?? p.id}
-              </text>
-              <text
-                x={p.x + p.w / 2}
-                y={p.y + p.h - 4}
-                textAnchor="middle"
-                fontSize={Math.max(7, Math.min(p.w, p.h) / 9)}
-                fill="var(--color-text-tertiary)"
-                fontFamily="JetBrains Mono, monospace"
-              >
-                {p.w}×{p.h}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-    </div>
+        [ fig.07 ] cabinet &middot; top-down layout (mm)
+      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="headlineSmall" sx={{ fontWeight: 700 }}>
+          控制柜布局
+        </Typography>
+        <Typography
+          variant="labelSmall"
+          sx={{ fontFamily: '"JetBrains Mono", monospace', color: 'text.disabled' }}
+        >
+          {cabinet.width} &times; {cabinet.height} mm
+        </Typography>
+      </Box>
+      <Paper
+        variant="outlined"
+        sx={{
+          borderRadius: 2,
+          overflow: 'hidden',
+          display: 'inline-block',
+          maxWidth: '100%',
+        }}
+      >
+        <Box
+          component="svg"
+          viewBox={`-20 -20 ${maxX + 40} ${maxY + 40}`}
+          sx={{ display: 'block', maxWidth: 768, bgcolor: 'background.paper' }}
+        >
+          <rect
+            x={0}
+            y={0}
+            width={cabinet.width}
+            height={cabinet.height}
+            fill="none"
+            stroke={theme.palette.divider}
+            strokeWidth={2}
+            strokeDasharray="4 4"
+          />
+          {placed.map((p) => {
+            const c = colourFor(p.type);
+            return (
+              <g key={p.id}>
+                <rect
+                  x={p.x}
+                  y={p.y}
+                  width={p.w}
+                  height={p.h}
+                  fill={c + '1a'}
+                  stroke={c}
+                  strokeWidth={1.5}
+                />
+                <text
+                  x={p.x + p.w / 2}
+                  y={p.y + p.h / 2}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fontSize={Math.max(9, Math.min(p.w, p.h) / 6)}
+                  fill={theme.palette.text.primary}
+                  fontFamily="JetBrains Mono, monospace"
+                >
+                  {labels.get(p.id) ?? p.id}
+                </text>
+                <text
+                  x={p.x + p.w / 2}
+                  y={p.y + p.h - 4}
+                  textAnchor="middle"
+                  fontSize={Math.max(7, Math.min(p.w, p.h) / 9)}
+                  fill={theme.palette.text.disabled}
+                  fontFamily="JetBrains Mono, monospace"
+                >
+                  {p.w}&times;{p.h}
+                </text>
+              </g>
+            );
+          })}
+        </Box>
+      </Paper>
+    </Box>
   );
 }

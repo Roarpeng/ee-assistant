@@ -19,6 +19,22 @@ import {
   type Episode,
   type Report,
 } from '../../services/memory';
+import {
+  Paper,
+  Typography,
+  Chip,
+  Box,
+  List,
+  ListItem,
+  Button,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from '@mui/material';
 
 type Status = 'idle' | 'loading' | 'ok' | 'error';
 
@@ -92,173 +108,313 @@ export function MemoryTab() {
   }
 
   return (
-    <div data-testid="memory-tab" className="space-y-6">
+    <Box data-testid="memory-tab" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {status === 'loading' && (
-        <div
+        <Typography
           data-testid="memory-loading"
-          className="text-center py-6 font-mono text-xs text-app-text-tertiary"
+          variant="body2"
+          color="text.disabled"
+          sx={{
+            textAlign: 'center',
+            py: 4,
+            fontFamily: '"JetBrains Mono", monospace',
+            fontSize: '0.75rem',
+          }}
         >
           读取记忆中…
-        </div>
+        </Typography>
       )}
 
       {status === 'error' && (
-        <div
+        <Paper
           data-testid="memory-error"
-          className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-300"
+          variant="outlined"
+          sx={{
+            px: 2,
+            py: 1.5,
+            borderColor: 'error.main',
+            borderOpacity: 0.4,
+            bgcolor: 'error.main',
+            bgcolorOpacity: 0.1,
+            color: 'error.main',
+            fontSize: '0.75rem',
+            borderRadius: 2,
+          }}
         >
           读取失败 — {error ?? '后端记忆服务暂未可用。'}
-        </div>
+        </Paper>
       )}
 
       {/* Episodes section */}
-      <section data-testid="memory-episodes-section">
-        <div className="flex items-baseline justify-between mb-2">
-          <div>
-            <div className="text-[10px] font-mono uppercase tracking-widest text-app-text-tertiary">
+      <Box data-testid="memory-episodes-section">
+        <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 1.5 }}>
+          <Box>
+            <Typography
+              variant="caption"
+              color="text.disabled"
+              sx={{
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                fontFamily: '"JetBrains Mono", monospace',
+              }}
+            >
               [ memory · episodes ]
-            </div>
-            <h3 className="text-sm font-bold text-app-text-primary mt-0.5">
+            </Typography>
+            <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ mt: 0.25 }}>
               工程经验
-              <span className="ml-2 font-mono text-[10px] text-app-text-tertiary">
+              <Typography
+                component="span"
+                variant="caption"
+                color="text.disabled"
+                sx={{ ml: 1, fontFamily: '"JetBrains Mono", monospace', fontSize: '0.625rem' }}
+              >
                 (最近 {episodes.length})
-              </span>
-            </h3>
-          </div>
-        </div>
+              </Typography>
+            </Typography>
+          </Box>
+        </Box>
 
-        <div className="rounded-xl border border-app-border overflow-hidden bg-app-bg-primary">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-app-bg-tertiary text-app-text-tertiary border-b border-app-border">
-              <tr>
-                <th className="px-3 py-2 font-bold uppercase tracking-wider w-28">日期</th>
-                <th className="px-3 py-2 font-bold uppercase tracking-wider">摘要</th>
-                <th className="px-3 py-2 font-bold uppercase tracking-wider w-20">决策</th>
-                <th className="px-3 py-2 font-bold uppercase tracking-wider w-16">评分</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-app-border/60">
-              {episodes.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    data-testid="memory-episodes-empty"
-                    className="px-3 py-6 text-center text-app-text-tertiary"
-                  >
-                    暂无工程经验。完成一次完整分析后将自动记录。
-                  </td>
-                </tr>
-              )}
-              {episodes.map((ep) => (
-                <tr
-                  key={ep.id}
-                  data-testid={`memory-episode-row-${ep.id}`}
-                  className="hover:bg-app-bg-tertiary/50"
+        <Paper variant="outlined" sx={{ overflow: 'hidden', borderRadius: 2 }}>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow
+                  sx={{ bgcolor: 'surfaceContainerHigh', '& th': { borderBottom: 1, borderColor: 'divider' } }}
                 >
-                  <td className="px-3 py-2 font-mono text-app-text-tertiary text-[10px]">
-                    {formatDate(ep.created_at)}
-                  </td>
-                  <td className="px-3 py-2 text-app-text-primary">
-                    {ep.summary || '(无摘要)'}
-                  </td>
-                  <td className="px-3 py-2 font-mono text-app-text-secondary tabular-nums">
-                    {(ep.key_decisions || []).length}
-                  </td>
-                  <td className="px-3 py-2 font-mono text-app-text-secondary tabular-nums">
-                    {ep.score.toFixed(2)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                  <TableCell
+                    sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.65rem', color: 'text.disabled', px: 1.5, py: 1, width: 112 }}
+                  >
+                    日期
+                  </TableCell>
+                  <TableCell
+                    sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.65rem', color: 'text.disabled', px: 1.5, py: 1 }}
+                  >
+                    摘要
+                  </TableCell>
+                  <TableCell
+                    sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.65rem', color: 'text.disabled', px: 1.5, py: 1, width: 80 }}
+                  >
+                    决策
+                  </TableCell>
+                  <TableCell
+                    sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.65rem', color: 'text.disabled', px: 1.5, py: 1, width: 64 }}
+                  >
+                    评分
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {episodes.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      data-testid="memory-episodes-empty"
+                      sx={{ textAlign: 'center', py: 4, color: 'text.disabled', fontSize: '0.75rem' }}
+                    >
+                      暂无工程经验。完成一次完整分析后将自动记录。
+                    </TableCell>
+                  </TableRow>
+                )}
+                {episodes.map((ep) => (
+                  <TableRow
+                    key={ep.id}
+                    data-testid={`memory-episode-row-${ep.id}`}
+                    hover
+                    sx={{ '&:hover': { bgcolor: 'action.hover' } }}
+                  >
+                    <TableCell
+                      sx={{
+                        fontFamily: '"JetBrains Mono", monospace',
+                        color: 'text.disabled',
+                        fontSize: '0.625rem',
+                        px: 1.5,
+                        py: 1,
+                      }}
+                    >
+                      {formatDate(ep.created_at)}
+                    </TableCell>
+                    <TableCell sx={{ color: 'text.primary', fontSize: '0.75rem', px: 1.5, py: 1 }}>
+                      {ep.summary || '(无摘要)'}
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontFamily: '"JetBrains Mono", monospace',
+                        color: 'text.secondary',
+                        fontSize: '0.75rem',
+                        px: 1.5,
+                        py: 1,
+                      }}
+                    >
+                      {(ep.key_decisions || []).length}
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontFamily: '"JetBrains Mono", monospace',
+                        color: 'text.secondary',
+                        fontSize: '0.75rem',
+                        px: 1.5,
+                        py: 1,
+                      }}
+                    >
+                      {ep.score.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Box>
 
       {/* Reports section */}
-      <section data-testid="memory-reports-section">
-        <div className="flex items-baseline justify-between mb-2">
-          <div>
-            <div className="text-[10px] font-mono uppercase tracking-widest text-app-text-tertiary">
+      <Box data-testid="memory-reports-section">
+        <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 1.5 }}>
+          <Box>
+            <Typography
+              variant="caption"
+              color="text.disabled"
+              sx={{
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                fontFamily: '"JetBrains Mono", monospace',
+              }}
+            >
               [ memory · weekly reports ]
-            </div>
-            <h3 className="text-sm font-bold text-app-text-primary mt-0.5">
+            </Typography>
+            <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ mt: 0.25 }}>
               周报
-              <span className="ml-2 font-mono text-[10px] text-app-text-tertiary">
+              <Typography
+                component="span"
+                variant="caption"
+                color="text.disabled"
+                sx={{ ml: 1, fontFamily: '"JetBrains Mono", monospace', fontSize: '0.625rem' }}
+              >
                 (最近 {reports.length})
-              </span>
-            </h3>
-          </div>
-          <button
+              </Typography>
+            </Typography>
+          </Box>
+          <Button
             type="button"
             data-testid="memory-consolidate-now"
             onClick={handleConsolidate}
             disabled={consolidating}
-            className="px-3 py-1.5 rounded-md text-[11px] font-bold border border-app-border bg-app-accent/10 text-app-accent hover:bg-app-accent/20 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
+            size="small"
+            variant="outlined"
+            startIcon={
+              consolidating ? (
+                <CircularProgress size={12} sx={{ color: 'inherit' }} />
+              ) : undefined
+            }
+            sx={{
+              fontSize: '0.6875rem',
+              fontWeight: 700,
+              borderColor: 'divider',
+              color: 'primary.main',
+              bgcolor: 'primary.main',
+              bgcolorOpacity: 0.1,
+              '&:hover': { bgcolor: 'primary.main', bgcolorOpacity: 0.2 },
+            }}
           >
-            {consolidating && (
-              <span
-                data-testid="memory-consolidate-spinner"
-                aria-hidden="true"
-                className="inline-block h-3 w-3 animate-spin rounded-full border border-app-accent/40 border-t-app-accent"
-              />
-            )}
             {consolidating ? '整合中…' : '立即整合'}
-          </button>
-        </div>
+          </Button>
+        </Box>
 
         {toast && (
-          <div
+          <Paper
             data-testid="memory-consolidate-toast"
-            className="mb-2 rounded-md border border-app-border bg-app-bg-primary px-3 py-1.5 text-[11px] text-app-text-secondary"
+            variant="outlined"
+            sx={{
+              mb: 1.5,
+              px: 2,
+              py: 1,
+              fontSize: '0.6875rem',
+              color: 'text.secondary',
+              borderRadius: 1,
+            }}
           >
             {toast}
-          </div>
+          </Paper>
         )}
 
-        <div className="rounded-xl border border-app-border overflow-hidden bg-app-bg-primary">
+        <Paper variant="outlined" sx={{ overflow: 'hidden', borderRadius: 2 }}>
           {reports.length === 0 ? (
-            <div
+            <Typography
               data-testid="memory-reports-empty"
-              className="px-3 py-6 text-center text-xs text-app-text-tertiary"
+              variant="body2"
+              color="text.disabled"
+              sx={{ textAlign: 'center', py: 4, fontSize: '0.75rem' }}
             >
               暂无周报。点击「立即整合」生成第一份。
-            </div>
+            </Typography>
           ) : (
-            <ul className="divide-y divide-app-border/60">
+            <List disablePadding sx={{ '& > .MuiListItem-root': { borderBottom: 1, borderColor: 'divider', borderBottomOpacity: 0.6 } }}>
               {reports.map((rep) => {
                 const open = !!expanded[rep.id];
                 const ruleCount = (rep.new_rules || []).length;
                 const revCount = (rep.revisions || []).length;
                 const gapCount = (rep.gaps || []).length;
                 return (
-                  <li
-                    key={rep.id}
-                    data-testid={`memory-report-row-${rep.id}`}
-                    className="text-xs"
-                  >
-                    <button
+                  <ListItem key={rep.id} disablePadding sx={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                    <Button
                       type="button"
                       onClick={() => toggleExpanded(rep.id)}
                       aria-expanded={open}
                       data-testid={`memory-report-toggle-${rep.id}`}
-                      className="w-full text-left px-3 py-2 flex items-center justify-between gap-3 hover:bg-app-bg-tertiary/50"
+                      fullWidth
+                      sx={{
+                        textTransform: 'none',
+                        justifyContent: 'space-between',
+                        px: 2,
+                        py: 1,
+                        borderRadius: 0,
+                        color: 'text.primary',
+                        fontSize: '0.75rem',
+                        fontWeight: 400,
+                        '&:hover': { bgcolor: 'action.hover' },
+                      }}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="font-mono text-app-text-tertiary text-[10px] shrink-0">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0, overflow: 'hidden' }}>
+                        <Typography
+                          variant="caption"
+                          color="text.disabled"
+                          sx={{
+                            fontFamily: '"JetBrains Mono", monospace',
+                            fontSize: '0.625rem',
+                            flexShrink: 0,
+                          }}
+                        >
                           {formatDate(rep.period_start)} → {formatDate(rep.period_end)}
-                        </span>
-                        <span className="text-app-text-secondary truncate">
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" noWrap>
                           候选规则 {ruleCount} 条 · 修订 {revCount} 次 · 缺口 {gapCount} 条
-                        </span>
-                      </div>
-                      <span className="font-mono text-[10px] text-app-text-tertiary shrink-0">
+                        </Typography>
+                      </Box>
+                      <Typography
+                        variant="caption"
+                        color="text.disabled"
+                        sx={{
+                          fontFamily: '"JetBrains Mono", monospace',
+                          fontSize: '0.625rem',
+                          flexShrink: 0,
+                          ml: 1,
+                        }}
+                      >
                         {open ? '▾ 收起' : '▸ 展开详情'}
-                      </span>
-                    </button>
+                      </Typography>
+                    </Button>
                     {open && (
-                      <div
+                      <Box
                         data-testid={`memory-report-detail-${rep.id}`}
-                        className="px-3 pb-3 pt-1 space-y-3 bg-app-bg-secondary/40"
+                        sx={{
+                          px: 2,
+                          pb: 2,
+                          pt: 0.5,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 2,
+                          bgcolor: 'action.hover',
+                          bgcolorOpacity: 0.5,
+                        }}
                       >
                         <ReportSubTable
                           title="候选规则 new_rules"
@@ -278,27 +434,41 @@ export function MemoryTab() {
                           emptyText="无缺口"
                           testid={`memory-report-gaps-${rep.id}`}
                         />
-                        <div className="text-[10px] font-mono text-app-text-tertiary">
+                        <Typography
+                          variant="caption"
+                          color="text.disabled"
+                          sx={{
+                            fontFamily: '"JetBrains Mono", monospace',
+                            fontSize: '0.625rem',
+                          }}
+                        >
                           metrics ·{' '}
                           {Object.entries(rep.metrics || {}).map(([k, v], idx, arr) => (
-                            <span key={k}>
-                              {k}={v}
+                            <Typography component="span" key={k} variant="caption" color="text.disabled" sx={{ fontSize: '0.625rem' }}>
+                              {k}={String(v)}
                               {idx < arr.length - 1 ? ' · ' : ''}
-                            </span>
+                            </Typography>
                           ))}
                           {Object.keys(rep.metrics || {}).length === 0 && '—'}
-                          <span className="ml-2">created {formatDateTime(rep.created_at)}</span>
-                        </div>
-                      </div>
+                          <Typography
+                            component="span"
+                            variant="caption"
+                            color="text.disabled"
+                            sx={{ ml: 1, fontSize: '0.625rem' }}
+                          >
+                            created {formatDateTime(rep.created_at)}
+                          </Typography>
+                        </Typography>
+                      </Box>
                     )}
-                  </li>
+                  </ListItem>
                 );
               })}
-            </ul>
+            </List>
           )}
-        </div>
-      </section>
-    </div>
+        </Paper>
+      </Box>
+    </Box>
   );
 }
 
@@ -316,35 +486,76 @@ function ReportSubTable({
   const data = rows || [];
   if (data.length === 0) {
     return (
-      <div data-testid={testid} className="text-[11px]">
-        <div className="font-mono uppercase tracking-widest text-app-text-tertiary text-[10px] mb-1">
+      <Box data-testid={testid}>
+        <Typography
+          variant="caption"
+          color="text.disabled"
+          sx={{
+            fontFamily: '"JetBrains Mono", monospace',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            fontSize: '0.625rem',
+            mb: 0.5,
+            display: 'block',
+          }}
+        >
           {title}
-        </div>
-        <div className="text-app-text-tertiary italic">{emptyText}</div>
-      </div>
+        </Typography>
+        <Typography variant="body2" color="text.disabled" fontStyle="italic" sx={{ fontSize: '0.6875rem' }}>
+          {emptyText}
+        </Typography>
+      </Box>
     );
   }
   const cols = Array.from(
     new Set(data.flatMap((row) => Object.keys(row || {}))),
   );
   return (
-    <div data-testid={testid} className="text-[11px]">
-      <div className="font-mono uppercase tracking-widest text-app-text-tertiary text-[10px] mb-1">
+    <Box data-testid={testid}>
+      <Typography
+        variant="caption"
+        color="text.disabled"
+        sx={{
+          fontFamily: '"JetBrains Mono", monospace',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          fontSize: '0.625rem',
+          mb: 0.5,
+          display: 'block',
+        }}
+      >
         {title}
-      </div>
-      <table className="w-full border border-app-border-light">
-        <thead>
-          <tr className="bg-app-bg-tertiary/50 text-app-text-tertiary uppercase tracking-wider text-[10px]">
+      </Typography>
+      <Table size="small" sx={{ border: 1, borderColor: 'divider', borderOpacity: 0.5 }}>
+        <TableHead>
+          <TableRow
+            sx={{
+              '& th': {
+                color: 'text.disabled',
+                textTransform: 'uppercase',
+                letterSpacing: '0.025em',
+                fontSize: '0.625rem',
+                fontWeight: 700,
+                px: 1,
+                py: 0.5,
+                borderBottom: 1,
+                borderColor: 'divider',
+                borderBottomOpacity: 0.5,
+                bgcolor: 'action.hover',
+                bgcolorOpacity: 0.5,
+              },
+            }}
+          >
             {cols.map((c) => (
-              <th key={c} className="text-left px-2 py-1 border-b border-app-border-light">
+              <TableCell key={c} sx={{ textAlign: 'left' }}>
                 {c}
-              </th>
+              </TableCell>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {data.map((row, idx) => (
-            <tr key={idx} className="bg-app-bg-primary">
+            <TableRow key={idx} sx={{ bgcolor: 'background.paper' }}>
               {cols.map((c) => {
                 const v = (row as Record<string, unknown>)[c];
                 let display: string;
@@ -352,18 +563,30 @@ function ReportSubTable({
                 else if (typeof v === 'object') display = JSON.stringify(v);
                 else display = String(v);
                 return (
-                  <td
+                  <TableCell
                     key={c}
-                    className="px-2 py-1 border-b border-app-border-light text-app-text-secondary font-mono truncate max-w-[160px]"
+                    sx={{
+                      px: 1,
+                      py: 0.5,
+                      borderBottom: 1,
+                      borderColor: 'divider',
+                      color: 'text.secondary',
+                      fontFamily: '"JetBrains Mono", monospace',
+                      fontSize: '0.65rem',
+                      maxWidth: 160,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
                   >
                     {display}
-                  </td>
+                  </TableCell>
                 );
               })}
-            </tr>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </Box>
   );
 }

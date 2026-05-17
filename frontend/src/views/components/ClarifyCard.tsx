@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { authedFetch } from '../../services/orgClient';
 import { useStore } from '../../models/store';
+import {
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  Typography,
+  Box,
+} from '@mui/material';
 
 export interface ClarifyGroup {
   key: string;
@@ -58,56 +66,112 @@ export function ClarifyCard({ groups, selected = {}, onSelect }: Props) {
   const hasSelection = Object.keys(display).length > 0;
 
   return (
-    <div className="border border-app-border rounded-md bg-app-bg-secondary p-3 mt-2 space-y-3">
-      <div className="text-[10px] font-mono uppercase tracking-widest text-app-text-tertiary">
-        请选择以下参数 · clarify
-      </div>
-      {groups.map((g) => {
-        const picked = display[g.key];
-        return (
-          <div key={g.key}>
-            <div className="text-xs font-bold mb-1.5 text-app-text-primary">
-              {g.label}
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {g.choices.map((c) => {
-                const isPicked = c === picked;
-                return (
-                  <button
-                    key={c}
-                    type="button"
-                    aria-pressed={isPicked}
-                    onClick={() => handleClick(g.key, c)}
-                    className={`px-2.5 py-1 text-xs font-mono rounded-sm border transition-colors ${
-                      isPicked
-                        ? 'bg-app-accent-light border-app-accent text-app-accent'
-                        : 'border-app-border text-app-text-secondary hover:border-app-accent hover:text-app-text-primary'
-                    }`}
-                  >
-                    {c}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-      <div className="flex items-center justify-end gap-2 pt-1">
+    <Card variant="outlined" sx={{ mt: 2 }}>
+      <CardContent sx={{ pb: 1, '&:last-child': { pb: 1 } }}>
+        <Typography
+          variant="caption"
+          color="text.disabled"
+          sx={{
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            fontFamily: '"JetBrains Mono", monospace',
+            fontSize: '0.6875rem',
+            fontWeight: 500,
+            mb: 2,
+          }}
+        >
+          请选择以下参数 · clarify
+        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {groups.map((g) => {
+            const picked = display[g.key];
+            return (
+              <Box key={g.key}>
+                <Typography
+                  variant="body2"
+                  fontWeight={700}
+                  color="text.primary"
+                  sx={{ mb: 0.75, fontSize: '0.75rem' }}
+                >
+                  {g.label}
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                  {g.choices.map((c) => {
+                    const isPicked = c === picked;
+                    return (
+                      <Button
+                        key={c}
+                        type="button"
+                        aria-pressed={isPicked}
+                        onClick={() => handleClick(g.key, c)}
+                        size="small"
+                        variant={isPicked ? 'contained' : 'outlined'}
+                        sx={{
+                          fontFamily: '"JetBrains Mono", monospace',
+                          fontSize: '0.75rem',
+                          minWidth: 0,
+                          py: 0.25,
+                          px: 1.25,
+                          borderRadius: 1,
+                          borderWidth: isPicked ? 1 : 1,
+                          ...(isPicked
+                            ? {
+                                bgcolor: 'primary.light',
+                                borderColor: 'primary.main',
+                                color: 'primary.main',
+                                '&:hover': {
+                                  bgcolor: 'primary.light',
+                                  borderColor: 'primary.main',
+                                },
+                              }
+                            : {
+                                borderColor: 'divider',
+                                color: 'text.secondary',
+                                '&:hover': {
+                                  borderColor: 'primary.main',
+                                  color: 'text.primary',
+                                },
+                              }),
+                        }}
+                      >
+                        {c}
+                      </Button>
+                    );
+                  })}
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
+      </CardContent>
+      <CardActions sx={{ justifyContent: 'flex-end', gap: 1, px: 2, pb: 1.5 }}>
         {submitted && (
-          <span className="text-[10px] text-emerald-400" data-testid="clarify-writeback-ok">
+          <Typography
+            variant="caption"
+            color="success.main"
+            data-testid="clarify-writeback-ok"
+            sx={{ fontSize: '0.625rem' }}
+          >
             已记忆此组织偏好
-          </span>
+          </Typography>
         )}
-        <button
+        <Button
           type="button"
           onClick={handleSubmit}
           disabled={submitting || !hasSelection}
           data-testid="clarify-submit"
-          className="px-3 py-1 text-[11px] font-bold rounded-md bg-app-accent hover:bg-app-accent-hover text-app-text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+          size="small"
+          variant="contained"
+          sx={{
+            fontSize: '0.6875rem',
+            fontWeight: 700,
+            py: 0.5,
+            px: 1.5,
+          }}
         >
           {submitting ? '记忆中…' : '确认并记忆'}
-        </button>
-      </div>
-    </div>
+        </Button>
+      </CardActions>
+    </Card>
   );
 }

@@ -5,6 +5,16 @@ import type { NodeData, EdgeData } from '../../models/store';
 import { useChatHistory } from '../../hooks/useChatHistory';
 import { api } from '../../services/api';
 import { t } from '../../services/i18n';
+import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
+import CircularProgress from '@mui/material/CircularProgress';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import Button from '@mui/material/Button';
+import SendIcon from '@mui/icons-material/Send';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ChatIcon from '@mui/icons-material/Chat';
 
 const ENGINEERING_ANALYSIS_RE = /完整|生成|设计.*(系统|方案|控制)|选型|BOM|物料|拓扑|PLC|ST|SCL|代码|需求分析|控制系统|电气方案/;
 
@@ -50,7 +60,7 @@ export function ChatPanel() {
     };
   }, []);
 
-  // Hero landing → newProject({ seedPrompt }) leaves a one-shot prompt that we
+  // Hero landing => newProject({ seedPrompt }) leaves a one-shot prompt that we
   // pop into the chat input here. Runs once per project switch.
   useEffect(() => {
     const seed = consumePendingSeedPrompt();
@@ -79,9 +89,7 @@ export function ChatPanel() {
   };
 
   // Normalize topology coming from any source (LangGraph, chat orchestrator, LLM)
-  // into the flat shape that our yjsStore + ReactFlow expects. Backend should
-  // already do this, but we keep a defensive fallback so a misbehaving LLM
-  // can never collapse the canvas to (0,0) or strip edge labels.
+  // into the flat shape that our yjsStore + ReactFlow expects.
   const normalizeTopologyPayload = (raw: any): { nodes: NodeData[]; edges: EdgeData[] } => {
     const nodesIn: any[] = Array.isArray(raw?.nodes) ? raw.nodes : [];
     const nodes: NodeData[] = [];
@@ -119,10 +127,6 @@ export function ChatPanel() {
       if (!source || !target || !validIds.has(source) || !validIds.has(target)) return;
       const data = e.data && typeof e.data === 'object' ? e.data : {};
       const protocol = String(e.protocol ?? e.label ?? data.protocol ?? data.label ?? 'PROFINET').slice(0, 32);
-      // Backend `_normalize_topology` already attaches sourceHandle/targetHandle/category
-      // — pass them through so ReactFlow renders the right port + color.
-      // If absent (older runs / manually authored), TopologyPanel.observeTopology
-      // falls back to a protocol→side classifier.
       const sourceHandle = typeof e.sourceHandle === 'string' ? e.sourceHandle : undefined;
       const targetHandle = typeof e.targetHandle === 'string' ? e.targetHandle : undefined;
       const category =
@@ -184,9 +188,6 @@ export function ChatPanel() {
       useStore.getState().setIOItems(state.io_items);
     }
     if (state.clarification?.needed && Array.isArray(state.clarification.groups)) {
-      // Only inject ONCE per partial run — the requirement node fires
-      // exactly once, so checking the last assistant message keeps the
-      // chip picker from being duplicated on retries.
       const messages = useStore.getState().messages;
       const lastClarify = [...messages].reverse().find(
         (m) => m.role === 'assistant' && Array.isArray(m.options) && m.options.length > 0
@@ -299,9 +300,7 @@ export function ChatPanel() {
           }
 
           // Progressive rendering: every node may carry a `partial` slice
-          // (BOM, topology, code) that we can render *immediately* — the user
-          // sees each artifact appear as it's generated instead of waiting for
-          // the whole graph to finish.
+          // (BOM, topology, code) that we can render *immediately*.
           if (data.partial) {
             applyAnalysisPayload(data.partial);
           }
@@ -349,7 +348,7 @@ export function ChatPanel() {
       }
     }
 
-    // ── Resume flow: human provides manual component selection ──
+    // Resume flow: human provides manual component selection
     if (interruptedRef.current && p) {
       interruptedRef.current = false;
       let manualSelections: any[];
@@ -357,7 +356,7 @@ export function ChatPanel() {
         const parsed = JSON.parse(userMessage);
         manualSelections = Array.isArray(parsed) ? parsed : [parsed];
       } catch {
-        // Free-text fallback: try to extract category and order number
+        // Free-text fallback
         manualSelections = [{
           category: interruptedRef2.current?.not_found_categories?.[0] || '',
           manufacturer: '',
@@ -423,133 +422,281 @@ export function ChatPanel() {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-5 overflow-hidden min-h-0">
-      <div className="flex justify-between items-start mb-4 shrink-0">
-        <div>
-          <div className="text-xs text-app-text-tertiary font-bold uppercase tracking-[0.2em]">{tr.chat.agent}</div>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
-              快速对话
-            </span>
-            <span className="px-2 py-1 rounded-full bg-app-accent/10 text-app-accent text-[10px] font-bold border border-indigo-500/20">
-              LangGraph 生成
-            </span>
-          </div>
-        </div>
-        <div className="flex gap-3 items-center">
-          <button
-            className="hover:text-app-accent transition-colors text-[10px] px-2 py-1 rounded-lg hover:bg-app-accent-light"
+    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', px: 2.5, py: 2.5, overflow: 'hidden', minHeight: 0 }}>
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexShrink: 0 }}>
+        <Box>
+          <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em' }}>
+            {tr.chat.agent}
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+            <Chip
+              label="快速对话"
+              size="small"
+              sx={{
+                bgcolor: 'rgba(16,185,129,0.1)',
+                color: '#34D399',
+                border: '1px solid rgba(16,185,129,0.2)',
+                fontWeight: 700,
+                fontSize: '0.625rem',
+                height: 22,
+                '& .MuiChip-label': { px: 0.5 },
+              }}
+            />
+            <Chip
+              label="LangGraph 生成"
+              size="small"
+              sx={{
+                bgcolor: 'rgba(129,140,248,0.1)',
+                color: 'primary.light',
+                border: '1px solid rgba(129,140,248,0.2)',
+                fontWeight: 700,
+                fontSize: '0.625rem',
+                height: 22,
+                '& .MuiChip-label': { px: 0.5 },
+              }}
+            />
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+          <Button
+            size="small"
             onClick={() => { interruptedRef.current = false; interruptedRef2.current = null; newProject({ preserveCanvas: false }); }}
             title={tr.chat.newProject}
+            sx={{ fontSize: '0.625rem', minWidth: 0, px: 1, py: 0.5, color: 'text.secondary', '&:hover': { color: 'primary.light', bgcolor: 'rgba(129,140,248,0.08)' } }}
           >
-            + 清空画布
-          </button>
-          <button
-            className="hover:text-emerald-400 transition-colors text-[10px] px-2 py-1 rounded-lg hover:bg-emerald-500/10"
+            + {tr.chat.newProject}
+          </Button>
+          <Button
+            size="small"
             onClick={() => { interruptedRef.current = false; interruptedRef2.current = null; newProject({ preserveCanvas: true }); }}
             title="沿用当前画布继续"
+            sx={{ fontSize: '0.625rem', minWidth: 0, px: 1, py: 0.5, color: 'text.secondary', '&:hover': { color: '#34D399', bgcolor: 'rgba(16,185,129,0.08)' } }}
           >
             沿用画布
-          </button>
-          <button
-            className="hover:text-amber-400 transition-colors text-[10px] px-2 py-1 rounded-lg hover:bg-amber-500/10"
+          </Button>
+          <Button
+            size="small"
             onClick={clearChat}
             title={tr.chat.clearChat}
+            startIcon={<DeleteIcon sx={{ fontSize: 13 }} />}
+            sx={{ fontSize: '0.625rem', minWidth: 0, px: 1, py: 0.5, color: 'text.secondary', '&:hover': { color: '#FBBF24', bgcolor: 'rgba(251,191,36,0.08)' } }}
           >
             {tr.chat.clearChat}
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Box>
+      </Box>
 
+      {/* Chat context link banner */}
       {chatContext && (
-        <div className="mb-3 shrink-0 flex items-center gap-2 bg-app-accent/10 border border-indigo-500/20 rounded-xl px-3 py-2 text-[11px]">
-          <span className="text-app-accent font-bold">{tr.chat.linkedContext}</span>
-          <span className="text-app-text-secondary">
+        <Box
+          sx={{
+            mb: 1.5,
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            bgcolor: 'rgba(129,140,248,0.1)',
+            border: '1px solid rgba(129,140,248,0.2)',
+            borderRadius: 3,
+            px: 1.5,
+            py: 1,
+            fontSize: '0.6875rem',
+          }}
+        >
+          <Typography component="span" sx={{ color: 'primary.light', fontWeight: 700 }}>{tr.chat.linkedContext}</Typography>
+          <Typography component="span" sx={{ color: 'text.secondary' }}>
             {chatContext.nodeIds.length} {tr.chat.components}
-          </span>
-          <button
-            className="ml-auto text-app-text-tertiary hover:text-app-text-secondary"
+          </Typography>
+          <Box
+            component="button"
             onClick={() => setChatContext(null)}
+            sx={{
+              ml: 'auto',
+              color: 'text.disabled',
+              bgcolor: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              lineHeight: 1,
+              '&:hover': { color: 'text.secondary' },
+            }}
           >
             ×
-          </button>
-        </div>
+          </Box>
+        </Box>
       )}
 
-      <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
+      {/* Messages area */}
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+          pr: 1,
+          '&::-webkit-scrollbar': { width: 6 },
+          '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 3, minHeight: 40 },
+        }}
+      >
         {messages.length === 0 && (
-          <div className="mt-8 px-2">
-            <div className="text-center text-app-text-secondary text-lg font-bold">{tr.chat.welcome}</div>
-            <div className="text-center text-app-text-tertiary text-xs mt-3">{tr.chat.example}</div>
-            <div className="grid grid-cols-1 gap-2 mt-6">
+          <Box sx={{ mt: 4, px: 1 }}>
+            <Typography sx={{ textAlign: 'center', color: 'text.secondary', fontWeight: 700, fontSize: '1.125rem' }}>
+              {tr.chat.welcome}
+            </Typography>
+            <Typography sx={{ textAlign: 'center', color: 'text.disabled', fontSize: '0.75rem', mt: 1.5 }}>
+              {tr.chat.example}
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 1, mt: 3 }}>
               {[
                 '基于当前画布检查供电与安全回路',
                 '设计一套带急停和两台电机的输送线控制系统',
                 '帮我审查 BOM 是否缺少必要附件',
               ].map((prompt) => (
-                <button
+                <Paper
                   key={prompt}
                   onClick={() => setInputValue(prompt)}
-                  className="text-left rounded-2xl border border-app-border bg-app-bg-primary/60 hover:bg-app-bg-tertiary px-4 py-3 text-xs text-app-text-secondary transition-colors"
+                  variant="outlined"
+                  sx={{
+                    textAlign: 'left',
+                    borderRadius: 4,
+                    borderColor: 'divider',
+                    bgcolor: 'rgba(15,23,42,0.6)',
+                    px: 2,
+                    py: 1.5,
+                    fontSize: '0.75rem',
+                    color: 'text.secondary',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s',
+                    '&:hover': { bgcolor: 'background.paper' },
+                  }}
                 >
                   {prompt}
-                </button>
+                </Paper>
               ))}
-            </div>
-          </div>
+            </Box>
+          </Box>
         )}
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}
-          >
-            {msg.role !== 'user' && (
-              <div
-                className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 mt-1 ${
-                  isProcessing && msg.role === 'assistant'
-                    ? 'bg-app-accent text-app-text-primary animate-pulse shadow-[0_0_15px_rgba(99,102,241,0.5)]'
-                    : 'bg-app-accent/20 text-app-accent'
-                }`}
-              >
-                V
-              </div>
-            )}
-            <div
-              className={`max-w-[92%] p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-                msg.role === 'user'
-                  ? 'bg-app-accent text-app-text-primary rounded-tr-sm font-medium ml-8 shadow-lg shadow-indigo-950/30'
-                  : msg.role === 'system'
-                    ? 'bg-amber-500/10 text-amber-200 rounded-tl-sm text-xs mr-8 border border-amber-500/20'
-                    : 'bg-app-bg-tertiary text-app-text-primary rounded-tl-sm text-sm mr-8 shadow-inner border border-app-border/50'
-              }`}
-            >
-              {msg.context?.componentSummary && (
-                <div className="mb-2 rounded-lg bg-app-accent/10 border border-indigo-500/20 px-2 py-1 text-[10px] text-app-accent">
-                  关联画布: {msg.context.componentSummary}
-                </div>
-              )}
-              {msg.content}
-              {msg.role === 'assistant' && msg.options && msg.options.length > 0 && (
-                <ClarifyCard
-                  groups={msg.options}
-                  onSelect={(key, choice) =>
-                    setInputValue((prev) =>
-                      prev ? `${prev}\n${key}=${choice}` : `${key}=${choice}`
-                    )
-                  }
-                />
-              )}
-            </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
+        {messages.map((msg) => {
+          const isUser = msg.role === 'user';
+          const isSystem = msg.role === 'system';
 
-      <div className="mt-5 shrink-0 rounded-3xl bg-app-bg-primary border border-app-border p-2 shadow-2xl">
-        <textarea
-          id="chat-input"
-          name="chat-input"
-          rows={3}
+          const bubbleSx = isUser
+            ? {
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                borderColor: 'transparent',
+                borderTopRightRadius: '4px',
+                fontWeight: 500,
+                boxShadow: '0 10px 15px -3px rgba(30,27,75,0.3)',
+              }
+            : isSystem
+            ? {
+                bgcolor: 'rgba(245,158,11,0.1)',
+                color: '#FDE68A',
+                borderColor: 'rgba(245,158,11,0.2)',
+                borderTopLeftRadius: '4px',
+                fontSize: '0.75rem',
+              }
+            : {
+                bgcolor: 'background.paper',
+                color: 'text.primary',
+                borderColor: 'rgba(51,65,85,0.5)',
+                borderTopLeftRadius: '4px',
+              };
+
+          return (
+            <Box
+              key={msg.id}
+              sx={{ display: 'flex', gap: 1.5, flexDirection: isUser ? 'row-reverse' : 'row' }}
+            >
+              {!isUser && (
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    flexShrink: 0,
+                    mt: 0.5,
+                    ...(isProcessing && msg.role === 'assistant'
+                      ? {
+                          bgcolor: 'primary.main',
+                          color: 'primary.contrastText',
+                          boxShadow: '0 0 15px rgba(99,102,241,0.5)',
+                        }
+                      : { bgcolor: 'rgba(129,140,248,0.2)', color: 'primary.light' }
+                    ),
+                  }}
+                >
+                  <ChatIcon sx={{ fontSize: 16 }} />
+                </Box>
+              )}
+              <Paper
+                variant="outlined"
+                sx={{
+                  maxWidth: '92%',
+                  p: 2,
+                  fontSize: '0.875rem',
+                  lineHeight: 1.625,
+                  whiteSpace: 'pre-wrap',
+                  ...bubbleSx,
+                }}
+              >
+                {msg.context?.componentSummary && (
+                  <Box
+                    sx={{
+                      mb: 1,
+                      borderRadius: 1,
+                      bgcolor: 'rgba(129,140,248,0.1)',
+                      border: '1px solid rgba(129,140,248,0.2)',
+                      px: 1,
+                      py: 0.5,
+                      fontSize: '0.625rem',
+                      color: 'primary.light',
+                    }}
+                  >
+                    关联画布: {msg.context.componentSummary}
+                  </Box>
+                )}
+                {msg.content}
+                {msg.role === 'assistant' && msg.options && msg.options.length > 0 && (
+                  <ClarifyCard
+                    groups={msg.options}
+                    onSelect={(key, choice) =>
+                      setInputValue((prev) =>
+                        prev ? `${prev}\n${key}=${choice}` : `${key}=${choice}`
+                      )
+                    }
+                  />
+                )}
+              </Paper>
+            </Box>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </Box>
+
+      {/* Input area */}
+      <Paper
+        variant="outlined"
+        sx={{
+          mt: 2.5,
+          flexShrink: 0,
+          borderRadius: 4,
+          bgcolor: 'background.default',
+          borderColor: 'divider',
+          p: 1,
+          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+        }}
+      >
+        <TextField
+          multiline
+          minRows={3}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => {
@@ -560,21 +707,36 @@ export function ChatPanel() {
           }}
           placeholder={isProcessing ? tr.chat.processing : tr.chat.placeholder}
           disabled={isProcessing}
-          className="w-full resize-none bg-transparent px-3 py-2 text-sm text-app-text-primary focus:outline-none font-medium placeholder:text-app-text-tertiary disabled:opacity-50"
+          variant="outlined"
+          fullWidth
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              bgcolor: 'transparent',
+              '& fieldset': { border: 'none' },
+            },
+            '& .MuiInputBase-input': {
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              color: 'text.primary',
+              '&::placeholder': { color: 'text.disabled', opacity: 1 },
+            },
+          }}
         />
-        <div className="flex items-center justify-between border-t border-app-border pt-2 px-1">
-          <div className="text-[10px] text-app-text-tertiary">
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid', borderColor: 'divider', pt: 1, px: 0.5 }}>
+          <Typography sx={{ fontSize: '0.625rem', color: 'text.disabled' }}>
             Enter 发送 · Shift+Enter 换行 · 输出前自动核准
-          </div>
-          <button
+          </Typography>
+          <Button
             onClick={handleSend}
             disabled={isProcessing || !inputValue.trim()}
-            className="bg-app-accent hover:bg-app-accent-hover disabled:bg-app-bg-tertiary disabled:text-app-text-tertiary text-app-text-primary font-bold text-xs px-5 py-2 rounded-xl transition-colors"
+            variant="contained"
+            endIcon={isProcessing ? <CircularProgress size={14} color="inherit" /> : <SendIcon sx={{ fontSize: 16 }} />}
+            sx={{ fontWeight: 700, fontSize: '0.75rem', px: 2.5, py: 1, minWidth: 0, borderRadius: 3 }}
           >
             {isProcessing ? '处理中' : tr.chat.send}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </Box>
+      </Paper>
+    </Box>
   );
 }

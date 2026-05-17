@@ -1,4 +1,5 @@
-import { Download } from 'lucide-react';
+import { Box, Paper, Typography, Button } from '@mui/material';
+import { FileDownload as FileDownloadIcon } from '@mui/icons-material';
 import { useStore } from '../../models/store';
 import { t } from '../../services/i18n';
 import Editor from '@monaco-editor/react';
@@ -9,25 +10,97 @@ export function SCLPanel() {
   const tr = t(language);
 
   return (
-    <div className="w-full h-full relative overflow-hidden flex flex-col p-8 rounded-[2.5rem]">
-      <div className="absolute -right-20 -top-20 w-80 h-80 bg-indigo-600/10 rounded-full blur-[100px]" />
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        p: 4,
+        borderRadius: 5,
+      }}
+    >
+      {/* Decorative blur */}
+      <Box
+        sx={(theme) => ({
+          position: 'absolute',
+          right: -80,
+          top: -80,
+          width: 320,
+          height: 320,
+          bgcolor: 'rgba(79, 70, 229, 0.1)',
+          borderRadius: '50%',
+          filter: 'blur(100px)',
+          pointerEvents: 'none',
+        })}
+      />
 
-      <div className="flex justify-between items-center mb-8 relative z-10">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full mb-3">
-            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, position: 'relative', zIndex: 10 }}>
+        <Box>
+          <Box
+            sx={(theme) => ({
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 1,
+              px: 1.5,
+              py: 0.5,
+              bgcolor: 'rgba(99, 102, 241, 0.1)',
+              border: 1,
+              borderColor: 'rgba(99, 102, 241, 0.2)',
+              borderRadius: 999,
+              mb: 1.5,
+            })}
+          >
+            <Typography
+              variant="labelSmall"
+              sx={{
+                color: 'primary.light',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+              }}
+            >
               {tr.scl.target}
-            </span>
-          </div>
-          <h2 className="text-3xl font-bold tracking-tight text-white">{tr.scl.title}</h2>
-        </div>
-        <button className="flex items-center gap-2 px-6 py-3 bg-white text-black text-sm font-bold rounded-2xl shadow-sm hover:scale-105 active:scale-95 transition-all mt-4">
-          <Download className="w-4 h-4" />
+            </Typography>
+          </Box>
+          <Typography variant="headlineMedium" sx={{ fontWeight: 700 }}>
+            {tr.scl.title}
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          color="inherit"
+          startIcon={<FileDownloadIcon />}
+          sx={{
+            bgcolor: 'common.white',
+            color: 'common.black',
+            '&:hover': {
+              bgcolor: 'grey.200',
+            },
+            mt: 4,
+            fontWeight: 700,
+            fontSize: 14,
+          }}
+        >
           {tr.scl.download}
-        </button>
-      </div>
+        </Button>
+      </Box>
 
-      <div className="flex-1 bg-neutral-950 border border-neutral-800 rounded-[2rem] overflow-hidden shadow-inner relative z-10">
+      {/* Monaco Editor container */}
+      <Paper
+        variant="outlined"
+        sx={(theme) => ({
+          flex: 1,
+          overflow: 'hidden',
+          borderRadius: 4,
+          position: 'relative',
+          zIndex: 10,
+          bgcolor: theme.palette.mode === 'dark' ? '#0a0a0a' : 'background.default',
+        })}
+      >
         <Editor
           height="100%"
           defaultLanguage="pascal"
@@ -44,12 +117,12 @@ export function SCLPanel() {
             padding: { top: 16, bottom: 16 },
           }}
           loading={
-            <div className="flex items-center justify-center h-full text-neutral-500">
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'text.disabled' }}>
               {tr.scl.loading}
-            </div>
+            </Box>
           }
         />
-      </div>
-    </div>
+      </Paper>
+    </Box>
   );
 }

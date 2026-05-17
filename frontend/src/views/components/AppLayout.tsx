@@ -1,6 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../../models/store';
 import { t } from '../../services/i18n';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import SettingsIcon from '@mui/icons-material/Settings';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import TranslateIcon from '@mui/icons-material/Translate';
+import EngineeringIcon from '@mui/icons-material/Engineering';
 import { ChatPanel } from './ChatPanel';
 import { TopologyPanel } from './TopologyPanel';
 import { BOMPanel } from './BOMPanel';
@@ -12,9 +23,9 @@ import { InfoPanel } from './InfoPanel';
 import { WiringPanel } from './WiringPanel';
 import { GuidePanel } from './GuidePanel';
 import { CabinetPanel } from './CabinetPanel';
-import { Settings, Sun, Moon, Languages, PenTool } from 'lucide-react';
 
-export function AppLayout() {
+export function AppLayout({ initialTab }: { initialTab?: 'chat' | 'knowledge' }) {
+  const project = useStore((s) => s.project);
   const activeCanvasTab = useStore((s) => s.activeCanvasTab);
   const setActiveCanvasTab = useStore((s) => s.setActiveCanvasTab);
   const language = useStore((s) => s.language);
@@ -26,7 +37,7 @@ export function AppLayout() {
   const unreadChatCount = useStore((s) => s.unreadChatCount);
   const resetUnread = useStore((s) => s.resetUnread);
 
-  const [centerTab, setCenterTab] = useState<'chat' | 'knowledge'>('chat');
+  const [centerTab, setCenterTab] = useState<'chat' | 'knowledge'>(initialTab || 'chat');
   const [chatWidth, setChatWidth] = useState(() => {
     try {
       const saved = localStorage.getItem('volta-chat-width');
@@ -80,96 +91,261 @@ export function AppLayout() {
     ['guide', tr.header.guide],
   ];
 
+  const handleCenterTabChange = (_: React.SyntheticEvent, value: string) => {
+    setCenterTab(value as 'chat' | 'knowledge');
+    if (value === 'chat') resetUnread();
+  };
+
+  const handleCanvasTabChange = (_: React.SyntheticEvent, value: string) => {
+    setActiveCanvasTab(
+      value as 'info' | 'topology' | 'wiring' | 'bom' | 'code' | 'guide' | 'cabinet',
+    );
+  };
+
+  const themeToggleIcon = theme === 'light' ? (
+    <DarkModeIcon sx={{ fontSize: 14 }} />
+  ) : theme === 'dark' ? (
+    <EngineeringIcon sx={{ fontSize: 14 }} />
+  ) : (
+    <LightModeIcon sx={{ fontSize: 14 }} />
+  );
+
+  const themeToggleTitle =
+    theme === 'light'
+      ? 'Switch to dark mode'
+      : theme === 'dark'
+        ? 'Switch to engineering mode'
+        : 'Switch to light mode';
+
   return (
-    <div className="flex h-screen bg-app-bg-primary text-app-text-primary font-sans p-4 gap-4 overflow-hidden relative">
+    <Box
+      sx={{
+        display: 'flex',
+        height: '100vh',
+        bgcolor: 'background.default',
+        color: 'text.primary',
+        p: 2,
+        gap: 2,
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
       {/* Left: Conversation Sidebar */}
       <ConversationSidebar />
 
       {/* Chat / Knowledge panel (fixed width, resizable) */}
-      <div style={{ width: chatWidth }} className="flex-shrink-0 flex flex-col min-w-0">
-        <div className="w-full flex flex-col bg-app-bg-secondary border border-app-border rounded-lg h-full overflow-hidden shadow-xl">
-          {/* Chat header: brand + tabs + controls */}
-          <div className="flex items-center justify-between px-6 pt-5 pb-0 border-b border-app-border shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-app-accent rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <span className="text-app-text-primary font-bold tracking-tighter text-xs">V</span>
-              </div>
-              <span className="text-lg font-bold tracking-tight uppercase">{tr.app.name}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={toggleLanguage}
-                className="w-8 h-8 bg-app-bg-secondary hover:bg-app-bg-tertiary border border-app-border rounded-full flex items-center justify-center text-app-text-secondary hover:text-app-text-primary transition-colors"
-                title={language === 'zh' ? 'Switch to English' : '切换到中文'}
+      <Box
+        sx={{
+          width: chatWidth,
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0,
+        }}
+      >
+        <Paper
+          variant="outlined"
+          sx={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            overflow: 'hidden',
+            borderRadius: '12px',
+            bgcolor: 'surfaceContainer',
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
+          }}
+        >
+          {/* Chat header: brand + controls */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              px: 3,
+              pt: 2.5,
+              pb: 0,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              flexShrink: 0,
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box
+                sx={{
+                  width: 36,
+                  height: 36,
+                  bgcolor: 'primary.main',
+                  borderRadius: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 10px 15px -3px rgba(79, 70, 229, 0.2), 0 4px 6px -4px rgba(79, 70, 229, 0.2)',
+                }}
               >
-                <Languages className="w-3.5 h-3.5" />
-                <span className="text-[9px] font-bold ml-0.5">{language === 'zh' ? 'EN' : '中'}</span>
-              </button>
-              <button
-                onClick={toggleTheme}
-                className="w-8 h-8 bg-app-bg-secondary hover:bg-app-bg-tertiary border border-app-border rounded-full flex items-center justify-center text-app-text-secondary hover:text-app-text-primary transition-colors"
-                title={
-                  theme === 'light'
-                    ? 'Switch to dark mode'
-                    : theme === 'dark'
-                    ? 'Switch to engineering mode'
-                    : 'Switch to light mode'
-                }
-              >
-                {theme === 'light' ? (
-                  <Moon className="w-3.5 h-3.5" />
-                ) : theme === 'dark' ? (
-                  <PenTool className="w-3.5 h-3.5" />
-                ) : (
-                  <Sun className="w-3.5 h-3.5" />
-                )}
-              </button>
-              <button
-                onClick={() => setIsSettingsOpen(true)}
-                className="w-8 h-8 bg-app-bg-secondary hover:bg-app-bg-tertiary border border-app-border rounded-full flex items-center justify-center text-app-text-secondary hover:text-app-text-primary transition-colors"
-              >
-                <Settings className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+                <Typography
+                  sx={{ color: 'primary.contrastText', fontWeight: 700, letterSpacing: '-0.05em', fontSize: '0.75rem' }}
+                >
+                  V
+                </Typography>
+              </Box>
+              <Typography sx={{ fontSize: '1.125rem', fontWeight: 700, letterSpacing: '-0.025em', textTransform: 'uppercase' }}>
+                {tr.app.name}
+              </Typography>
+            </Box>
 
-          {/* Chat / Knowledge tab buttons */}
-          <div className="flex px-6 pt-3 gap-2 shrink-0">
-            <button
-              className={`pb-3 px-3 text-sm font-bold uppercase tracking-wide border-b-[3px] transition-colors relative ${
-                centerTab === 'chat'
-                  ? 'border-indigo-500 text-app-accent'
-                  : 'border-transparent text-app-text-tertiary hover:text-app-text-secondary'
-              }`}
-              onClick={() => { setCenterTab('chat'); resetUnread(); }}
-            >
-              {tr.chat.tab}
-              {unreadChatCount > 0 && centerTab !== 'chat' && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-app-bg-secondary" />
-              )}
-            </button>
-            <button
-              className={`pb-3 px-3 text-sm font-bold uppercase tracking-wide border-b-[3px] transition-colors ${
-                centerTab === 'knowledge'
-                  ? 'border-indigo-500 text-app-accent'
-                  : 'border-transparent text-app-text-tertiary hover:text-app-text-secondary'
-              }`}
-              onClick={() => setCenterTab('knowledge')}
-            >
-              {tr.chat.knowledge}
-            </button>
-          </div>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {/* Language toggle */}
+              <IconButton
+                onClick={toggleLanguage}
+                size="small"
+                title={language === 'zh' ? 'Switch to English' : '切换到中文'}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  bgcolor: 'surfaceContainer',
+                  color: 'text.secondary',
+                  borderRadius: '50%',
+                  '&:hover': { bgcolor: 'surfaceContainerHigh', color: 'text.primary' },
+                }}
+              >
+                <TranslateIcon sx={{ fontSize: 14 }} />
+                <Typography
+                  component="span"
+                  sx={{ fontSize: '9px', fontWeight: 700, ml: 0.25 }}
+                >
+                  {language === 'zh' ? 'EN' : '中'}
+                </Typography>
+              </IconButton>
+
+              {/* Theme toggle */}
+              <IconButton
+                onClick={toggleTheme}
+                size="small"
+                title={themeToggleTitle}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  bgcolor: 'surfaceContainer',
+                  color: 'text.secondary',
+                  borderRadius: '50%',
+                  '&:hover': { bgcolor: 'surfaceContainerHigh', color: 'text.primary' },
+                }}
+              >
+                {themeToggleIcon}
+              </IconButton>
+
+              {/* Settings */}
+              <IconButton
+                onClick={() => setIsSettingsOpen(true)}
+                size="small"
+                title="Settings"
+                sx={{
+                  width: 32,
+                  height: 32,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  bgcolor: 'surfaceContainer',
+                  color: 'text.secondary',
+                  borderRadius: '50%',
+                  '&:hover': { bgcolor: 'surfaceContainerHigh', color: 'text.primary' },
+                }}
+              >
+                <SettingsIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Box>
+          </Box>
+
+          {/* Chat / Knowledge tab */}
+          <Tabs
+            value={centerTab}
+            onChange={handleCenterTabChange}
+            sx={{
+              px: 3,
+              pt: 0.75,
+              minHeight: 'auto',
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              flexShrink: 0,
+              '& .MuiTabs-indicator': {
+                height: 3,
+                bgcolor: 'primary.main',
+              },
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: '0.875rem',
+                letterSpacing: '0.05em',
+                minWidth: 'auto',
+                minHeight: 'auto',
+                px: 2,
+                pb: 1.5,
+                pt: 1,
+                color: 'text.disabled',
+                '&.Mui-selected': {
+                  color: 'primary.main',
+                },
+                '&:hover': {
+                  color: 'text.secondary',
+                },
+              },
+            }}
+          >
+            <Tab
+              value="chat"
+              label={
+                <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                  {tr.chat.tab}
+                  {unreadChatCount > 0 && centerTab !== 'chat' && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: -4,
+                        right: -8,
+                        width: 10,
+                        height: 10,
+                        bgcolor: 'error.main',
+                        borderRadius: '50%',
+                        border: '2px solid',
+                        borderColor: 'surfaceContainer',
+                      }}
+                    />
+                  )}
+                </Box>
+              }
+            />
+            <Tab value="knowledge" label={tr.chat.knowledge} />
+          </Tabs>
 
           {/* Chat/Knowledge content */}
-          <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
             {centerTab === 'chat' ? <ChatPanel /> : <KnowledgePanel />}
-          </div>
-        </div>
-      </div>
+          </Box>
+        </Paper>
+      </Box>
 
       {/* Resizer */}
-      <div
-        className="w-3 relative mx-[-8px] z-10 flex items-center justify-center cursor-col-resize group"
+      <Box
+        sx={{
+          width: 12,
+          position: 'relative',
+          mx: -1,
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'col-resize',
+          '&:hover > div': {
+            bgcolor: 'primary.main',
+          },
+          '&:active > div': {
+            bgcolor: 'primary.dark',
+          },
+        }}
         onMouseDown={(e) => {
           e.preventDefault();
           isDragging.current = true;
@@ -177,79 +353,149 @@ export function AppLayout() {
           document.body.classList.add('select-none');
         }}
       >
-        <div className="w-1 h-12 bg-app-bg-tertiary/50 rounded-full group-hover:bg-app-accent group-active:bg-app-accent-hover transition-colors shadow-sm" />
-      </div>
+        <Box
+          sx={{
+            width: 4,
+            height: 48,
+            bgcolor: 'surfaceContainerHighest',
+            opacity: 0.5,
+            borderRadius: '9999px',
+            transition: 'background-color 0.2s',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+          }}
+        />
+      </Box>
 
       {/* Right: Canvas Workspace (flex-1, takes remaining space) */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Canvas header with tabs */}
-        <header className="h-[56px] flex items-center justify-between px-6 bg-app-bg-secondary border border-app-border rounded-lg shrink-0 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-app-bg-tertiary/50 rounded-full">
-              <span className="w-1.5 h-1.5 bg-app-accent rounded-full animate-pulse" />
-              <span className="text-[10px] font-bold text-app-text-secondary uppercase tracking-widest">
-                {tr.header.version}
-              </span>
-            </div>
-          </div>
+        <Box
+          sx={{
+            height: 56,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 3,
+            bgcolor: 'surfaceContainer',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: '12px',
+            flexShrink: 0,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+          }}
+        >
+          {/* Version badge */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1.25, py: 0.5 }}>
+            <Box
+              sx={{
+                width: 6,
+                height: 6,
+                bgcolor: 'primary.main',
+                borderRadius: '50%',
+                '@keyframes pulse': {
+                  '0%, 100%': { opacity: 1 },
+                  '50%': { opacity: 0.5 },
+                },
+                animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              }}
+            />
+            <Typography sx={{ fontSize: '0.625rem', fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              {tr.header.version}
+            </Typography>
+          </Box>
 
-          <nav className="flex bg-app-bg-primary border border-app-border rounded-full px-2 py-1 gap-1 text-xs font-bold text-app-text-tertiary h-[40px]">
+          {/* Canvas tab navigation */}
+          <Tabs
+            value={activeCanvasTab}
+            onChange={handleCanvasTabChange}
+            sx={{
+              bgcolor: 'background.default',
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: '9999px',
+              px: 1,
+              minHeight: 36,
+              '& .MuiTabs-scroller': {
+                overflow: 'visible !important',
+              },
+              '& .MuiTabs-flexContainer': {
+                gap: 0.5,
+                overflow: 'visible',
+              },
+              '& .MuiTabs-indicator': { display: 'none' },
+              '& .MuiTab-root': {
+                minHeight: 28,
+                minWidth: 'auto',
+                py: 0,
+                px: 2,
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: '0.7rem',
+                letterSpacing: '0.025em',
+                color: 'text.disabled',
+                borderRadius: '9999px',
+                transition: 'all 0.15s',
+                '&.Mui-selected': {
+                  color: 'text.primary',
+                  bgcolor: 'surfaceContainerHigh',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                },
+                '&:hover': {
+                  color: 'text.primary',
+                  bgcolor: 'surfaceContainerHigh',
+                },
+              },
+            }}
+          >
             {canvasTabs.map(([id, label]) => (
-              <button
-                key={id}
-                onClick={() =>
-                  setActiveCanvasTab(
-                    id as
-                      | 'info'
-                      | 'topology'
-                      | 'wiring'
-                      | 'bom'
-                      | 'code'
-                      | 'guide'
-                      | 'cabinet'
-                  )
-                }
-                className={`px-4 h-full flex items-center rounded-full transition-all tracking-wide ${
-                  activeCanvasTab === id
-                    ? 'bg-app-bg-tertiary text-app-text-primary shadow-sm'
-                    : 'hover:text-app-text-primary hover:bg-app-bg-tertiary/50'
-                }`}
-              >
-                {label}
-              </button>
+              <Tab key={id} value={id} label={label} />
             ))}
-          </nav>
+          </Tabs>
 
-          <div className="w-[72px]" />
-        </header>
+          {/* Spacer to balance the header */}
+          <Box sx={{ width: 72 }} />
+        </Box>
 
-        <main className="flex-1 mt-4 overflow-hidden relative border border-app-border rounded-lg bg-app-bg-secondary shadow-xl">
-          <div className={activeCanvasTab === 'info' ? 'h-full' : 'hidden h-full'}>
+        {/* Canvas content area */}
+        <Box
+          sx={{
+            flex: 1,
+            mt: 2,
+            overflow: 'hidden',
+            position: 'relative',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: '12px',
+            bgcolor: 'surfaceContainer',
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
+          }}
+        >
+          <Box sx={{ height: '100%', display: activeCanvasTab === 'info' ? 'block' : 'none' }}>
             <InfoPanelMount />
-          </div>
-          <div className={activeCanvasTab === 'topology' ? 'h-full' : 'hidden h-full'}>
+          </Box>
+          <Box sx={{ height: '100%', display: activeCanvasTab === 'topology' ? 'block' : 'none' }}>
             <TopologyPanel />
-          </div>
-          <div className={activeCanvasTab === 'wiring' ? 'h-full' : 'hidden h-full'}>
+          </Box>
+          <Box sx={{ height: '100%', display: activeCanvasTab === 'wiring' ? 'block' : 'none' }}>
             <WiringPanelMount />
-          </div>
-          <div className={activeCanvasTab === 'bom' ? 'h-full' : 'hidden h-full'}>
+          </Box>
+          <Box sx={{ height: '100%', display: activeCanvasTab === 'bom' ? 'block' : 'none' }}>
             <BOMPanel />
-          </div>
-          <div className={activeCanvasTab === 'code' ? 'h-full' : 'hidden h-full'}>
+          </Box>
+          <Box sx={{ height: '100%', display: activeCanvasTab === 'code' ? 'block' : 'none' }}>
             <SCLPanel />
-          </div>
-          <div className={activeCanvasTab === 'cabinet' ? 'h-full' : 'hidden h-full'}>
+          </Box>
+          <Box sx={{ height: '100%', display: activeCanvasTab === 'cabinet' ? 'block' : 'none' }}>
             <CabinetPanelMount />
-          </div>
-          <div className={activeCanvasTab === 'guide' ? 'h-full' : 'hidden h-full'}>
+          </Box>
+          <Box sx={{ height: '100%', display: activeCanvasTab === 'guide' ? 'block' : 'none' }}>
             <GuidePanelMount />
-          </div>
-        </main>
-      </div>
+          </Box>
+        </Box>
+      </Box>
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-    </div>
+    </Box>
   );
 }
 

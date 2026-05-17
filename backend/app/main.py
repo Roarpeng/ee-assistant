@@ -135,39 +135,66 @@ async def test_connectivity(body: ConnectivityTestInput):
     # ── Embedding probe ───────────────────────────────────────────────────
     emb = body.embedding
     emb_preset = _resolve_preset(emb.get("provider"), emb.get("base_url"))
-    if emb.get("api_key") and emb.get("base_url"):
+    emb_model = emb.get("model", "text-embedding-3-small")
+    _is_multimodal = (
+        emb_preset is not None
+        and emb_preset.supports_multimodal_embed
+        and emb_model in emb_preset.multimodal_embed_models
+    )
+
+    if emb.get("api_key") and (emb.get("base_url") or _is_multimodal):
         try:
-            client = AsyncOpenAI(api_key=emb["api_key"], base_url=emb["base_url"])
+            if _is_multimodal:
+                # Multimodal model → use DashScope native SDK
+                import asyncio as _asyncio
+                from dashscope import MultiModalEmbedding
 
-            kwargs: dict = {
-                "model": emb.get("model", "text-embedding-3-small"),
-                "input": "test",
-            }
-            # Decide whether to send `dimensions=`. Default to legacy behaviour
-            # (always send) when we have no preset, matching the previous code
-            # path so OpenAI/SiliconFlow probes stay backward-compatible.
-            supports_dim = (
-                emb_preset.embed_supports_dimensions if emb_preset is not None else True
-            )
-            if supports_dim:
-                requested_dim = emb.get("dimension", 1536)
-                # DashScope text-embedding-v3 caps at 1024 — clamp.
-                if (
-                    emb_preset is not None
-                    and emb_preset.id == "dashscope"
-                    and isinstance(requested_dim, int)
-                    and requested_dim > 1024
-                ):
-                    requested_dim = 1024
-                kwargs["dimensions"] = requested_dim
+                resp = await _asyncio.to_thread(
+                    MultiModalEmbedding.call,
+                    api_key=emb["api_key"],
+                    model=emb_model,
+                    input=[{"text": "connectivity test"}],
+                )
+                if resp.status_code != 200:
+                    raise RuntimeError(
+                        f"DashScope multimodal error (status={resp.status_code}): {resp.message}"
+                    )
+                dim = len(resp.output["embedding"]) if resp.output and "embedding" in resp.output else 0
+                results["embedding"] = {
+                    "ok": True,
+                    "dimension": dim,
+                    "provider": emb_preset.id if emb_preset else "custom",
+                    "multimodal": True,
+                }
+            else:
+                # Standard OpenAI-compatible embedding
+                client = AsyncOpenAI(api_key=emb["api_key"], base_url=emb["base_url"])
 
-            r = await client.embeddings.create(**kwargs)
-            results["embedding"] = {
-                "ok": True,
-                "dimension": len(r.data[0].embedding),
-                "provider": emb_preset.id if emb_preset else "custom",
-                "sent_dimensions_kwarg": "dimensions" in kwargs,
-            }
+                kwargs: dict = {
+                    "model": emb_model,
+                    "input": "test",
+                }
+                supports_dim = (
+                    emb_preset.embed_supports_dimensions if emb_preset is not None else True
+                )
+                if supports_dim:
+                    requested_dim = emb.get("dimension", 1536)
+                    if (
+                        emb_preset is not None
+                        and emb_preset.id == "dashscope"
+                        and isinstance(requested_dim, int)
+                        and requested_dim > 1024
+                    ):
+                        requested_dim = 1024
+                    kwargs["dimensions"] = requested_dim
+
+                r = await client.embeddings.create(**kwargs)
+                results["embedding"] = {
+                    "ok": True,
+                    "dimension": len(r.data[0].embedding),
+                    "provider": emb_preset.id if emb_preset else "custom",
+                    "sent_dimensions_kwarg": "dimensions" in kwargs,
+                }
         except Exception as e:
             results["embedding"] = {
                 "ok": False,

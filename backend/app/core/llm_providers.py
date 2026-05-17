@@ -51,6 +51,8 @@ class ProviderPreset:
     recommended_embed_models: tuple[str, ...]
     embed_supports_dimensions: bool
     embed_native_dim: int
+    supports_multimodal_embed: bool = False
+    multimodal_embed_models: tuple[str, ...] = ()
     api_key_env_aliases: tuple[str, ...] = field(default_factory=tuple)
     docs_url: str = ""
     notes: str = ""
@@ -143,11 +145,18 @@ PROVIDERS: dict[str, ProviderPreset] = {
         ),
         embed_supports_dimensions=True,
         embed_native_dim=1024,
+        supports_multimodal_embed=True,
+        multimodal_embed_models=(
+            "qwen3-vl-embedding",
+            "tongyi-embedding-vision-plus",
+            "multimodal-embedding-v1",
+        ),
         api_key_env_aliases=("DASHSCOPE_API_KEY", "BAILIAN_API_KEY"),
         docs_url="https://help.aliyun.com/zh/model-studio/developer-reference/compatibility-of-openai-with-dashscope",
         notes=(
             "OpenAI-compatible. text-embedding-v3 supports dimensions up to 1024 "
-            "(values >1024 will 400). text-embedding-v1/v2 do NOT accept dimensions."
+            "(values >1024 will 400). text-embedding-v1/v2 do NOT accept dimensions. "
+            "Multimodal embedding (tongyi-embedding-vision-plus) available via native SDK."
         ),
     ),
     "volcengine": ProviderPreset(
@@ -262,6 +271,8 @@ def provider_to_dict(preset: ProviderPreset) -> dict:
         "recommended_embed_models": list(preset.recommended_embed_models),
         "embed_supports_dimensions": preset.embed_supports_dimensions,
         "embed_native_dim": preset.embed_native_dim,
+        "supports_multimodal_embed": preset.supports_multimodal_embed,
+        "multimodal_embed_models": list(preset.multimodal_embed_models),
         "docs_url": preset.docs_url,
         "notes": preset.notes,
     }

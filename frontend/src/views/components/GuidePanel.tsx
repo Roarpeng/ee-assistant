@@ -1,3 +1,13 @@
+import {
+  Box,
+  Paper,
+  Stepper,
+  Step,
+  StepLabel,
+  Typography,
+  Avatar,
+} from '@mui/material';
+
 export interface GuideStep {
   title: string;
   body: string;
@@ -7,38 +17,87 @@ interface Props {
   steps: GuideStep[];
 }
 
+function StepNumber({ index }: { index: number }) {
+  return (
+    <Avatar
+      sx={{
+        width: 36,
+        height: 36,
+        bgcolor: 'primary.main',
+        color: 'primary.contrastText',
+        fontFamily: '"JetBrains Mono", monospace',
+        fontWeight: 700,
+        fontSize: 14,
+        borderRadius: 1.5,
+      }}
+    >
+      {String(index + 1).padStart(2, '0')}
+    </Avatar>
+  );
+}
+
 export function GuidePanel({ steps }: Props) {
   if (steps.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-app-text-tertiary text-sm font-mono">
+      <Box
+        sx={{
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'text.disabled',
+          typography: 'bodyMedium',
+          fontFamily: '"JetBrains Mono", monospace',
+        }}
+      >
         未生成调试指引 — 完成代码生成后将自动产出步骤化指引。
-      </div>
+      </Box>
     );
   }
   return (
-    <div className="h-full overflow-auto p-6 max-w-3xl mx-auto custom-scrollbar">
-      <div className="text-[10px] font-mono tracking-widest text-app-text-tertiary uppercase mb-2">
-        [ fig.06 ] commissioning · runbook
-      </div>
-      <h2 className="text-2xl font-bold mb-6 tracking-tight">装配 / 调试指引</h2>
-      <ol className="space-y-4">
+    <Box
+      sx={{ height: '100%', overflow: 'auto', p: 4, maxWidth: 768, mx: 'auto' }}
+      className="custom-scrollbar"
+    >
+      <Typography
+        variant="labelSmall"
+        sx={{
+          fontFamily: '"JetBrains Mono", monospace',
+          letterSpacing: '0.1em',
+          color: 'text.disabled',
+          textTransform: 'uppercase',
+          mb: 1,
+          display: 'block',
+        }}
+      >
+        [ fig.06 ] commissioning &middot; runbook
+      </Typography>
+      <Typography variant="headlineSmall" sx={{ mb: 4, fontWeight: 700 }}>
+        装配 / 调试指引
+      </Typography>
+      <Stepper orientation="vertical" nonLinear sx={{ ml: -1 }}>
         {steps.map((step, idx) => (
-          <li
-            key={idx}
-            className="border border-app-border rounded-md bg-app-bg-secondary p-4 flex gap-4"
-          >
-            <div className="text-2xl font-mono font-bold text-app-accent tabular-nums w-10 shrink-0">
-              {String(idx + 1).padStart(2, '0')}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-bold mb-1">{step.title}</div>
-              <div className="text-sm text-app-text-secondary whitespace-pre-wrap">
+          <Step key={idx} active sx={{ '& .MuiStepConnector-line': { borderColor: 'divider' } }}>
+            <StepLabel
+              StepIconComponent={() => <StepNumber index={idx} />}
+              sx={{
+                '& .MuiStepLabel-label': { ml: 1.5 },
+              }}
+            >
+              <Typography variant="titleMedium" sx={{ fontWeight: 700, mb: 0.5 }}>
+                {step.title}
+              </Typography>
+              <Typography
+                variant="bodyMedium"
+                color="text.secondary"
+                sx={{ whiteSpace: 'pre-wrap', mb: 2 }}
+              >
                 {step.body}
-              </div>
-            </div>
-          </li>
+              </Typography>
+            </StepLabel>
+          </Step>
         ))}
-      </ol>
-    </div>
+      </Stepper>
+    </Box>
   );
 }

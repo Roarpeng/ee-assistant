@@ -6,7 +6,7 @@ from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, Fi
 from openai import AsyncOpenAI
 
 from app.config import settings
-from app.core.llm_providers import detect_provider, get_provider
+from app.core.llm_providers import detect_provider, get_provider, PROVIDERS
 
 
 def _build_httpx_client() -> httpx.AsyncClient:
@@ -148,6 +148,126 @@ class RAGEngine:
                     await asyncio.sleep(1 * (attempt + 1))
 
         return all_embeddings
+
+    async def embed_multimodal(
+        self,
+        inputs: list[dict],
+        model: str | None = None,
+    ) -> list[list[float]]:
+        """Embed text + images using DashScope native MultiModalEmbedding API.
+
+        Each element in ``inputs`` is a dict with optional keys:
+            - ``text``:  text content for the chunk
+            - ``image``: image URL or base64 data URI (``data:image/...;base64,...``)
+
+        Returns a list of embedding vectors (one per input element).
+        """
+        if not inputs:
+            return []
+
+        api_key = settings.effective_embed_api_key()
+        if not api_key:
+            raise ValueError("No embedding API key configured")
+
+        mm_model = model or settings.multimodal_embed_model or "tongyi-embedding-vision-plus"
+
+        try:
+            from dashscope import MultiModalEmbedding
+        except ImportError:
+            raise ImportError(
+                "dashscope SDK is required for multimodal embedding. "
+                "Install it with: pip install dashscope"
+            )
+
+        all_embeddings: list[list[float]] = []
+
+        # DashScope multimodal API accepts a list of {text, image} dicts
+        # Retry logic for API flakiness
+        for attempt in range(3):
+            try:
+                resp = await asyncio.to_thread(
+                    MultiModalEmbedding.call,
+                    api_key=api_key,
+                    model=mm_model,
+                    input=inputs,
+                )
+                # Check for errors
+                if resp.status_code != 200:
+                    raise RuntimeError(
+                        f"DashScope multimodal embedding failed "
+                        f"(status={resp.status_code}): {resp.message}"
+                    )
+                if resp.output is None or "embedding" not in resp.output:
+                    raise RuntimeError(
+                        f"DashScope multimodal embedding returned no embedding: "
+                        f"{resp.output}"
+                    )
+
+                # resp.output["embedding"] is a single vector if input was a list
+                # of multimodal elements (DashScope fuses text+image into one vector)
+                emb = resp.output["embedding"]
+                all_embeddings.append(emb)
+                break
+            except Exception as e:
+                print(f"Multimodal embedding attempt {attempt+1} failed: {e}")
+                if attempt == 2:
+                    raise e
+                await asyncio.sleep(1 * (attempt + 1))
+
+        return all_embeddings
+
+    async def index_multimodal_chunks(
+        self,
+        chunks: list[dict],
+        doc_id: str,
+        metadata: dict,
+    ):
+        """Index chunks that may contain images using multimodal embedding.
+
+        Each chunk is a dict with:
+            - ``content``: text content (required)
+            - ``image``: optional image URL or base64 data URI
+        """
+        if not chunks:
+            return
+
+        # Build multimodal inputs for DashScope
+        mm_inputs = [
+            {
+                "text": c.get("content", ""),
+                **({"image": c["image"]} if c.get("image") else {}),
+            }
+            for c in chunks
+        ]
+
+        # embed_multimodal currently returns one vector per call (fused).
+        # For multiple chunks we call one-at-a-time to get per-chunk vectors.
+        embeddings = []
+        for inp in mm_inputs:
+            vec_list = await self.embed_multimodal([inp])
+            embeddings.extend(vec_list)
+
+        points = [
+            PointStruct(
+                id=str(uuid.uuid4()),
+                vector=emb,
+                payload={
+                    "doc_id": doc_id,
+                    "content": c.get("content", ""),
+                    "chunk_index": i,
+                    "has_image": bool(c.get("image")),
+                    **metadata,
+                },
+            )
+            for i, (c, emb) in enumerate(zip(chunks, embeddings))
+        ]
+
+        qdrant_batch_size = 100
+        for i in range(0, len(points), qdrant_batch_size):
+            batch_points = points[i : i + qdrant_batch_size]
+            await self.qdrant.upsert(
+                collection_name=self.collection, points=batch_points
+            )
 
     async def index_chunks(self, chunks: list[dict], doc_id: str, metadata: dict):
         if not chunks:

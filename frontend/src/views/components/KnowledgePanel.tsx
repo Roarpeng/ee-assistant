@@ -2,25 +2,43 @@ import { useEffect, useRef, useState } from 'react';
 import { useStore, type KnowledgeDoc, type KnowledgeDocStatus, type KnowledgeSourceType } from '../../models/store';
 import { t } from '../../services/i18n';
 import { api } from '../../services/api';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import UploadIcon from '@mui/icons-material/Upload';
+import DeleteIcon from '@mui/icons-material/Delete';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import SearchIcon from '@mui/icons-material/Search';
 
-const STATUS_COLORS: Record<KnowledgeDocStatus, string> = {
-  uploading: 'bg-gray-500/20 text-gray-400',
-  chunking: 'bg-blue-500/20 text-blue-400',
-  embedding: 'bg-indigo-500/20 text-indigo-400',
-  graph_extracting: 'bg-purple-500/20 text-purple-400',
-  ready: 'bg-emerald-500/20 text-emerald-400',
-  error: 'bg-red-500/20 text-red-400',
+const STATUS_STYLE: Record<KnowledgeDocStatus, { bg: string; color: string }> = {
+  uploading: { bg: 'rgba(107,114,128,0.2)', color: '#9CA3AF' },
+  chunking: { bg: 'rgba(59,130,246,0.2)', color: '#60A5FA' },
+  embedding: { bg: 'rgba(129,140,248,0.2)', color: '#818CF8' },
+  graph_extracting: { bg: 'rgba(168,85,247,0.2)', color: '#C084FC' },
+  ready: { bg: 'rgba(16,185,129,0.2)', color: '#34D399' },
+  error: { bg: 'rgba(239,68,68,0.2)', color: '#F87171' },
 };
 
 // Per-source-type badge styles — kept distinct so users can scan a long
 // list and instantly tell URL-imported pages from a binary PDF.
-const SOURCE_BADGE: Record<KnowledgeSourceType, { label: string; cls: string }> = {
-  pdf:  { label: 'PDF',  cls: 'bg-rose-500/20 text-rose-400' },
-  txt:  { label: 'TXT',  cls: 'bg-slate-500/20 text-slate-300' },
-  md:   { label: 'MD',   cls: 'bg-amber-500/20 text-amber-300' },
-  html: { label: 'HTML', cls: 'bg-orange-500/20 text-orange-300' },
-  docx: { label: 'DOCX', cls: 'bg-sky-500/20 text-sky-300' },
-  url:  { label: 'URL',  cls: 'bg-emerald-500/20 text-emerald-300' },
+const SOURCE_BADGE: Record<KnowledgeSourceType, { label: string; color: string; bg: string }> = {
+  pdf:  { label: 'PDF',  color: '#FB7185', bg: 'rgba(244,63,94,0.2)' },
+  txt:  { label: 'TXT',  color: '#CBD5E1', bg: 'rgba(100,116,139,0.2)' },
+  md:   { label: 'MD',   color: '#FCD34D', bg: 'rgba(245,158,11,0.2)' },
+  html: { label: 'HTML', color: '#FDBA74', bg: 'rgba(234,88,12,0.2)' },
+  docx: { label: 'DOCX', color: '#7DD3FC', bg: 'rgba(14,165,233,0.2)' },
+  url:  { label: 'URL',  color: '#6EE7B7', bg: 'rgba(16,185,129,0.2)' },
 };
 
 const TERMINAL_STATUSES: KnowledgeDocStatus[] = ['ready', 'error'];
@@ -320,216 +338,367 @@ export function KnowledgePanel() {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-0 overflow-hidden min-h-0">
+    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
       {/* Header */}
-      <div className="p-6 pb-2 border-b border-neutral-800 shrink-0">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-neutral-300 tracking-wide">{tr.knowledge.title}</h3>
-          <button
+      <Box sx={{ px: 3, py: 3, pb: 1, borderBottom: '1px solid', borderColor: 'divider', flexShrink: 0 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Typography sx={{ fontSize: '0.875rem', fontWeight: 700, color: 'text.secondary', letterSpacing: '0.025em' }}>
+            {tr.knowledge.title}
+          </Typography>
+          <Button
             onClick={toggleSelectionMode}
-            className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
-              selectionMode
-                ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                : 'bg-neutral-800 text-neutral-400 hover:text-neutral-200 border border-neutral-700'
-            }`}
+            variant={selectionMode ? 'outlined' : 'text'}
+            size="small"
+            sx={{
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              px: 1.5,
+              py: 0.5,
+              minWidth: 0,
+              ...(selectionMode
+                ? { borderColor: 'rgba(129,140,248,0.3)', color: 'primary.light', bgcolor: 'rgba(129,140,248,0.1)' }
+                : { color: 'text.disabled', '&:hover': { color: 'text.secondary' } }
+              ),
+            }}
           >
             {selectionMode ? tr.knowledge.exitSelect : tr.knowledge.select}
-          </button>
-        </div>
-        <div className="relative">
-          <input
-            id="knowledge-search"
-            name="knowledge-search"
-            type="text"
-            placeholder={tr.knowledge.search}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-indigo-500 placeholder:text-neutral-600 transition-colors"
-          />
-          <svg
-            className="absolute left-3 top-3 w-4 h-4 text-neutral-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-      </div>
+          </Button>
+        </Box>
+        <TextField
+          placeholder={tr.knowledge.search}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          variant="outlined"
+          fullWidth
+          size="small"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              bgcolor: 'background.default',
+              borderRadius: 3,
+              '& fieldset': { borderColor: 'divider' },
+              '&:hover fieldset': { borderColor: 'primary.main' },
+              '&.Mui-focused fieldset': { borderColor: 'primary.main' },
+            },
+            '& .MuiInputBase-input': { fontSize: '0.875rem', color: 'text.primary', '&::placeholder': { color: 'text.disabled', opacity: 1 } },
+          }}
+        />
+      </Box>
 
       {/* Document list */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-3 pr-2 custom-scrollbar">
+      <List sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2, display: 'flex', flexDirection: 'column', gap: 0, '&::-webkit-scrollbar': { width: 6 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 3 } }}>
         {loading && (
-          <p className="text-xs text-neutral-500 text-center py-8">Loading...</p>
+          <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', textAlign: 'center', py: 4 }}>
+            Loading...
+          </Typography>
         )}
 
         {!loading && filteredDocs.length === 0 && (
-          <p className="text-xs text-neutral-500 text-center py-8">{tr.knowledge.noDocs}</p>
+          <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', textAlign: 'center', py: 4 }}>
+            {tr.knowledge.noDocs}
+          </Typography>
         )}
 
-        {filteredDocs.map((doc) => (
-          <div
-            key={doc.id}
-            onClick={() => selectionMode && toggleDocSelection(doc.id)}
-            className={`group border rounded-2xl p-4 transition-colors relative overflow-hidden ${
-              selectionMode
-                ? selectedIds.has(doc.id)
-                  ? 'bg-indigo-500/10 border-indigo-500/40 cursor-pointer'
-                  : 'bg-neutral-800/50 border-neutral-800 hover:border-neutral-700 cursor-pointer'
-                : 'bg-neutral-800/50 border-neutral-800 hover:bg-neutral-800'
-            }`}
-          >
-            <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 rounded-bl-full group-hover:bg-indigo-500/10 transition-colors" />
-            <div className="flex items-start gap-3">
-              {selectionMode && (
-                <div
-                  className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                    selectedIds.has(doc.id)
-                      ? 'bg-indigo-500 border-indigo-500'
-                      : 'border-neutral-600'
-                  }`}
-                >
-                  {selectedIds.has(doc.id) && (
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  {(() => {
-                    const badge = SOURCE_BADGE[doc.source_type ?? 'pdf'] ?? SOURCE_BADGE.pdf;
-                    return (
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${badge.cls}`}>
-                        {badge.label}
-                      </span>
-                    );
-                  })()}
-                  <h4 className="text-sm font-medium text-neutral-200 truncate" title={doc.source_url ?? doc.filename}>
-                    {doc.filename}
-                  </h4>
-                </div>
-                <div className="flex items-center gap-3 mt-2 flex-wrap">
-                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${STATUS_COLORS[doc.status] || STATUS_COLORS.error}`}>
-                    {isTerminal(doc.status) && doc.status === 'ready' && '✓ '}
-                    {isTerminal(doc.status) && doc.status === 'error' && '✗ '}
-                    {tr.knowledge.status[doc.status] || doc.status}
-                  </span>
-                  {doc.status === 'error' && (
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        console.log(`Retrying document ${doc.id}...`);
-                        try {
-                          const updated = await api.retryKnowledgeDoc(doc.id);
-                          console.log('Retry response:', updated);
-                          if (updated && updated.status) {
-                            setDocs(useStore.getState().knowledgeDocs.map(d => 
-                              d.id === doc.id ? { ...d, status: updated.status } : d
-                            ));
-                            connectProgress(doc.id);
-                          } else {
-                            console.error('Retry failed: Invalid response format', updated);
-                            setUploadError('重试失败：服务器返回格式错误');
-                          }
-                        } catch (err: any) {
-                          console.error('Retry failed:', err);
-                          setUploadError(`重试失败: ${err.message || '未知错误'}`);
-                        }
+        {filteredDocs.map((doc) => {
+          const isSelected = selectedIds.has(doc.id);
+          return (
+            <ListItem
+              key={doc.id}
+              disablePadding
+              sx={{ display: 'block', mb: 1.5 }}
+            >
+              <Paper
+                variant="outlined"
+                onClick={() => selectionMode && toggleDocSelection(doc.id)}
+                sx={{
+                  borderRadius: 2,
+                  p: 2,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  cursor: selectionMode ? 'pointer' : 'default',
+                  transition: 'background-color 0.2s, border-color 0.2s',
+                  borderColor: selectionMode && isSelected ? 'rgba(129,140,248,0.4)' : 'divider',
+                  bgcolor: selectionMode && isSelected ? 'rgba(129,140,248,0.1)' : 'background.paper',
+                  '&:hover': selectionMode ? { borderColor: 'rgba(129,140,248,0.4)' } : { bgcolor: 'action.hover' },
+                }}
+              >
+                {/* Decorative corner gradient */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: 64,
+                    height: 64,
+                    bgcolor: 'rgba(129,140,248,0.03)',
+                    borderBottomLeftRadius: '100%',
+                    pointerEvents: 'none',
+                  }}
+                />
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                  {/* Selection checkbox */}
+                  {selectionMode && (
+                    <Box
+                      sx={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 0.75,
+                        border: '2px solid',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        mt: 0.25,
+                        transition: 'all 0.2s',
+                        borderColor: isSelected ? 'primary.main' : 'text.disabled',
+                        bgcolor: isSelected ? 'primary.main' : 'transparent',
                       }}
-                      className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-colors"
                     >
-                      ↻ 重试
-                    </button>
+                      {isSelected && <CheckCircleIcon sx={{ fontSize: 14, color: 'primary.contrastText' }} />}
+                    </Box>
                   )}
-                  <span className="text-[10px] text-neutral-500">{doc.chunk_count} 块</span>
-                  <span className="text-[10px] text-neutral-600">{formatDate(doc.uploaded_at)}</span>
-                  {doc.manufacturer !== 'Unknown' && (
-                    <span className="text-[10px] text-neutral-500">{doc.manufacturer}</span>
-                  )}
-                </div>
-                {doc.category_tags.length > 0 && (
-                  <div className="flex gap-1.5 mt-2 flex-wrap">
-                    {doc.category_tags.map((tag) => (
-                      <span key={tag} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-neutral-700/50 text-neutral-400">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {(() => {
+                        const badge = SOURCE_BADGE[doc.source_type ?? 'pdf'] ?? SOURCE_BADGE.pdf;
+                        return (
+                          <Chip
+                            label={badge.label}
+                            size="small"
+                            sx={{
+                              fontSize: '0.625rem',
+                              fontWeight: 700,
+                              height: 20,
+                              color: badge.color,
+                              bgcolor: badge.bg,
+                              '& .MuiChip-label': { px: 0.5 },
+                            }}
+                          />
+                        );
+                      })()}
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 500, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        title={doc.source_url ?? doc.filename}
+                      >
+                        {doc.filename}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 1, flexWrap: 'wrap' }}>
+                      <Chip
+                        label={`${isTerminal(doc.status) && doc.status === 'ready' ? '✓ ' : ''}${isTerminal(doc.status) && doc.status === 'error' ? '✗ ' : ''}${tr.knowledge.status[doc.status] || doc.status}`}
+                        size="small"
+                        sx={{
+                          fontSize: '0.625rem',
+                          fontWeight: 500,
+                          height: 20,
+                          bgcolor: STATUS_STYLE[doc.status]?.bg || STATUS_STYLE.error.bg,
+                          color: STATUS_STYLE[doc.status]?.color || STATUS_STYLE.error.color,
+                          '& .MuiChip-label': { px: 1 },
+                        }}
+                      />
+                      {doc.status === 'error' && (
+                        <Button
+                          size="small"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              const updated = await api.retryKnowledgeDoc(doc.id);
+                              if (updated && updated.status) {
+                                setDocs(useStore.getState().knowledgeDocs.map(d =>
+                                  d.id === doc.id ? { ...d, status: updated.status } : d
+                                ));
+                                connectProgress(doc.id);
+                              } else {
+                                setUploadError('重试失败：服务器返回格式错误');
+                              }
+                            } catch (err: any) {
+                              setUploadError(`重试失败: ${err.message || '未知错误'}`);
+                            }
+                          }}
+                          sx={{
+                            fontSize: '0.625rem',
+                            fontWeight: 500,
+                            minWidth: 0,
+                            px: 1,
+                            py: 0,
+                            color: '#FBBF24',
+                            bgcolor: 'rgba(234,179,8,0.2)',
+                            '&:hover': { bgcolor: 'rgba(234,179,8,0.3)' },
+                          }}
+                        >
+                          <RefreshIcon sx={{ fontSize: 12, mr: 0.25 }} /> 重试
+                        </Button>
+                      )}
+                      <Typography component="span" sx={{ fontSize: '0.625rem', color: 'text.disabled' }}>
+                        {doc.chunk_count} 块
+                      </Typography>
+                      <Typography component="span" sx={{ fontSize: '0.625rem', color: 'text.disabled' }}>
+                        {formatDate(doc.uploaded_at)}
+                      </Typography>
+                      {doc.manufacturer !== 'Unknown' && (
+                        <Typography component="span" sx={{ fontSize: '0.625rem', color: 'text.disabled' }}>
+                          {doc.manufacturer}
+                        </Typography>
+                      )}
+                    </Box>
+                    {doc.category_tags.length > 0 && (
+                      <Box sx={{ display: 'flex', gap: 0.75, mt: 1, flexWrap: 'wrap' }}>
+                        {doc.category_tags.map((tag) => (
+                          <Chip
+                            key={tag}
+                            label={tag}
+                            size="small"
+                            sx={{
+                              fontSize: '0.625rem',
+                              fontWeight: 500,
+                              height: 20,
+                              bgcolor: 'rgba(64,64,64,0.5)',
+                              color: 'text.disabled',
+                              '& .MuiChip-label': { px: 0.75 },
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+              </Paper>
+            </ListItem>
+          );
+        })}
+      </List>
 
       {/* Selection mode action bar */}
       {selectionMode && (
-        <div className="p-4 border-t border-neutral-800 bg-neutral-900/80 backdrop-blur shrink-0 flex items-center justify-between">
-          <span className="text-xs text-neutral-400">{tr.knowledge.selected(selectedIds.size)}</span>
-          <div className="flex gap-2">
-            <button
+        <Box
+          sx={{
+            px: 3,
+            py: 2,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            bgcolor: 'rgba(23,23,23,0.8)',
+            backdropFilter: 'blur(8px)',
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled' }}>
+            {tr.knowledge.selected(selectedIds.size)}
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
               onClick={selectAllDocs}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-white transition-colors"
+              size="small"
+              variant="outlined"
+              sx={{ fontSize: '0.75rem', fontWeight: 500, px: 1.5, py: 0.5, minWidth: 0, borderColor: 'divider', color: 'text.secondary', '&:hover': { color: '#fff', borderColor: 'text.secondary' } }}
             >
               {tr.knowledge.selectAll}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleBatchDelete}
               disabled={selectedIds.size === 0 || deleting}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              size="small"
+              variant="outlined"
+              startIcon={<DeleteIcon sx={{ fontSize: 14 }} />}
+              sx={{
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                px: 1.5,
+                py: 0.5,
+                minWidth: 0,
+                borderColor: 'rgba(239,68,68,0.3)',
+                color: '#F87171',
+                '&:hover': { bgcolor: 'rgba(239,68,68,0.1)', borderColor: '#F87171' },
+                '&.Mui-disabled': { opacity: 0.4 },
+              }}
             >
               {deleting ? tr.knowledge.deleting : tr.knowledge.deleteSelected}
-            </button>
-          </div>
-        </div>
+            </Button>
+          </Box>
+        </Box>
       )}
 
       {/* Upload */}
-      <div className="p-6 border-t border-neutral-800 shrink-0 space-y-3">
+      <Box sx={{ px: 3, py: 3, borderTop: '1px solid', borderColor: 'divider', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         {uploadError && (
-          <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+          <Box
+            sx={{
+              fontSize: '0.75rem',
+              color: '#F87171',
+              bgcolor: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.2)',
+              borderRadius: 2,
+              px: 1.5,
+              py: 1,
+            }}
+          >
             {uploadError}
-          </div>
+          </Box>
         )}
 
         {/* Queue progress widget — only visible while a queue is active */}
         {queueState && (
-          <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-3 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-indigo-300">
+          <Paper
+            variant="outlined"
+            sx={{
+              bgcolor: 'rgba(129,140,248,0.1)',
+              borderColor: 'rgba(129,140,248,0.3)',
+              borderRadius: 2,
+              p: 1.5,
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: 'primary.light' }}>
                 {tr.knowledge.queueProgress(queueState.done, queueState.total)}
-              </span>
-              <div className="flex items-center gap-3">
-                <span className="text-neutral-400">
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled' }}>
                   {tr.knowledge.queueSummary(queueState.success, queueState.failed)}
-                </span>
+                </Typography>
                 {queueState.done < queueState.total && !cancelledRef.current && (
-                  <button
+                  <Button
                     onClick={cancelQueue}
-                    className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors"
+                    size="small"
+                    sx={{
+                      fontSize: '0.625rem',
+                      fontWeight: 500,
+                      minWidth: 0,
+                      px: 1,
+                      py: 0.25,
+                      color: 'text.disabled',
+                      bgcolor: 'background.paper',
+                      '&:hover': { color: 'text.primary' },
+                    }}
                     title="Skip remaining; in-flight uploads still finish"
                   >
                     {tr.knowledge.cancel}
-                  </button>
+                  </Button>
                 )}
-              </div>
-            </div>
-            <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-indigo-500 transition-all duration-300"
-                style={{
-                  width: `${queueState.total === 0 ? 0 : (queueState.done / queueState.total) * 100}%`,
-                }}
-              />
-            </div>
-          </div>
+              </Box>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={queueState.total === 0 ? 0 : (queueState.done / queueState.total) * 100}
+              sx={{
+                height: 6,
+                borderRadius: 3,
+                bgcolor: 'background.paper',
+                '& .MuiLinearProgress-bar': { bgcolor: 'primary.main', borderRadius: 3, transition: 'width 0.3s' },
+              }}
+            />
+          </Paper>
         )}
 
-        {/* Hidden native input — the dropzone & button trigger it.
-            `accept` lists every supported file type. The browser still
-            allows "All files" so we re-check on the JS side too. */}
+        {/* Hidden native input */}
         <input
           id="knowledge-file-upload"
           name="knowledge-file-upload"
@@ -538,15 +707,12 @@ export function KnowledgePanel() {
           accept=".pdf,.txt,.md,.markdown,.html,.htm,.docx,application/pdf,text/plain,text/markdown,text/html,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           multiple
           onChange={handleInputChange}
-          className="hidden"
+          style={{ display: 'none' }}
         />
 
-        {/* URL ingestion — single-page fetch on the server. We render this
-            above the dropzone so users discover the alternative without
-            it competing for the dominant click target. */}
-        <div className="mb-3 flex items-stretch gap-2">
-          <input
-            type="url"
+        {/* URL ingestion */}
+        <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+          <TextField
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             onKeyDown={(e) => {
@@ -554,20 +720,42 @@ export function KnowledgePanel() {
             }}
             placeholder={tr.knowledge.urlPlaceholder}
             disabled={urlSubmitting}
-            className="flex-1 min-w-0 px-3 py-2 text-xs rounded-lg bg-neutral-800/60 border border-neutral-700 focus:border-indigo-500/60 focus:outline-none text-neutral-200 placeholder-neutral-500 disabled:opacity-50"
+            variant="outlined"
+            size="small"
+            fullWidth
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                bgcolor: 'rgba(30,41,59,0.6)',
+                borderRadius: 2,
+                '& fieldset': { borderColor: 'divider' },
+                '&:hover fieldset': { borderColor: 'rgba(129,140,248,0.6)' },
+              },
+              '& .MuiInputBase-input': { fontSize: '0.75rem', color: 'text.primary', '&::placeholder': { color: 'text.disabled', opacity: 1 } },
+            }}
           />
-          <button
+          <Button
             onClick={() => void handleUrlSubmit()}
             disabled={urlSubmitting || !urlInput.trim()}
-            className="text-xs font-bold px-3 py-2 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+            variant="outlined"
+            size="small"
+            sx={{
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+              borderColor: 'rgba(129,140,248,0.4)',
+              color: 'primary.light',
+              bgcolor: 'rgba(129,140,248,0.1)',
+              '&:hover': { bgcolor: 'rgba(129,140,248,0.2)', borderColor: 'primary.light' },
+              '&.Mui-disabled': { opacity: 0.4 },
+            }}
           >
             {urlSubmitting ? '…' : tr.knowledge.addUrl}
-          </button>
-        </div>
+          </Button>
+        </Box>
 
-        {/* Dropzone — also serves as the upload button. Drag events on the
-            outer div allow drops anywhere in the zone, not just on text. */}
-        <div
+        {/* Dropzone */}
+        <Paper
+          variant="outlined"
           onDragOver={(e) => {
             e.preventDefault();
             if (!isDragOver) setIsDragOver(true);
@@ -578,37 +766,57 @@ export function KnowledgePanel() {
           }}
           onDrop={handleDrop}
           onClick={() => !uploading && fileInputRef.current?.click()}
-          className={`w-full px-4 py-5 rounded-xl border-2 border-dashed cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
-            isDragOver
-              ? 'border-indigo-400 bg-indigo-500/15 text-indigo-200'
+          sx={{
+            p: 2.5,
+            border: '2px dashed',
+            borderColor: isDragOver ? 'primary.light' : uploading ? 'divider' : 'rgba(64,64,64,0.5)',
+            borderRadius: 2,
+            cursor: uploading ? 'wait' : 'pointer',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1,
+            bgcolor: isDragOver
+              ? 'rgba(129,140,248,0.08)'
               : uploading
-              ? 'border-neutral-700 bg-neutral-800/30 text-neutral-500 cursor-wait'
-              : 'border-neutral-700 hover:border-indigo-500/60 bg-neutral-800/40 hover:bg-neutral-800 text-neutral-300'
-          }`}
+              ? 'rgba(30,41,59,0.15)'
+              : 'rgba(30,41,59,0.2)',
+            transition: 'all 0.2s',
+            '&:hover': uploading
+              ? {}
+              : {
+                  borderColor: 'rgba(129,140,248,0.6)',
+                  bgcolor: 'rgba(30,41,59,0.4)',
+                },
+          }}
         >
           {uploading ? (
-            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ width: 20, height: 20, borderRadius: '50%', border: '3px solid', borderColor: 'divider', borderTopColor: 'primary.main', animation: 'spin 0.8s linear infinite' }}>
+                {/* CSS spinner */}
+              </Box>
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: 'text.disabled' }}>
+                {tr.knowledge.status.uploading}
+              </Typography>
+            </Box>
           ) : (
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M7 16a4 4 0 01-.88-7.9A5 5 0 0119.96 9.5a4 4 0 01-.96 7.5H7zm5-9v9m0 0l-3-3m3 3l3-3" />
-            </svg>
+            <UploadIcon sx={{ fontSize: 24, color: isDragOver ? 'primary.light' : 'text.disabled' }} />
           )}
-          <span className="text-xs font-bold">
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: isDragOver ? 'primary.light' : uploading ? 'text.disabled' : 'text.secondary' }}>
             {isDragOver
               ? tr.knowledge.dropActive
               : uploading
               ? tr.knowledge.status.uploading
               : tr.knowledge.uploadMulti}
-          </span>
+          </Typography>
           {!uploading && !isDragOver && (
-            <span className="text-[10px] text-neutral-500">{tr.knowledge.dropHint}</span>
+            <Typography sx={{ fontSize: '0.625rem', color: 'text.disabled' }}>
+              {tr.knowledge.dropHint}
+            </Typography>
           )}
-        </div>
-      </div>
-    </div>
+        </Paper>
+      </Box>
+    </Box>
   );
 }

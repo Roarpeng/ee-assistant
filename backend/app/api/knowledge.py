@@ -24,6 +24,7 @@ from app.core.extractors import (
     SUPPORTED_SUFFIXES,
     UnsupportedSourceError,
     detect_source_type,
+    extract_pdf_page_images,
     extract_text,
     normalize_suffix,
 )
@@ -274,6 +275,8 @@ async def _process_document(content: bytes, doc_id: str, filename: str, manufact
             # Extractor dispatch is sync + CPU-bound; keep it off the
             # event loop so concurrent uploads stay snappy.
             loop = asyncio.get_running_loop()
+            text = ""
+            multimodal_chunks: list[dict] | None = None
             try:
                 text = await loop.run_in_executor(
                     None,
@@ -281,30 +284,82 @@ async def _process_document(content: bytes, doc_id: str, filename: str, manufact
                 )
             except UnsupportedSourceError as exc:
                 raise ValueError(f"暂不支持的文档类型: {exc}") from exc
-            except ExtractionError as exc:
-                raise ValueError(str(exc)) from exc
+            except ExtractionError:
+                # Image-only PDF fallback: extract page images for multimodal embedding
+                suffix = normalize_suffix(filename)
+                if suffix == ".pdf":
+                    await knowledge_progress.push(doc_id, ProgressEvent(
+                        stage="chunking",
+                        message="扫描型 PDF 检测到，切换到多模态嵌入模式..."
+                    ))
+                    page_images = await loop.run_in_executor(
+                        None,
+                        lambda: extract_pdf_page_images(content),
+                    )
+                    if not page_images:
+                        raise ValueError("PDF 无法提取页面图像，可能损坏或加密。")
+                    multimodal_chunks = [
+                        {
+                            "content": p["text"] or f"Page {p['page']+1}",
+                            "image": p["image_base64"],
+                            "doc_id": doc_id,
+                            "manufacturer": manufacturer,
+                            "category_tags": tags,
+                        }
+                        for p in page_images
+                    ]
+                else:
+                    raise ValueError(
+                        "提取的文本为空。文档可能为纯图像(扫描版/需 OCR)、已加密或格式损坏。"
+                    )
 
-            chunks = chunk_text(text, doc_id, manufacturer, tags)
-            if not chunks:
-                raise ValueError("文档内容过短，无法生成有效的文本块。")
+            if multimodal_chunks:
+                # Multimodal embedding path
+                await _update_status(session, doc_id, "embedding")
+                await knowledge_progress.push(doc_id, ProgressEvent(
+                    stage="embedding",
+                    message=f"正在多模态向量化 {len(multimodal_chunks)} 个页面..."
+                ))
 
-            await _update_status(session, doc_id, "embedding")
-            await knowledge_progress.push(doc_id, ProgressEvent(
-                stage="embedding", message=f"正在向量化 {len(chunks)} 个文本块..."
-            ))
+                await rag_engine.index_multimodal_chunks(
+                    multimodal_chunks, doc_id,
+                    {"manufacturer": manufacturer, "category_tags": tags},
+                )
+                await session.execute(
+                    update(KnowledgeDoc)
+                    .where(KnowledgeDoc.id == doc_id)
+                    .values(chunk_count=len(multimodal_chunks))
+                )
+                await session.commit()
+            else:
+                # Standard text embedding path
+                chunks = chunk_text(text, doc_id, manufacturer, tags)
+                if not chunks:
+                    raise ValueError("文档内容过短，无法生成有效的文本块。")
 
-            await rag_engine.index_chunks(chunks, doc_id, {"manufacturer": manufacturer, "category_tags": tags})
-            await session.execute(
-                update(KnowledgeDoc).where(KnowledgeDoc.id == doc_id).values(chunk_count=len(chunks))
-            )
-            await session.commit()
+                await _update_status(session, doc_id, "embedding")
+                await knowledge_progress.push(doc_id, ProgressEvent(
+                    stage="embedding", message=f"正在向量化 {len(chunks)} 个文本块..."
+                ))
 
-            await _update_status(session, doc_id, "graph_extracting")
-            await knowledge_progress.push(doc_id, ProgressEvent(
-                stage="graph_extracting", message="正在提取实体与关系图谱..."
-            ))
+                await rag_engine.index_chunks(chunks, doc_id, {"manufacturer": manufacturer, "category_tags": tags})
+                await session.execute(
+                    update(KnowledgeDoc).where(KnowledgeDoc.id == doc_id).values(chunk_count=len(chunks))
+                )
+                await session.commit()
 
-            await _extract_graph_knowledge(text[:20000], doc_id, session)
+            # Graph extraction: use concatenated page texts for multimodal PDFs
+            graph_text = text
+            if not graph_text and multimodal_chunks:
+                graph_text = "\n".join(c["content"] for c in multimodal_chunks if c["content"])
+
+            if graph_text.strip():
+                await _update_status(session, doc_id, "graph_extracting")
+                await knowledge_progress.push(doc_id, ProgressEvent(
+                    stage="graph_extracting", message="正在提取实体与关系图谱..."
+                ))
+
+                await _extract_graph_knowledge(graph_text[:20000], doc_id, session)
 
             await _update_status(session, doc_id, "ready")
             await knowledge_progress.push(doc_id, ProgressEvent(

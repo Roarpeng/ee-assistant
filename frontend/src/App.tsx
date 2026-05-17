@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { ThemeProvider } from '@mui/material/styles';
 import { AppLayout } from './views/components/AppLayout';
 import { HeroLanding } from './views/components/HeroLanding';
 import { useStore } from './models/store';
+import { lightTheme, darkTheme } from './theme/md3';
 
 const EXAMPLES = [
   '恒温水箱 PLC 控制系统, 需 PLd 安全等级',
@@ -15,29 +17,45 @@ export default function App() {
   const project = useStore((s) => s.project);
   const newProject = useStore((s) => s.newProject);
   const loadChatHistory = useStore((s) => s.loadChatHistory);
+  const themeMode = useStore((s) => s.theme);
 
-  // M1: bootstrap (or restore) the organization identity exactly once
-  // before any other API call goes out. `bootstrapOrg` is idempotent —
-  // if a token already exists in localStorage it just hydrates `org`.
+  // When true, show AppLayout directly with knowledge tab (no project needed)
+  const [forceKnowledge, setForceKnowledge] = useState(false);
+
   useEffect(() => {
     void useStore.getState().bootstrapOrg();
   }, []);
 
-  // Best-effort restore of the last project on cold boot so reloads don't kick
-  // the user back to the hero screen.
   useEffect(() => {
     if (!project) void loadChatHistory();
   }, [project, loadChatHistory]);
 
-  if (!project) {
+  // Direct entry to knowledge base — no project required
+  if (forceKnowledge) {
     return (
-      <HeroLanding
-        examples={EXAMPLES}
-        onSubmit={(prompt) => {
-          void newProject({ preserveCanvas: false, seedPrompt: prompt });
-        }}
-      />
+      <ThemeProvider theme={themeMode === 'dark' || themeMode === 'engineering' ? darkTheme : lightTheme}>
+        <AppLayout initialTab="knowledge" />
+      </ThemeProvider>
     );
   }
-  return <AppLayout />;
+
+  if (!project) {
+    return (
+      <ThemeProvider theme={themeMode === 'dark' || themeMode === 'engineering' ? darkTheme : lightTheme}>
+        <HeroLanding
+          examples={EXAMPLES}
+          onSubmit={(prompt) => {
+            void newProject({ preserveCanvas: false, seedPrompt: prompt });
+          }}
+          onOpenKnowledge={() => setForceKnowledge(true)}
+        />
+      </ThemeProvider>
+    );
+  }
+
+  return (
+    <ThemeProvider theme={themeMode === 'dark' || themeMode === 'engineering' ? darkTheme : lightTheme}>
+      <AppLayout />
+    </ThemeProvider>
+  );
 }

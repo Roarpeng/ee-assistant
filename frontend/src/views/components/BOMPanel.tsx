@@ -1,5 +1,29 @@
 import { useState } from 'react';
-import { Download, Search, Filter, ExternalLink, Info, ThumbsDown } from 'lucide-react';
+import {
+  FileDownload as FileDownloadIcon,
+  Search as SearchIcon,
+  FilterList as FilterListIcon,
+  Info as InfoIcon,
+  OpenInNew as OpenInNewIcon,
+  ThumbDown as ThumbDownAltIcon,
+} from '@mui/icons-material';
+import {
+  Box,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  Typography,
+  IconButton,
+  Button,
+  TextField,
+  InputAdornment,
+  alpha,
+} from '@mui/material';
 import { useStore } from '../../models/store';
 import { t } from '../../services/i18n';
 import { buildProcurementUrl } from '../../services/procurement';
@@ -69,129 +93,349 @@ export function BOMPanel() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col p-8 overflow-hidden rounded-[2.5rem] relative">
-      <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-indigo-600/10 rounded-full blur-[100px]" />
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        p: 4,
+        overflow: 'hidden',
+        borderRadius: 5,
+        position: 'relative',
+      }}
+    >
+      {/* Decorative blur */}
+      <Box
+        sx={{
+          position: 'absolute',
+          right: -80,
+          bottom: -80,
+          width: 320,
+          height: 320,
+          bgcolor: 'rgba(79, 70, 229, 0.1)',
+          borderRadius: '50%',
+          filter: 'blur(100px)',
+          pointerEvents: 'none',
+        }}
+      />
 
-      <div className="flex justify-between items-start mb-8 relative z-10">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full mb-3">
-            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+      {/* Header */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          mb: 4,
+          position: 'relative',
+          zIndex: 10,
+        }}
+      >
+        <Box>
+          <Box
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 1,
+              px: 1.5,
+              py: 0.5,
+              bgcolor: 'rgba(99, 102, 241, 0.1)',
+              border: 1,
+              borderColor: 'rgba(99, 102, 241, 0.2)',
+              borderRadius: 999,
+              mb: 1.5,
+            }}
+          >
+            <Typography
+              variant="labelSmall"
+              sx={{
+                color: 'primary.light',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+              }}
+            >
               {tr.bom.title}
-            </span>
-          </div>
-          <h2 className="text-3xl font-bold tracking-tight text-white">{tr.bom.title}</h2>
-        </div>
-        <div className="flex gap-3 mt-4">
-          <button className="flex items-center gap-2 px-6 py-3 bg-white text-black text-sm font-bold rounded-2xl shadow-sm hover:scale-105 active:scale-95 transition-all">
-            <Download className="w-4 h-4" />
-            {tr.bom.export}
-          </button>
-        </div>
-      </div>
+            </Typography>
+          </Box>
+          <Typography variant="headlineMedium" sx={{ fontWeight: 700 }}>
+            {tr.bom.title}
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          color="inherit"
+          startIcon={<FileDownloadIcon />}
+          sx={{
+            bgcolor: 'common.white',
+            color: 'common.black',
+            '&:hover': { bgcolor: 'grey.200' },
+            mt: 3,
+            fontWeight: 700,
+            fontSize: 14,
+          }}
+        >
+          {tr.bom.export}
+        </Button>
+      </Box>
 
-      <div className="flex justify-end gap-3 mb-6 relative z-10">
-        <button className="flex items-center gap-2 px-6 py-2.5 bg-neutral-800 border border-neutral-700 text-neutral-300 text-sm font-bold rounded-2xl hover:bg-neutral-700 transition-colors">
-          {tr.bom.filter} <Filter className="w-4 h-4" />
-        </button>
-        <div className="relative">
-          <Search className="w-4 h-4 text-neutral-500 absolute left-4 top-1/2 -translate-y-1/2" />
-          <input
-            id="bom-search"
-            name="bom-search"
-            type="text"
-            placeholder={tr.bom.search}
-            className="pl-12 pr-4 py-2.5 bg-neutral-800 border border-neutral-700 text-white text-sm font-medium rounded-2xl focus:outline-none focus:border-indigo-500 w-72"
-          />
-        </div>
-      </div>
+      {/* Search / Filter Bar */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 2,
+          mb: 3,
+          position: 'relative',
+          zIndex: 10,
+        }}
+      >
+        <Button
+          variant="outlined"
+          startIcon={<FilterListIcon />}
+          sx={{
+            borderRadius: 4,
+            fontWeight: 700,
+            fontSize: 13,
+            borderColor: 'divider',
+            color: 'text.secondary',
+          }}
+        >
+          {tr.bom.filter}
+        </Button>
+        <TextField
+          placeholder={tr.bom.search}
+          size="small"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: 'text.disabled', fontSize: 16 }} />
+              </InputAdornment>
+            ),
+            sx: {
+              borderRadius: 4,
+              bgcolor: 'action.hover',
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'divider',
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'text.disabled',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'primary.main',
+              },
+              fontSize: 14,
+              fontWeight: 500,
+            },
+          }}
+          sx={{ width: 288 }}
+        />
+      </Box>
 
-      <div className="flex-1 bg-neutral-950 border border-neutral-800 rounded-[2rem] overflow-hidden flex flex-col relative z-10 shadow-inner">
-        <div className="overflow-x-auto flex-1 custom-scrollbar">
-          <table className="w-full text-left text-sm text-neutral-300 whitespace-nowrap">
-            <thead className="bg-neutral-900 text-neutral-400 sticky top-0 z-10 border-b border-neutral-800">
-              <tr>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-indigo-400">{tr.bom.itemNo}</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">{tr.bom.component}</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">{tr.bom.manufacturer}</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">{tr.bom.partNo}</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">{tr.bom.qty}</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">{tr.bom.specs}</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">采购</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-800/50">
+      {/* Table */}
+      <Paper
+        variant="outlined"
+        sx={(theme) => ({
+          flex: 1,
+          overflow: 'hidden',
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+          zIndex: 10,
+          bgcolor: theme.palette.mode === 'dark' ? '#0a0a0a' : 'background.default',
+        })}
+      >
+        <TableContainer sx={{ flex: 1, overflow: 'auto' }} className="custom-scrollbar">
+          <Table stickyHeader size="small">
+            <TableHead>
+              <TableRow
+                sx={(theme) => ({
+                  bgcolor: theme.palette.mode === 'dark' ? '#171717' : 'grey.100',
+                  '& th': {
+                    px: 3,
+                    py: 1.5,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    color: 'primary.light',
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    bgcolor: theme.palette.mode === 'dark' ? '#171717' : 'grey.100',
+                  },
+                })}
+              >
+                <TableCell>{tr.bom.itemNo}</TableCell>
+                <TableCell>{tr.bom.component}</TableCell>
+                <TableCell>{tr.bom.manufacturer}</TableCell>
+                <TableCell>{tr.bom.partNo}</TableCell>
+                <TableCell>{tr.bom.qty}</TableCell>
+                <TableCell>{tr.bom.specs}</TableCell>
+                <TableCell>采购</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {bomData.map((item) => {
                 const proc = buildProcurementUrl({ manufacturer: item.mfg, model: item.pn });
                 return (
-                  <tr
+                  <TableRow
                     key={item.id}
-                    className={`hover:bg-neutral-800/50 transition-colors ${item.active ? 'bg-neutral-900' : ''}`}
+                    sx={(theme) => ({
+                      bgcolor: item.active
+                        ? theme.palette.mode === 'dark'
+                          ? alpha(theme.palette.common.white, 0.04)
+                          : alpha(theme.palette.common.black, 0.02)
+                        : 'transparent',
+                      '&:hover': {
+                        bgcolor:
+                          theme.palette.mode === 'dark'
+                            ? alpha(theme.palette.common.white, 0.06)
+                            : alpha(theme.palette.common.black, 0.04),
+                      },
+                      transition: 'background-color 200ms',
+                      '& td': {
+                        px: 3,
+                        py: 1.5,
+                        borderBottom: 1,
+                        borderColor: 'divider',
+                        fontSize: 13,
+                      },
+                    })}
                   >
-                    <td className="px-6 py-4 text-indigo-400 font-bold">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
+                    {/* Item No / Info button */}
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <IconButton
+                          size="small"
                           onClick={() => setPopoverFor(bomTriple(item))}
                           disabled={!projectId}
-                          aria-label={`查看 ${item.name} ${item.mfg} ${item.pn} 的记忆来源`}
                           data-testid={`bom-info-${item.id}`}
-                          className="text-app-text-tertiary hover:text-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          sx={{
+                            color: 'text.disabled',
+                            '&:hover': { color: 'primary.light' },
+                            '&.Mui-disabled': { opacity: 0.3 },
+                          }}
                           title="查看记忆来源 — 为什么 AI 推荐了这个型号"
                         >
-                          <Info className="w-4 h-4" />
-                        </button>
-                        <span>{item.id}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 font-medium">{item.name}</td>
-                    <td className="px-6 py-4 text-neutral-400">{item.mfg}</td>
-                    <td className="px-6 py-4 font-mono text-emerald-400">
-                      <span className="bg-emerald-500/10 inline-block mt-2 px-2.5 py-0.5 rounded-md text-xs font-bold">
-                        {item.pn}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-2.5 py-1 rounded-md bg-indigo-500/20 text-indigo-400 font-bold">
-                        {item.qty}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-neutral-400">{item.specs}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                          <InfoIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                        <Typography
+                          variant="bodyMedium"
+                          sx={{ color: 'primary.light', fontWeight: 700 }}
+                        >
+                          {item.id}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+
+                    {/* Component name */}
+                    <TableCell>
+                      <Typography variant="bodyMedium" sx={{ fontWeight: 500 }}>
+                        {item.name}
+                      </Typography>
+                    </TableCell>
+
+                    {/* Manufacturer */}
+                    <TableCell>
+                      <Typography variant="bodyMedium" color="text.secondary">
+                        {item.mfg}
+                      </Typography>
+                    </TableCell>
+
+                    {/* Part number chip */}
+                    <TableCell>
+                      <Chip
+                        label={item.pn}
+                        size="small"
+                        sx={{
+                          bgcolor: alpha('#10b981', 0.1),
+                          color: '#34d399',
+                          fontWeight: 700,
+                          fontFamily: '"JetBrains Mono", monospace',
+                          fontSize: 12,
+                          borderRadius: 1,
+                          height: 24,
+                        }}
+                      />
+                    </TableCell>
+
+                    {/* Qty chip */}
+                    <TableCell>
+                      <Chip
+                        label={item.qty}
+                        size="small"
+                        sx={{
+                          bgcolor: alpha('#6366f1', 0.2),
+                          color: 'primary.light',
+                          fontWeight: 700,
+                          borderRadius: 1,
+                          height: 28,
+                        }}
+                      />
+                    </TableCell>
+
+                    {/* Specs */}
+                    <TableCell>
+                      <Typography variant="bodyMedium" color="text.secondary">
+                        {item.specs}
+                      </Typography>
+                    </TableCell>
+
+                    {/* Procurement + Negative feedback */}
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         {proc ? (
-                          <a
+                          <Box
+                            component="a"
                             href={proc}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-app-accent hover:text-app-accent-hover text-xs font-mono"
+                            sx={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                              color: 'primary.main',
+                              fontSize: 12,
+                              fontFamily: '"JetBrains Mono", monospace',
+                              textDecoration: 'none',
+                              '&:hover': { color: 'primary.dark' },
+                            }}
                             title={`在供应商目录中查找 ${item.pn}`}
                           >
-                            查询 <ExternalLink className="w-3 h-3" />
-                          </a>
+                            查询
+                            <OpenInNewIcon sx={{ fontSize: 12 }} />
+                          </Box>
                         ) : (
-                          <span className="text-neutral-600 text-xs">—</span>
+                          <Typography variant="caption" color="text.disabled">
+                            &mdash;
+                          </Typography>
                         )}
-                        <button
-                          type="button"
+                        <IconButton
+                          size="small"
                           onClick={() => handleNegative(item)}
                           disabled={!projectId || negativeBusyId === item.id}
-                          aria-label={`这个选错了 — ${item.name} ${item.mfg} ${item.pn}`}
                           data-testid={`bom-negative-${item.id}`}
-                          className="text-neutral-500 hover:text-rose-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          sx={{
+                            color: 'text.disabled',
+                            '&:hover': { color: 'error.light' },
+                            '&.Mui-disabled': { opacity: 0.3 },
+                          }}
                           title="这个选错了 — 让 AI 下次别再推荐"
                         >
-                          <ThumbsDown className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                          <ThumbDownAltIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
 
+      {/* Memory source popover */}
       {popoverFor && projectId && (
         <MemorySourcePopover
           projectId={projectId}
@@ -201,6 +445,6 @@ export function BOMPanel() {
           onClose={() => setPopoverFor(null)}
         />
       )}
-    </div>
+    </Box>
   );
 }

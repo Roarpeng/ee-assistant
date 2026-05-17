@@ -34,6 +34,8 @@ export interface ProviderPreset {
   recommended_embed_models: string[];
   embed_supports_dimensions: boolean;
   embed_native_dim: number;
+  supports_multimodal_embed?: boolean;
+  multimodal_embed_models?: string[];
   docs_url?: string;
   notes?: string;
 }
@@ -101,10 +103,12 @@ export const FALLBACK_PROVIDERS: ProviderPreset[] = [
     recommended_embed_models: ['text-embedding-v3', 'text-embedding-v2'],
     embed_supports_dimensions: true,
     embed_native_dim: 1024,
+    supports_multimodal_embed: true,
+    multimodal_embed_models: ['qwen3-vl-embedding', 'tongyi-embedding-vision-plus', 'multimodal-embedding-v1'],
     docs_url:
       'https://help.aliyun.com/zh/model-studio/developer-reference/compatibility-of-openai-with-dashscope',
     notes:
-      'OpenAI-compatible. text-embedding-v3 supports dimensions up to 1024 (values >1024 will 400).',
+      'OpenAI-compatible. text-embedding-v3 supports dimensions up to 1024 (values >1024 will 400). Multimodal embedding available via native SDK.',
   },
   {
     id: 'volcengine',

@@ -1,6 +1,18 @@
-import { Settings, Sun, Moon, Languages } from 'lucide-react';
 import { useStore } from '../../models/store';
 import { t } from '../../services/i18n';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Box,
+  ToggleButtonGroup,
+  ToggleButton,
+} from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LanguageIcon from '@mui/icons-material/Language';
 
 export function Header({
   activeTab,
@@ -24,56 +36,203 @@ export function Header({
   ];
 
   return (
-    <header className="h-[72px] flex items-center justify-between px-8 bg-neutral-900 border border-neutral-800 rounded-[2.5rem] shrink-0 shadow-sm">
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-          <span className="text-white font-bold tracking-tighter text-sm">V</span>
-        </div>
-        <span className="text-xl font-bold tracking-tight uppercase">{tr.app.name}</span>
-      </div>
-
-      <nav className="flex bg-neutral-950 border border-neutral-800 rounded-full px-2 py-1.5 gap-2 text-sm font-bold text-neutral-500 h-[52px]">
-        {tabs.map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setActiveTab(id)}
-            className={`px-6 h-full flex items-center rounded-full transition-all tracking-wide ${
-              activeTab === id
-                ? 'bg-neutral-800 text-white shadow-sm'
-                : 'hover:text-white hover:bg-neutral-800/50'
-            }`}
+    <AppBar
+      position="static"
+      elevation={0}
+      sx={{
+        bgcolor: 'background.paper',
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: '2.5rem',
+        height: 72,
+        flexShrink: 0,
+        justifyContent: 'center',
+        px: 3,
+      }}
+    >
+      <Toolbar disableGutters sx={{ minHeight: 'auto !important', height: '100%' }}>
+        {/* Left: Brand */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              bgcolor: 'primary.main',
+              borderRadius: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 6px -1px rgba(79,70,229,0.2)',
+            }}
           >
-            {label}
-          </button>
-        ))}
-      </nav>
+            <Typography
+              sx={{
+                color: 'primary.contrastText',
+                fontWeight: 700,
+                letterSpacing: '-0.05em',
+                fontSize: '0.875rem',
+                lineHeight: 1,
+              }}
+            >
+              V
+            </Typography>
+          </Box>
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            letterSpacing="-0.025em"
+            textTransform="uppercase"
+            sx={{ color: 'text.primary' }}
+          >
+            {tr.app.name}
+          </Typography>
+        </Box>
 
-      <div className="flex items-center gap-4">
-        <div className="px-4 py-2 bg-neutral-800/50 rounded-full text-xs font-bold text-indigo-400 border border-indigo-500/20 uppercase tracking-widest hidden lg:block">
-          {tr.header.version}
-        </div>
-        <button
-          onClick={toggleLanguage}
-          className="w-10 h-10 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
-          title={language === 'zh' ? 'Switch to English' : '切换到中文'}
+        {/* Spacer */}
+        <Box sx={{ flex: 1 }} />
+
+        {/* Center: Nav tabs */}
+        <ToggleButtonGroup
+          value={activeTab}
+          exclusive
+          onChange={(_, val) => {
+            if (val !== null) setActiveTab(val);
+          }}
+          size="small"
+          sx={{
+            bgcolor: 'background.default',
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: '999px',
+            px: 0.5,
+            py: 0.25,
+            gap: 0.5,
+            height: 52,
+            '& .MuiToggleButton-root': {
+              border: 'none',
+              borderRadius: '999px',
+              px: 3,
+              py: 0,
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              color: 'text.disabled',
+              height: '100%',
+              '&.Mui-selected': {
+                bgcolor: 'surfaceContainerHigh',
+                color: 'text.primary',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                '&:hover': { bgcolor: 'surfaceContainerHigh' },
+              },
+              '&:hover': {
+                color: 'text.primary',
+                bgcolor: 'action.hover',
+              },
+            },
+          }}
         >
-          <Languages className="w-4 h-4" />
-          <span className="text-[10px] font-bold ml-0.5">{language === 'zh' ? 'EN' : '中'}</span>
-        </button>
-        <button
-          onClick={toggleTheme}
-          className="w-10 h-10 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
-          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-        </button>
-        <button
-          onClick={onOpenSettings}
-          className="w-10 h-10 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
-        >
-          <Settings className="w-5 h-5" />
-        </button>
-      </div>
-    </header>
+          {tabs.map(([id, label]) => (
+            <ToggleButton key={id} value={id} aria-label={label}>
+              {label}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+
+        {/* Spacer */}
+        <Box sx={{ flex: 1 }} />
+
+        {/* Right: Actions */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box
+            sx={{
+              display: { xs: 'none', lg: 'flex' },
+              alignItems: 'center',
+              px: 2,
+              py: 0.75,
+              bgcolor: 'action.hover',
+              borderRadius: '999px',
+              border: 1,
+              borderColor: 'primary.main',
+              borderOpacity: 0.2,
+            }}
+          >
+            <Typography
+              variant="caption"
+              fontWeight={700}
+              textTransform="uppercase"
+              letterSpacing="0.1em"
+              sx={{ color: 'primary.main', fontSize: '0.65rem' }}
+            >
+              {tr.header.version}
+            </Typography>
+          </Box>
+
+          <IconButton
+            onClick={toggleLanguage}
+            size="small"
+            title={language === 'zh' ? 'Switch to English' : '切换到中文'}
+            sx={{
+              width: 40,
+              height: 40,
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: '50%',
+              color: 'text.secondary',
+              '&:hover': { color: 'text.primary', bgcolor: 'action.hover' },
+            }}
+          >
+            <LanguageIcon sx={{ fontSize: 16 }} />
+            <Typography
+              component="span"
+              sx={{
+                fontSize: '0.625rem',
+                fontWeight: 700,
+                ml: 0.25,
+                color: 'inherit',
+              }}
+            >
+              {language === 'zh' ? 'EN' : '中'}
+            </Typography>
+          </IconButton>
+
+          <IconButton
+            onClick={toggleTheme}
+            size="small"
+            title={`Switch to ${theme === 'light' ? 'dark' : theme === 'dark' ? 'engineering' : 'light'} mode`}
+            sx={{
+              width: 40,
+              height: 40,
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: '50%',
+              color: 'text.secondary',
+              '&:hover': { color: 'text.primary', bgcolor: 'action.hover' },
+            }}
+          >
+            {theme === 'light' ? (
+              <DarkModeIcon sx={{ fontSize: 16 }} />
+            ) : (
+              <LightModeIcon sx={{ fontSize: 16 }} />
+            )}
+          </IconButton>
+
+          <IconButton
+            onClick={onOpenSettings}
+            size="small"
+            sx={{
+              width: 40,
+              height: 40,
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: '50%',
+              color: 'text.secondary',
+              '&:hover': { color: 'text.primary', bgcolor: 'action.hover' },
+            }}
+          >
+            <SettingsIcon sx={{ fontSize: 20 }} />
+          </IconButton>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 }

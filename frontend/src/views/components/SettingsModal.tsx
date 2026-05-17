@@ -1,21 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import {
-  X,
-  Cpu,
-  Database,
-  Eye,
-  EyeOff,
-  Key,
-  Link,
-  Box,
-  Hash,
-  Thermometer,
-  Ruler,
-  Zap,
-  CheckCircle,
-  XCircle,
-  Server,
-} from 'lucide-react';
 import { useStore, type AppSettings, type ProviderId } from '../../models/store';
 import { t } from '../../services/i18n';
 import { api } from '../../services/api';
@@ -25,6 +8,36 @@ import {
   FALLBACK_PROVIDERS,
   type ProviderPreset,
 } from '../../services/llmProviders';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import IconButton from '@mui/material/IconButton';
+import Slider from '@mui/material/Slider';
+import InputAdornment from '@mui/material/InputAdornment';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import CloseIcon from '@mui/icons-material/Close';
+import MemoryIcon from '@mui/icons-material/Memory';
+import StorageIcon from '@mui/icons-material/Storage';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import LinkIcon from '@mui/icons-material/Link';
+import WidgetsIcon from '@mui/icons-material/Widgets';
+import TagIcon from '@mui/icons-material/Tag';
+import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
+import StraightenIcon from '@mui/icons-material/Straighten';
+import BoltIcon from '@mui/icons-material/Bolt';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import DnsIcon from '@mui/icons-material/Dns';
 
 type Props = { isOpen: boolean; onClose: () => void };
 
@@ -191,382 +204,567 @@ export function SettingsModal({ isOpen, onClose }: Props) {
     }
   };
 
-  if (!isOpen) return null;
-
-  const inputClass =
-    'w-full bg-neutral-950 border border-neutral-800 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-neutral-600';
-
   const renderProviderLabel = (p: ProviderPreset) =>
     language === 'zh' ? p.label : p.label_en || p.label;
 
   const dimensionLocked =
     embPreset !== null && embPreset.id !== 'custom' && !embPreset.embed_supports_dimensions;
 
-  return (
-    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-neutral-900 border border-neutral-800 rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-        <div className="flex justify-between items-center p-6 border-b border-neutral-800 shrink-0">
-          <h2 className="text-xl font-bold text-white tracking-tight">{tr.settings.title}</h2>
-          <button
-            onClick={onClose}
-            className="p-2 text-neutral-500 hover:text-white bg-neutral-800 rounded-full transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+  // Shared sx for consistent input styling
+  const textFieldSx = {
+    '& .MuiOutlinedInput-root': {
+      bgcolor: '#030712',
+      borderRadius: 2,
+      '& fieldset': { borderColor: 'divider' },
+      '&:hover fieldset': { borderColor: 'primary.main' },
+      '&.Mui-focused fieldset': { borderColor: 'primary.main' },
+    },
+    '& .MuiInputBase-input': {
+      color: '#fff',
+      fontSize: '0.875rem',
+      '&::placeholder': { color: 'text.disabled', opacity: 1 },
+    },
+  };
 
-        <div className="p-6 space-y-8 overflow-y-auto custom-scrollbar flex-1">
+  const labelSx = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 0.5,
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    color: 'text.disabled',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    mb: 0.5,
+  };
+
+  return (
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 4,
+          bgcolor: 'background.paper',
+          border: '1px solid',
+          borderColor: 'divider',
+          maxHeight: '85vh',
+          backgroundImage: 'none',
+        },
+      }}
+    >
+      {/* Title */}
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 3, py: 2.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', letterSpacing: '-0.025em' }}>
+          {tr.settings.title}
+        </Typography>
+        <IconButton onClick={onClose} size="small" sx={{ color: 'text.disabled', bgcolor: 'background.default', '&:hover': { color: 'text.primary' } }}>
+          <CloseIcon sx={{ fontSize: 18 }} />
+        </IconButton>
+      </DialogTitle>
+
+      {/* Content */}
+      <DialogContent sx={{ px: 3, py: 3, '&::-webkit-scrollbar': { width: 6 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 3 } }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {/* ===== Chat Model ===== */}
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Cpu className="w-5 h-5 text-indigo-400" />
-              <h3 className="text-sm font-bold text-neutral-200 uppercase tracking-wider">{tr.settings.chatModel}</h3>
-            </div>
+          <Box component="section">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <MemoryIcon sx={{ fontSize: 20, color: 'primary.light' }} />
+              <Typography sx={{ fontSize: '0.875rem', fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {tr.settings.chatModel}
+              </Typography>
+            </Box>
 
             {/* Provider dropdown */}
-            <div className="space-y-1.5">
-              <label
-                htmlFor="chat-provider"
-                className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider"
-              >
-                <Server className="w-3 h-3" /> {tr.settings.provider}
-              </label>
-              <select
-                id="chat-provider"
-                name="chat-provider"
+            <Box sx={{ mb: 2 }}>
+              <Typography sx={labelSx}>
+                <DnsIcon sx={{ fontSize: 14 }} /> {tr.settings.provider}
+              </Typography>
+              <Select
                 value={chatProvider}
                 onChange={(e) => handleSelectChatProvider(e.target.value as ProviderId)}
-                className={inputClass}
+                fullWidth
+                size="small"
+                sx={{
+                  bgcolor: '#030712',
+                  color: '#fff',
+                  borderRadius: 2,
+                  fontSize: '0.875rem',
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
+                  '& .MuiSelect-icon': { color: 'text.disabled' },
+                }}
               >
                 {providers.map((p) => (
-                  <option key={p.id} value={p.id}>
+                  <MenuItem key={p.id} value={p.id} sx={{ fontSize: '0.875rem' }}>
                     {renderProviderLabel(p)}
-                  </option>
+                  </MenuItem>
                 ))}
-              </select>
-              <p className="text-[11px] text-neutral-500 leading-snug">
+              </Select>
+              <Typography sx={{ fontSize: '0.6875rem', color: 'text.disabled', mt: 0.5, lineHeight: 1.3 }}>
                 {chatPreset?.notes && chatProvider !== 'custom'
                   ? chatPreset.notes
                   : tr.settings.providerHint}
-              </p>
-            </div>
+              </Typography>
+            </Box>
 
-            <div className="space-y-1.5">
-              <label htmlFor="chat-api-key" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                <Key className="w-3 h-3" /> {tr.settings.apiKey}
-              </label>
-              <div className="relative">
-                <input
-                  id="chat-api-key"
-                  name="chat-api-key"
-                  type={showChatKey ? 'text' : 'password'}
-                  value={chatApiKey}
-                  onChange={(e) => setChatApiKey(e.target.value)}
-                  placeholder="sk-..."
-                  className={`${inputClass} pr-12`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowChatKey(!showChatKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
-                >
-                  {showChatKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
+            {/* API Key */}
+            <Box sx={{ mb: 2 }}>
+              <Typography sx={labelSx}>
+                <VpnKeyIcon sx={{ fontSize: 14 }} /> {tr.settings.apiKey}
+              </Typography>
+              <TextField
+                type={showChatKey ? 'text' : 'password'}
+                value={chatApiKey}
+                onChange={(e) => setChatApiKey(e.target.value)}
+                placeholder="sk-..."
+                fullWidth
+                size="small"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowChatKey(!showChatKey)}
+                        edge="end"
+                        size="small"
+                        sx={{ color: 'text.disabled', '&:hover': { color: 'text.secondary' } }}
+                      >
+                        {showChatKey ? <VisibilityOffIcon sx={{ fontSize: 18 }} /> : <VisibilityIcon sx={{ fontSize: 18 }} />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={textFieldSx}
+              />
+            </Box>
 
-            <div className="space-y-1.5">
-              <label htmlFor="chat-base-url" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                <Link className="w-3 h-3" /> {tr.settings.baseUrl}
-              </label>
-              <input
-                id="chat-base-url"
-                name="chat-base-url"
-                type="text"
+            {/* Base URL */}
+            <Box sx={{ mb: 2 }}>
+              <Typography sx={labelSx}>
+                <LinkIcon sx={{ fontSize: 14 }} /> {tr.settings.baseUrl}
+              </Typography>
+              <TextField
                 value={chatBaseUrl}
                 onChange={(e) => setChatBaseUrl(e.target.value)}
                 placeholder="https://api.openai.com/v1"
-                className={inputClass}
+                fullWidth
+                size="small"
+                sx={textFieldSx}
               />
-            </div>
+            </Box>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label htmlFor="chat-model" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                  <Box className="w-3 h-3" /> {tr.settings.modelName}
-                </label>
-                <input
-                  id="chat-model"
-                  name="chat-model"
-                  type="text"
+            {/* Model name + Max tokens grid */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+              <Box>
+                <Typography sx={labelSx}>
+                  <WidgetsIcon sx={{ fontSize: 14 }} /> {tr.settings.modelName}
+                </Typography>
+                <TextField
                   value={chatModel}
                   onChange={(e) => setChatModel(e.target.value)}
                   placeholder="gpt-4o"
-                  className={inputClass}
+                  fullWidth
+                  size="small"
+                  sx={textFieldSx}
                 />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="chat-max-tokens" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                  <Hash className="w-3 h-3" /> {tr.settings.maxTokens}
-                </label>
-                <input
-                  id="chat-max-tokens"
-                  name="chat-max-tokens"
+              </Box>
+              <Box>
+                <Typography sx={labelSx}>
+                  <TagIcon sx={{ fontSize: 14 }} /> {tr.settings.maxTokens}
+                </Typography>
+                <TextField
                   type="number"
-                  min={256}
-                  max={32768}
-                  step={256}
                   value={chatMaxTokens}
                   onChange={(e) => setChatMaxTokens(Number(e.target.value))}
-                  className={inputClass}
+                  inputProps={{ min: 256, max: 32768, step: 256 }}
+                  fullWidth
+                  size="small"
+                  sx={textFieldSx}
                 />
-              </div>
-            </div>
+              </Box>
+            </Box>
 
-            {/* Recommended chat models — one-click model swap */}
+            {/* Recommended chat models */}
             {chatPreset && chatPreset.recommended_chat_models.length > 0 && (
-              <div className="space-y-1.5">
-                <p className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
+              <Box sx={{ mb: 2 }}>
+                <Typography sx={{ fontSize: '0.6875rem', fontWeight: 700, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 0.75 }}>
                   {tr.settings.recommendedModels}
-                </p>
-                <div className="flex flex-wrap gap-1.5">
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
                   {chatPreset.recommended_chat_models.map((m) => {
                     const active = m === chatModel;
                     return (
-                      <button
+                      <Button
                         key={m}
-                        type="button"
+                        size="small"
                         onClick={() => setChatModel(m)}
-                        className={
-                          'text-[11px] font-mono px-2 py-1 rounded-md border transition-colors ' +
-                          (active
-                            ? 'bg-indigo-500/15 border-indigo-500/40 text-indigo-300'
-                            : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-neutral-200')
-                        }
+                        sx={{
+                          fontSize: '0.6875rem',
+                          fontFamily: '"JetBrains Mono", monospace',
+                          px: 1,
+                          py: 0.25,
+                          minWidth: 0,
+                          borderRadius: 1,
+                          border: '1px solid',
+                          transition: 'all 0.2s',
+                          ...(active
+                            ? { bgcolor: 'rgba(129,140,248,0.12)', borderColor: 'rgba(129,140,248,0.4)', color: 'primary.light' }
+                            : { bgcolor: '#030712', borderColor: 'divider', color: 'text.disabled', '&:hover': { borderColor: 'text.disabled', color: 'text.secondary' } }
+                          ),
+                        }}
                       >
                         {m}
-                      </button>
+                      </Button>
                     );
                   })}
-                </div>
-              </div>
+                </Box>
+              </Box>
             )}
 
-            <div className="space-y-1.5">
-              <label htmlFor="chat-temp" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                <Thermometer className="w-3 h-3" /> {tr.settings.temperature}
-                <span className="ml-auto text-indigo-400">{chatTemperature.toFixed(1)}</span>
-              </label>
-              <input
-                id="chat-temp"
-                name="chat-temp"
-                type="range"
+            {/* Temperature */}
+            <Box sx={{ mb: 1 }}>
+              <Typography sx={{ ...labelSx, mb: 0.5 }}>
+                <DeviceThermostatIcon sx={{ fontSize: 14 }} /> {tr.settings.temperature}
+                <Typography component="span" sx={{ ml: 'auto', fontSize: '0.75rem', color: 'primary.light', fontWeight: 700 }}>
+                  {chatTemperature.toFixed(1)}
+                </Typography>
+              </Typography>
+              <Slider
+                value={chatTemperature}
+                onChange={(_, val) => setChatTemperature(val as number)}
                 min={0}
                 max={2}
                 step={0.1}
-                value={chatTemperature}
-                onChange={(e) => setChatTemperature(Number(e.target.value))}
-                className="w-full h-2 bg-neutral-800 rounded-full appearance-none cursor-pointer accent-indigo-500"
+                sx={{
+                  color: 'primary.main',
+                  '& .MuiSlider-thumb': { width: 16, height: 16 },
+                  '& .MuiSlider-track': { height: 6, borderRadius: 3 },
+                  '& .MuiSlider-rail': { height: 6, borderRadius: 3, bgcolor: 'background.default' },
+                }}
               />
-              <div className="flex justify-between text-[10px] text-neutral-600">
-                <span>0 · 精确</span>
-                <span>1 · 平衡</span>
-                <span>2 · 创造</span>
-              </div>
-            </div>
-            <p className="text-xs text-neutral-500 font-medium">{tr.settings.chatDesc}</p>
-          </section>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography sx={{ fontSize: '0.625rem', color: 'text.disabled' }}>0 · 精确</Typography>
+                <Typography sx={{ fontSize: '0.625rem', color: 'text.disabled' }}>1 · 平衡</Typography>
+                <Typography sx={{ fontSize: '0.625rem', color: 'text.disabled' }}>2 · 创造</Typography>
+              </Box>
+            </Box>
 
-          <div className="border-t border-neutral-800" />
+            <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', fontWeight: 500, mt: 1 }}>
+              {tr.settings.chatDesc}
+            </Typography>
+          </Box>
+
+          <Box sx={{ borderTop: '1px solid', borderColor: 'divider' }} />
 
           {/* ===== Embedding Model ===== */}
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Database className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-sm font-bold text-neutral-200 uppercase tracking-wider">{tr.settings.embeddingModel}</h3>
-            </div>
+          <Box component="section">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <StorageIcon sx={{ fontSize: 20, color: '#34D399' }} />
+              <Typography sx={{ fontSize: '0.875rem', fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {tr.settings.embeddingModel}
+              </Typography>
+            </Box>
 
             {/* Provider dropdown */}
-            <div className="space-y-1.5">
-              <label
-                htmlFor="emb-provider"
-                className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider"
-              >
-                <Server className="w-3 h-3" /> {tr.settings.provider}
-              </label>
-              <select
-                id="emb-provider"
-                name="emb-provider"
+            <Box sx={{ mb: 2 }}>
+              <Typography sx={labelSx}>
+                <DnsIcon sx={{ fontSize: 14 }} /> {tr.settings.provider}
+              </Typography>
+              <Select
                 value={embProvider}
                 onChange={(e) => handleSelectEmbProvider(e.target.value as ProviderId)}
-                className={inputClass}
+                fullWidth
+                size="small"
+                sx={{
+                  bgcolor: '#030712',
+                  color: '#fff',
+                  borderRadius: 2,
+                  fontSize: '0.875rem',
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
+                  '& .MuiSelect-icon': { color: 'text.disabled' },
+                }}
               >
                 {providers.map((p) => (
-                  <option key={p.id} value={p.id}>
+                  <MenuItem key={p.id} value={p.id} sx={{ fontSize: '0.875rem' }}>
                     {renderProviderLabel(p)}
-                  </option>
+                  </MenuItem>
                 ))}
-              </select>
-              <p className="text-[11px] text-neutral-500 leading-snug">
+              </Select>
+              <Typography sx={{ fontSize: '0.6875rem', color: 'text.disabled', mt: 0.5, lineHeight: 1.3 }}>
                 {embPreset?.notes && embProvider !== 'custom'
                   ? embPreset.notes
                   : tr.settings.providerHint}
-              </p>
-            </div>
+              </Typography>
+            </Box>
 
-            <div className="space-y-1.5">
-              <label htmlFor="emb-api-key" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                <Key className="w-3 h-3" /> {tr.settings.apiKey}
-              </label>
-              <div className="relative">
-                <input
-                  id="emb-api-key"
-                  name="emb-api-key"
-                  type={showEmbKey ? 'text' : 'password'}
-                  value={embApiKey}
-                  onChange={(e) => setEmbApiKey(e.target.value)}
-                  placeholder="sk-..."
-                  className={`${inputClass} pr-12`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowEmbKey(!showEmbKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
-                >
-                  {showEmbKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
+            {/* API Key */}
+            <Box sx={{ mb: 2 }}>
+              <Typography sx={labelSx}>
+                <VpnKeyIcon sx={{ fontSize: 14 }} /> {tr.settings.apiKey}
+              </Typography>
+              <TextField
+                type={showEmbKey ? 'text' : 'password'}
+                value={embApiKey}
+                onChange={(e) => setEmbApiKey(e.target.value)}
+                placeholder="sk-..."
+                fullWidth
+                size="small"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowEmbKey(!showEmbKey)}
+                        edge="end"
+                        size="small"
+                        sx={{ color: 'text.disabled', '&:hover': { color: 'text.secondary' } }}
+                      >
+                        {showEmbKey ? <VisibilityOffIcon sx={{ fontSize: 18 }} /> : <VisibilityIcon sx={{ fontSize: 18 }} />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={textFieldSx}
+              />
+            </Box>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label htmlFor="emb-base-url" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                  <Link className="w-3 h-3" /> {tr.settings.baseUrl}
-                </label>
-                <input
-                  id="emb-base-url"
-                  name="emb-base-url"
-                  type="text"
+            {/* Base URL + Dimension grid */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+              <Box>
+                <Typography sx={labelSx}>
+                  <LinkIcon sx={{ fontSize: 14 }} /> {tr.settings.baseUrl}
+                </Typography>
+                <TextField
                   value={embBaseUrl}
                   onChange={(e) => setEmbBaseUrl(e.target.value)}
                   placeholder="https://api.openai.com/v1"
-                  className={inputClass}
+                  fullWidth
+                  size="small"
+                  sx={textFieldSx}
                 />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="emb-dimension" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                  <Ruler className="w-3 h-3" /> {tr.settings.dimension}
-                </label>
-                <input
-                  id="emb-dimension"
-                  name="emb-dimension"
+              </Box>
+              <Box>
+                <Typography sx={labelSx}>
+                  <StraightenIcon sx={{ fontSize: 14 }} /> {tr.settings.dimension}
+                </Typography>
+                <TextField
                   type="number"
-                  min={128}
-                  max={8192}
-                  step={128}
                   value={embDimension}
                   onChange={(e) => setEmbDimension(Number(e.target.value))}
                   disabled={dimensionLocked}
-                  className={
-                    inputClass +
-                    (dimensionLocked ? ' opacity-50 cursor-not-allowed' : '')
-                  }
+                  inputProps={{ min: 128, max: 8192, step: 128 }}
+                  fullWidth
+                  size="small"
+                  sx={{
+                    ...textFieldSx,
+                    ...(dimensionLocked ? { '& .MuiInputBase-root': { opacity: 0.5 } } : {}),
+                  }}
                 />
                 {dimensionLocked && embPreset && (
-                  <p className="text-[10px] text-amber-400/80 leading-snug">
+                  <Typography sx={{ fontSize: '0.625rem', color: 'rgba(251,191,36,0.8)', mt: 0.25, lineHeight: 1.3 }}>
                     {tr.settings.dimensionLocked(embPreset.embed_native_dim)}
-                  </p>
+                  </Typography>
                 )}
-              </div>
-            </div>
+              </Box>
+            </Box>
 
-            <div className="space-y-1.5">
-              <label htmlFor="emb-model" className="flex items-center gap-1.5 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                <Box className="w-3 h-3" /> {tr.settings.modelName}
-              </label>
-              <input
-                id="emb-model"
-                name="emb-model"
-                type="text"
+            {/* Model name */}
+            <Box sx={{ mb: 2 }}>
+              <Typography sx={labelSx}>
+                <WidgetsIcon sx={{ fontSize: 14 }} /> {tr.settings.modelName}
+              </Typography>
+              <TextField
                 value={embModel}
                 onChange={(e) => setEmbModel(e.target.value)}
                 placeholder="text-embedding-3-small"
-                className={inputClass}
+                fullWidth
+                size="small"
+                sx={textFieldSx}
               />
-            </div>
+            </Box>
 
             {/* Recommended embedding models */}
             {embPreset && embPreset.recommended_embed_models.length > 0 && (
-              <div className="space-y-1.5">
-                <p className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
+              <Box sx={{ mb: 2 }}>
+                <Typography sx={{ fontSize: '0.6875rem', fontWeight: 700, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 0.75 }}>
                   {tr.settings.recommendedModels}
-                </p>
-                <div className="flex flex-wrap gap-1.5">
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
                   {embPreset.recommended_embed_models.map((m) => {
                     const active = m === embModel;
                     return (
-                      <button
+                      <Button
                         key={m}
-                        type="button"
+                        size="small"
                         onClick={() => setEmbModel(m)}
-                        className={
-                          'text-[11px] font-mono px-2 py-1 rounded-md border transition-colors ' +
-                          (active
-                            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
-                            : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-neutral-200')
-                        }
+                        sx={{
+                          fontSize: '0.6875rem',
+                          fontFamily: '"JetBrains Mono", monospace',
+                          px: 1,
+                          py: 0.25,
+                          minWidth: 0,
+                          borderRadius: 1,
+                          border: '1px solid',
+                          transition: 'all 0.2s',
+                          ...(active
+                            ? { bgcolor: 'rgba(16,185,129,0.12)', borderColor: 'rgba(16,185,129,0.4)', color: '#34D399' }
+                            : { bgcolor: '#030712', borderColor: 'divider', color: 'text.disabled', '&:hover': { borderColor: 'text.disabled', color: 'text.secondary' } }
+                          ),
+                        }}
                       >
                         {m}
-                      </button>
+                      </Button>
                     );
                   })}
-                </div>
-              </div>
+                </Box>
+              </Box>
             )}
 
-            <p className="text-xs text-neutral-500 font-medium">{tr.settings.embedDesc}</p>
-          </section>
-        </div>
+            {/* Multimodal embedding models */}
+            {embPreset && embPreset.supports_multimodal_embed && (embPreset.multimodal_embed_models || []).length > 0 && (
+              <Box sx={{ mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
+                  <VisibilityIcon sx={{ fontSize: 14, color: '#C084FC' }} />
+                  <Typography sx={{ fontSize: '0.6875rem', fontWeight: 700, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Multimodal Embedding
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                  {embPreset.multimodal_embed_models!.map((m) => {
+                    const active = m === embModel;
+                    return (
+                      <Button
+                        key={m}
+                        size="small"
+                        onClick={() => setEmbModel(m)}
+                        sx={{
+                          fontSize: '0.6875rem',
+                          fontFamily: '"JetBrains Mono", monospace',
+                          px: 1,
+                          py: 0.25,
+                          minWidth: 0,
+                          borderRadius: 1,
+                          border: '1px solid',
+                          transition: 'all 0.2s',
+                          ...(active
+                            ? { bgcolor: 'rgba(168,85,247,0.12)', borderColor: 'rgba(168,85,247,0.4)', color: '#C084FC' }
+                            : { bgcolor: '#030712', borderColor: 'divider', color: 'text.disabled', '&:hover': { borderColor: 'text.disabled', color: 'text.secondary' } }
+                          ),
+                        }}
+                      >
+                        {m}
+                      </Button>
+                    );
+                  })}
+                </Box>
+                <Typography sx={{ fontSize: '0.625rem', color: 'text.disabled', mt: 0.5 }}>
+                  使用 DashScope 原生 SDK，支持文本+图像多模态向量化
+                </Typography>
+              </Box>
+            )}
+
+            <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', fontWeight: 500 }}>
+              {tr.settings.embedDesc}
+            </Typography>
+          </Box>
+        </Box>
 
         {/* Test results */}
         {testResult && (
-          <div className="px-6 pt-2 border-t border-neutral-800 shrink-0 space-y-1.5">
-            <div className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg ${testResult.chat.ok ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-              {testResult.chat.ok ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-              <span className="font-medium">Chat</span>
-              <span className="ml-auto">{testResult.chat.ok ? `${tr.settings.testOk} · ${testResult.chat.model || ''}` : `${tr.settings.testFail} · ${testResult.chat.error}`}</span>
-            </div>
-            <div className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg ${testResult.embedding.ok ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-              {testResult.embedding.ok ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-              <span className="font-medium">Embedding</span>
-              <span className="ml-auto">{testResult.embedding.ok ? `${tr.settings.testOk} · ${testResult.embedding.dimension}d` : `${tr.settings.testFail} · ${testResult.embedding.error}`}</span>
-            </div>
-          </div>
+          <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Alert
+              severity={testResult.chat.ok ? 'success' : 'error'}
+              icon={testResult.chat.ok ? <CheckCircleIcon sx={{ fontSize: 18 }} /> : <CancelIcon sx={{ fontSize: 18 }} />}
+              sx={{
+                borderRadius: 2,
+                bgcolor: testResult.chat.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                color: testResult.chat.ok ? '#34D399' : '#F87171',
+                '& .MuiAlert-icon': { color: 'inherit' },
+              }}
+            >
+              <AlertTitle sx={{ fontSize: '0.75rem', fontWeight: 700, mb: 0 }}>Chat</AlertTitle>
+              <Typography sx={{ fontSize: '0.75rem' }}>
+                {testResult.chat.ok
+                  ? `${tr.settings.testOk} · ${testResult.chat.model || ''}`
+                  : `${tr.settings.testFail} · ${testResult.chat.error}`}
+              </Typography>
+            </Alert>
+            <Alert
+              severity={testResult.embedding.ok ? 'success' : 'error'}
+              icon={testResult.embedding.ok ? <CheckCircleIcon sx={{ fontSize: 18 }} /> : <CancelIcon sx={{ fontSize: 18 }} />}
+              sx={{
+                borderRadius: 2,
+                bgcolor: testResult.embedding.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                color: testResult.embedding.ok ? '#34D399' : '#F87171',
+                '& .MuiAlert-icon': { color: 'inherit' },
+              }}
+            >
+              <AlertTitle sx={{ fontSize: '0.75rem', fontWeight: 700, mb: 0 }}>Embedding</AlertTitle>
+              <Typography sx={{ fontSize: '0.75rem' }}>
+                {testResult.embedding.ok
+                  ? `${tr.settings.testOk} · ${testResult.embedding.dimension}d`
+                  : `${tr.settings.testFail} · ${testResult.embedding.error}`}
+              </Typography>
+            </Alert>
+          </Box>
         )}
+      </DialogContent>
 
-        <div className="p-6 border-t border-neutral-800 bg-neutral-950/50 shrink-0 flex gap-3">
-          <button
-            onClick={handleTest}
-            disabled={testing}
-            className="py-3 px-4 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 text-neutral-300 text-sm font-bold rounded-xl transition-colors flex items-center gap-1.5"
-          >
-            <Zap className={`w-4 h-4 ${testing ? 'animate-pulse text-yellow-400' : ''}`} />
-            {testing ? tr.settings.testing : tr.settings.testConn}
-          </button>
-          <button
+      {/* Actions */}
+      <DialogActions sx={{ justifyContent: 'space-between', px: 3, py: 2.5, borderTop: '1px solid', borderColor: 'divider', bgcolor: 'rgba(15,23,42,0.5)' }}>
+        <Button
+          onClick={handleTest}
+          disabled={testing}
+          startIcon={<BoltIcon sx={{ fontSize: 16 }} />}
+          variant="text"
+          sx={{
+            fontWeight: 700,
+            fontSize: '0.875rem',
+            color: 'text.secondary',
+            bgcolor: 'background.paper',
+            '&:hover': { bgcolor: 'action.hover' },
+            '&.Mui-disabled': { opacity: 0.5 },
+          }}
+        >
+          {testing ? tr.settings.testing : tr.settings.testConn}
+        </Button>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Button
             onClick={onClose}
-            className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-sm font-bold rounded-xl transition-colors"
+            variant="text"
+            sx={{
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              px: 3,
+              py: 1,
+              color: 'text.secondary',
+              bgcolor: 'background.paper',
+              '&:hover': { bgcolor: 'action.hover' },
+            }}
           >
             {tr.settings.cancel}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSave}
-            className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            variant="contained"
+            sx={{
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              px: 4,
+              py: 1,
+              boxShadow: '0 4px 6px -1px rgba(79,70,229,0.2)',
+              '&:hover': { transform: 'scale(1.02)' },
+              '&:active': { transform: 'scale(0.98)' },
+            }}
           >
             {tr.settings.save}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </Box>
+      </DialogActions>
+    </Dialog>
   );
 }

@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { Box, Typography } from '@mui/material';
 import { Handle, Position } from 'reactflow';
 
 // Color tokens per electrical-circuit category — kept in sync with
@@ -35,12 +36,8 @@ function handleStyle(category: HandleCategory, selected?: boolean): CSSPropertie
 //   left edge:   safe-left (target, red) | net-left (target, blue)
 //   right edge:  safe-right (source, red) | net-right (source, blue)
 //
-// Each handle gets `style={{ left/top: pct }}` so they don't pile up at
-// the midpoint. The wrapping component should add `group` on hover so
-// handles fade in only when the user is interacting with the node.
+// Handles become visible on hover via the parent Box's sx.
 export function NodeHandles({ selected }: { selected?: boolean }) {
-  const baseClass =
-    'group-hover:!opacity-100 hover:!opacity-100 hover:!scale-150';
   return (
     <>
       {/* Top edge — power in (target) + feedback out (source) */}
@@ -48,14 +45,12 @@ export function NodeHandles({ selected }: { selected?: boolean }) {
         type="target"
         position={Position.Top}
         id="pwr-top"
-        className={baseClass}
         style={{ ...handleStyle('power', selected), left: '30%' }}
       />
       <Handle
         type="source"
         position={Position.Top}
         id="fb-top"
-        className={baseClass}
         style={{ ...handleStyle('feedback', selected), left: '70%' }}
       />
 
@@ -64,14 +59,12 @@ export function NodeHandles({ selected }: { selected?: boolean }) {
         type="source"
         position={Position.Right}
         id="net-right"
-        className={baseClass}
         style={{ ...handleStyle('network', selected), top: '35%' }}
       />
       <Handle
         type="source"
         position={Position.Right}
         id="safe-right"
-        className={baseClass}
         style={{ ...handleStyle('safety', selected), top: '70%' }}
       />
 
@@ -80,14 +73,12 @@ export function NodeHandles({ selected }: { selected?: boolean }) {
         type="source"
         position={Position.Bottom}
         id="pwr-bottom"
-        className={baseClass}
         style={{ ...handleStyle('power', selected), left: '30%' }}
       />
       <Handle
         type="target"
         position={Position.Bottom}
         id="fb-bottom"
-        className={baseClass}
         style={{ ...handleStyle('feedback', selected), left: '70%' }}
       />
 
@@ -96,698 +87,1066 @@ export function NodeHandles({ selected }: { selected?: boolean }) {
         type="target"
         position={Position.Left}
         id="net-left"
-        className={baseClass}
         style={{ ...handleStyle('network', selected), top: '35%' }}
       />
       <Handle
         type="target"
         position={Position.Left}
         id="safe-left"
-        className={baseClass}
         style={{ ...handleStyle('safety', selected), top: '70%' }}
       />
     </>
   );
 }
 
+// Base hover style for all node containers (shows handles on hover)
+function nodeContainerSx(width: number) {
+  return {
+    width,
+    textAlign: 'center' as const,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    '&:hover .react-flow__handle': {
+      opacity: '1 !important',
+      transform: 'scale(1.5) !important',
+    },
+  };
+}
+
+function nodeLabelSx(selected?: boolean) {
+  return {
+    mt: 1,
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    fontSize: 11,
+    letterSpacing: '0.05em',
+    color: selected ? 'primary.light' : 'text.secondary',
+    transition: 'color 200ms',
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────
+// PLC
+// ────────────────────────────────────────────────────────────────────
 export function PLCNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[180px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(180)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[120px] w-[150px] bg-neutral-800 border-2 rounded-2xl flex overflow-hidden transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-indigo-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 120,
+          width: 150,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(99,102,241,0.5)',
+          borderRadius: 4,
+          display: 'flex',
+          overflow: 'hidden',
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="w-1/3 h-full border-r border-neutral-700 bg-neutral-900 p-2 flex flex-col gap-2">
-          <div className="flex gap-1">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981]" />
-          </div>
-          <div className="flex gap-1">
-            <div className="w-2 h-2 bg-rose-500 rounded-full" />
-          </div>
-        </div>
-        <div className="flex-1 flex flex-col gap-[2px] bg-neutral-700 px-1 py-1">
+        {/* Left panel - LEDs */}
+        <Box sx={{ width: '33%', height: '100%', borderRight: 1, borderColor: '#404040', bgcolor: '#171717', p: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#10b981', boxShadow: '0 0 8px #10b981' }} />
+          </Box>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#f43f5e' }} />
+          </Box>
+        </Box>
+        {/* IO strips */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', bgcolor: '#404040', px: 0.5, py: 0.5 }}>
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="flex-1 bg-neutral-800 rounded-[2px]" />
+            <Box key={i} sx={{ flex: 1, bgcolor: '#262626', borderRadius: '2px' }} />
           ))}
-        </div>
-        <div className="flex-1 flex flex-col gap-[2px] bg-neutral-700 px-1 py-1 border-l border-neutral-600">
+        </Box>
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', bgcolor: '#404040', px: 0.5, py: 0.5, borderLeft: 1, borderColor: '#525252' }}>
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="flex-1 bg-neutral-800 rounded-[2px]" />
+            <Box key={i} sx={{ flex: 1, bgcolor: '#262626', borderRadius: '2px' }} />
           ))}
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-indigo-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        </Box>
+      </Box>
+      <Typography sx={nodeLabelSx(selected)}>{data.label}</Typography>
+    </Box>
   );
 }
 
+// ────────────────────────────────────────────────────────────────────
+// HMI
+// ────────────────────────────────────────────────────────────────────
 export function HMINode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[180px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(180)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[120px] w-[160px] bg-neutral-950 border-4 rounded-[1.5rem] flex items-center justify-center p-2 relative transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-neutral-700 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 120,
+          width: 160,
+          bgcolor: '#0a0a0a',
+          border: 4,
+          borderColor: selected ? 'primary.main' : '#404040',
+          borderRadius: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 1,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div
-          className={`w-full h-full bg-neutral-800/80 border rounded-xl flex items-center justify-center ${
-            selected ? 'border-indigo-500/50' : 'border-neutral-700'
-          }`}
+        <Box
+          sx={{
+            width: '100%',
+            height: '100%',
+            bgcolor: 'rgba(38,38,38,0.8)',
+            border: 1,
+            borderColor: selected ? 'rgba(99,102,241,0.5)' : '#404040',
+            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
         >
-          <svg
-            width="32"
-            height="32"
+          <Box
+            component="svg"
+            width={32}
+            height={32}
             viewBox="0 0 24 24"
             fill="none"
             stroke={selected ? '#a5b4fc' : '#818cf8'}
             strokeWidth="2"
           >
             <path d="M11 11V7a2 2 0 012-2v0a2 2 0 012 2v2M15 11v-1a2 2 0 012-2v0a2 2 0 012 2v4a6 6 0 01-6 6h-2a6 6 0 01-6-6v-5a2 2 0 012-2h0a2 2 0 012 2v3" />
-          </svg>
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-indigo-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+          </Box>
+        </Box>
+      </Box>
+      <Typography sx={nodeLabelSx(selected)}>{data.label}</Typography>
+    </Box>
   );
 }
 
+// ────────────────────────────────────────────────────────────────────
+// IO Module
+// ────────────────────────────────────────────────────────────────────
 export function IONode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[180px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(180)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[120px] w-[140px] bg-neutral-800 border-2 rounded-2xl flex overflow-hidden transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-neutral-700 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 120,
+          width: 140,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : '#404040',
+          borderRadius: 4,
+          display: 'flex',
+          overflow: 'hidden',
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div
-          className={`w-8 h-full bg-amber-500/90 border-r flex flex-col gap-1 items-center py-3 ${
-            selected ? 'border-indigo-400' : 'border-neutral-700'
-          }`}
+        {/* Side indicator strip */}
+        <Box
+          sx={{
+            width: 32,
+            height: '100%',
+            bgcolor: 'rgba(245,158,11,0.9)',
+            borderRight: 1,
+            borderColor: selected ? 'primary.main' : '#404040',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0.5,
+            alignItems: 'center',
+            py: 1.5,
+          }}
         >
-          <div
-            className={`w-4 h-4 bg-neutral-900 rounded-full border-2 ${
-              selected ? 'border-indigo-400' : 'border-amber-300/50'
-            }`}
+          <Box
+            sx={{
+              width: 16,
+              height: 16,
+              bgcolor: '#171717',
+              borderRadius: '50%',
+              border: 2,
+              borderColor: selected ? 'primary.main' : 'rgba(252,211,77,0.5)',
+            }}
           />
-        </div>
-        <div className="flex-1 h-full grid grid-cols-4 gap-1 p-1 bg-neutral-700">
+        </Box>
+        {/* IO channel grid */}
+        <Box
+          sx={{
+            flex: 1,
+            height: '100%',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '2px',
+            p: 0.5,
+            bgcolor: '#404040',
+          }}
+        >
           {[...Array(32)].map((_, i) => (
-            <div
+            <Box
               key={i}
-              className={`w-full h-full rounded-[2px] ${
-                i % 5 === 0
-                  ? 'bg-emerald-500/80 shadow-[0_0_4px_#10b981]'
-                  : i % 7 === 0
-                  ? 'bg-rose-500/80 shadow-[0_0_4px_#f43f5e]'
-                  : 'bg-neutral-800'
-              }`}
+              sx={{
+                width: '100%',
+                height: '100%',
+                borderRadius: '2px',
+                bgcolor:
+                  i % 5 === 0
+                    ? 'rgba(16,185,129,0.8)'
+                    : i % 7 === 0
+                      ? 'rgba(244,63,94,0.8)'
+                      : '#262626',
+                boxShadow:
+                  i % 5 === 0
+                    ? '0 0 4px #10b981'
+                    : i % 7 === 0
+                      ? '0 0 4px #f43f5e'
+                      : 'none',
+              }}
             />
           ))}
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-indigo-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        </Box>
+      </Box>
+      <Typography sx={nodeLabelSx(selected)}>{data.label}</Typography>
+    </Box>
   );
 }
 
+// ────────────────────────────────────────────────────────────────────
+// VFD (Variable Frequency Drive)
+// ────────────────────────────────────────────────────────────────────
 export function VFDNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[120px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(120)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[130px] w-[80px] bg-neutral-800 border-2 rounded-2xl flex flex-col items-center p-2 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-neutral-700 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 130,
+          width: 80,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : '#404040',
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          p: 1,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="w-full h-6 bg-neutral-950 rounded-t-lg mb-2" />
-        <div className="w-full h-8 bg-emerald-950/50 border border-emerald-500/30 mb-2 flex items-center justify-center text-[10px] text-emerald-400 font-mono rounded-sm">
+        <Box sx={{ width: '100%', height: 24, bgcolor: '#0a0a0a', borderTopLeftRadius: 8, borderTopRightRadius: 8, mb: 1 }} />
+        <Box
+          sx={{
+            width: '100%',
+            height: 32,
+            bgcolor: 'rgba(5,46,22,0.5)',
+            border: 1,
+            borderColor: 'rgba(16,185,129,0.3)',
+            mb: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 10,
+            color: '#34d399',
+            fontFamily: '"JetBrains Mono", monospace',
+            borderRadius: '2px',
+          }}
+        >
           50.0Hz
-        </div>
-        <div className="grid grid-cols-2 gap-2 w-full px-2">
-          <div className="h-3 bg-rose-500/80 rounded-full" />
-          <div className="h-3 bg-emerald-500/80 rounded-full" />
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-indigo-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        </Box>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, width: '100%', px: 1 }}>
+          <Box sx={{ height: 12, bgcolor: 'rgba(244,63,94,0.8)', borderRadius: 999 }} />
+          <Box sx={{ height: 12, bgcolor: 'rgba(16,185,129,0.8)', borderRadius: 999 }} />
+        </Box>
+      </Box>
+      <Typography sx={nodeLabelSx(selected)}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 伺服驱动器 Servo Drive =====
+// ────────────────────────────────────────────────────────────────────
+// Servo Drive
+// ────────────────────────────────────────────────────────────────────
 export function ServoNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[160px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(160)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[110px] w-[140px] bg-neutral-800 border-2 rounded-2xl flex flex-col items-center justify-center gap-1 p-3 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-cyan-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 110,
+          width: 140,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(6,182,212,0.5)',
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 0.5,
+          p: 1.5,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="w-full h-7 bg-neutral-950 rounded-lg flex items-center justify-center text-[10px] text-cyan-400 font-mono tracking-wider">
+        <Box
+          sx={{
+            width: '100%',
+            height: 28,
+            bgcolor: '#0a0a0a',
+            borderRadius: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 10,
+            color: '#22d3ee',
+            fontFamily: '"JetBrains Mono", monospace',
+            letterSpacing: '0.05em',
+          }}
+        >
           SERVO
-        </div>
-        <div className="flex gap-2 w-full">
-          <div className="flex-1 h-10 bg-neutral-900 rounded-lg flex flex-col items-center justify-center gap-0.5">
-            <div className="w-8 h-1 bg-cyan-500/60 rounded-full" />
-            <div className="w-8 h-1 bg-cyan-500/40 rounded-full" />
-            <div className="w-8 h-1 bg-cyan-500/20 rounded-full" />
-          </div>
-          <div className="w-8 h-10 bg-neutral-900 rounded-lg flex items-center justify-center">
-            <div className="w-5 h-5 rounded-full border-2 border-cyan-500/60 flex items-center justify-center">
-              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
-            </div>
-          </div>
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-cyan-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
+          <Box
+            sx={{
+              flex: 1,
+              height: 40,
+              bgcolor: '#171717',
+              borderRadius: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '2px',
+            }}
+          >
+            <Box sx={{ width: 32, height: 4, bgcolor: 'rgba(6,182,212,0.6)', borderRadius: 999 }} />
+            <Box sx={{ width: 32, height: 4, bgcolor: 'rgba(6,182,212,0.4)', borderRadius: 999 }} />
+            <Box sx={{ width: 32, height: 4, bgcolor: 'rgba(6,182,212,0.2)', borderRadius: 999 }} />
+          </Box>
+          <Box
+            sx={{
+              width: 32,
+              height: 40,
+              bgcolor: '#171717',
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Box
+              sx={{
+                width: 20,
+                height: 20,
+                borderRadius: '50%',
+                border: 2,
+                borderColor: 'rgba(6,182,212,0.6)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Box
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  bgcolor: '#06b6d4',
+                  animation: 'servo-pulse 2s infinite',
+                  '@keyframes servo-pulse': {
+                    '0%, 100%': { opacity: 1 },
+                    '50%': { opacity: 0.4 },
+                  },
+                }}
+              />
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#22d3ee' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 开关电源 Power Supply =====
+// ────────────────────────────────────────────────────────────────────
+// Power Supply
+// ────────────────────────────────────────────────────────────────────
 export function PowerNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[140px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(140)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[90px] w-[120px] bg-neutral-800 border-2 rounded-xl flex flex-col justify-center gap-1.5 p-2 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-amber-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 90,
+          width: 120,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(245,158,11,0.5)',
+          borderRadius: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          gap: 0.75,
+          p: 1,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="flex items-center justify-between px-1">
-          <span className="text-[9px] font-bold text-amber-400 font-mono">24V</span>
-          <span className="text-[9px] font-bold text-amber-400 font-mono">10A</span>
-        </div>
-        <div className="flex-1 bg-neutral-900 rounded-lg flex items-center justify-center">
-          <div className="w-12 h-2 bg-amber-500/40 rounded-full relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[8px] text-amber-400/60 font-mono">~</div>
-          </div>
-        </div>
-        <div className="flex gap-2 justify-center">
-          <div className="w-4 h-4 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
-            <div className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
-          </div>
-          <div className="w-4 h-4 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-          </div>
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-amber-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 0.5 }}>
+          <Typography sx={{ fontSize: 9, fontWeight: 700, color: '#fbbf24', fontFamily: '"JetBrains Mono", monospace' }}>
+            24V
+          </Typography>
+          <Typography sx={{ fontSize: 9, fontWeight: 700, color: '#fbbf24', fontFamily: '"JetBrains Mono", monospace' }}>
+            10A
+          </Typography>
+        </Box>
+        <Box sx={{ flex: 1, bgcolor: '#171717', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Box sx={{ width: 48, height: 8, bgcolor: 'rgba(245,158,11,0.4)', borderRadius: 999, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography sx={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', fontSize: 8, color: 'rgba(251,191,36,0.6)', fontFamily: '"JetBrains Mono", monospace' }}>
+              ~
+            </Typography>
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+          <Box sx={{ width: 16, height: 16, borderRadius: '50%', bgcolor: 'rgba(245,158,11,0.2)', border: 1, borderColor: 'rgba(245,158,11,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#f59e0b' }} />
+          </Box>
+          <Box sx={{ width: 16, height: 16, borderRadius: '50%', bgcolor: 'rgba(16,185,129,0.2)', border: 1, borderColor: 'rgba(16,185,129,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10b981' }} />
+          </Box>
+        </Box>
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#fbbf24' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 工业交换机 Industrial Switch =====
+// ────────────────────────────────────────────────────────────────────
+// Industrial Switch
+// ────────────────────────────────────────────────────────────────────
 export function SwitchNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[160px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(160)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[100px] w-[145px] bg-neutral-800 border-2 rounded-2xl flex flex-col p-2 gap-1 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-blue-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 100,
+          width: 145,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(59,130,246,0.5)',
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          p: 1,
+          gap: 0.5,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="text-[9px] font-bold text-blue-400 font-mono text-center tracking-wider">ETH SWITCH</div>
-        <div className="flex-1 grid grid-cols-4 gap-1">
+        <Typography sx={{ fontSize: 9, fontWeight: 700, color: '#60a5fa', fontFamily: '"JetBrains Mono", monospace', textAlign: 'center', letterSpacing: '0.05em' }}>
+          ETH SWITCH
+        </Typography>
+        <Box sx={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.5 }}>
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="bg-neutral-900 rounded-md flex items-end justify-center pb-0.5">
-              <div className={`w-2 h-1.5 rounded-sm ${i < 4 ? 'bg-emerald-500/70' : 'bg-neutral-600'}`} />
-            </div>
+            <Box key={i} sx={{ bgcolor: '#171717', borderRadius: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', pb: 0.25 }}>
+              <Box sx={{ width: 8, height: 6, borderRadius: '2px', bgcolor: i < 4 ? 'rgba(16,185,129,0.7)' : '#525252' }} />
+            </Box>
           ))}
-        </div>
-        <div className="flex justify-between px-1">
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 0.5 }}>
           {[...Array(4)].map((_, i) => (
-            <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < 2 ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+            <Box key={i} sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: i < 2 ? '#10b981' : '#f59e0b' }} />
           ))}
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-blue-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        </Box>
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#60a5fa' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 安全继电器 Safety Relay =====
+// ────────────────────────────────────────────────────────────────────
+// Safety Relay
+// ────────────────────────────────────────────────────────────────────
 export function SafetyRelayNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[140px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(140)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[100px] w-[120px] bg-neutral-800 border-2 rounded-2xl flex flex-col items-center justify-center gap-2 p-2 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-rose-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 100,
+          width: 120,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(244,63,94,0.5)',
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 1,
+          p: 1,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="flex gap-2">
-          <div className="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-500/40 flex items-center justify-center">
-            <span className="text-[10px] font-black text-rose-400">S</span>
-          </div>
-          <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
-            <span className="text-[10px] font-black text-amber-400">R</span>
-          </div>
-        </div>
-        <div className="flex gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-rose-500/60" />
-          <div className="w-3 h-3 rounded-full bg-rose-500/60" />
-          <div className="w-3 h-3 rounded-full bg-emerald-500/60" />
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-rose-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ width: 32, height: 32, borderRadius: 1, bgcolor: 'rgba(244,63,94,0.2)', border: 1, borderColor: 'rgba(244,63,94,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography sx={{ fontSize: 10, fontWeight: 900, color: '#fb7185' }}>S</Typography>
+          </Box>
+          <Box sx={{ width: 32, height: 32, borderRadius: 1, bgcolor: 'rgba(245,158,11,0.2)', border: 1, borderColor: 'rgba(245,158,11,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography sx={{ fontSize: 10, fontWeight: 900, color: '#fbbf24' }}>R</Typography>
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 0.75 }}>
+          <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'rgba(244,63,94,0.6)' }} />
+          <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'rgba(244,63,94,0.6)' }} />
+          <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'rgba(16,185,129,0.6)' }} />
+        </Box>
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#fb7185' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 传感器 Sensor =====
+// ────────────────────────────────────────────────────────────────────
+// Sensor
+// ────────────────────────────────────────────────────────────────────
 export function SensorNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[110px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(110)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[85px] w-[85px] bg-neutral-800 border-2 rounded-full flex flex-col items-center justify-center gap-1 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-emerald-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 85,
+          width: 85,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(16,185,129,0.5)',
+          borderRadius: '50%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 0.5,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="w-8 h-8 rounded-full bg-neutral-900 border border-emerald-500/30 flex items-center justify-center">
-          <div className="w-4 h-4 rounded-full bg-emerald-500/40 flex items-center justify-center">
-            <div className="w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_6px_#10b981]" />
-          </div>
-        </div>
-        <div className="flex gap-3">
-          <div className="w-3 h-1 bg-emerald-500/50 rounded-full" />
-          <div className="w-3 h-1 bg-emerald-500/50 rounded-full" />
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-emerald-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        <Box
+          sx={{
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            bgcolor: '#171717',
+            border: 1,
+            borderColor: 'rgba(16,185,129,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Box
+            sx={{
+              width: 16,
+              height: 16,
+              borderRadius: '50%',
+              bgcolor: 'rgba(16,185,129,0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#34d399', boxShadow: '0 0 6px #10b981' }} />
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Box sx={{ width: 12, height: 4, bgcolor: 'rgba(16,185,129,0.5)', borderRadius: 999 }} />
+          <Box sx={{ width: 12, height: 4, bgcolor: 'rgba(16,185,129,0.5)', borderRadius: 999 }} />
+        </Box>
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#34d399' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 工控机 IPC =====
+// ────────────────────────────────────────────────────────────────────
+// IPC (Industrial PC)
+// ────────────────────────────────────────────────────────────────────
 export function IPCNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[160px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(160)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[100px] w-[140px] bg-neutral-800 border-2 rounded-xl flex flex-col p-2 gap-1 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-purple-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 100,
+          width: 140,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(168,85,247,0.5)',
+          borderRadius: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          p: 1,
+          gap: 0.5,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="flex-1 bg-neutral-950 rounded-lg border border-neutral-700 flex items-center justify-center">
-          <div className="w-14 h-8 bg-purple-500/10 border border-purple-500/30 rounded-md flex items-center justify-center">
-            <span className="text-[8px] font-bold text-purple-400 font-mono">SCADA</span>
-          </div>
-        </div>
-        <div className="flex justify-between px-3">
-          <div className="w-2 h-2 rounded-full bg-emerald-500/80" />
-          <div className="w-3 h-1.5 bg-neutral-600 rounded-full" />
-          <div className="w-2 h-2 rounded-full bg-blue-500/80" />
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-purple-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        <Box
+          sx={{
+            flex: 1,
+            bgcolor: '#0a0a0a',
+            borderRadius: 1,
+            border: 1,
+            borderColor: '#404040',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Box
+            sx={{
+              width: 56,
+              height: 32,
+              bgcolor: 'rgba(168,85,247,0.1)',
+              border: 1,
+              borderColor: 'rgba(168,85,247,0.3)',
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Typography sx={{ fontSize: 8, fontWeight: 700, color: '#c084fc', fontFamily: '"JetBrains Mono", monospace' }}>
+              SCADA
+            </Typography>
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 1.5 }}>
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'rgba(16,185,129,0.8)' }} />
+          <Box sx={{ width: 12, height: 6, bgcolor: '#525252', borderRadius: 999 }} />
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'rgba(59,130,246,0.8)' }} />
+        </Box>
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#c084fc' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 安全PLC Safety PLC =====
+// ────────────────────────────────────────────────────────────────────
+// Safety PLC
+// ────────────────────────────────────────────────────────────────────
 export function SafetyPLCNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[170px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(170)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[120px] w-[150px] bg-neutral-800 border-2 rounded-2xl flex overflow-hidden transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-yellow-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 120,
+          width: 150,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(234,179,8,0.5)',
+          borderRadius: 4,
+          display: 'flex',
+          overflow: 'hidden',
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="w-[30%] h-full border-r border-neutral-700 bg-neutral-900 p-1.5 flex flex-col gap-1.5">
-          <div className="flex gap-1"><div className="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_6px_#10b981]" /></div>
-          <div className="flex gap-1"><div className="w-2 h-2 bg-yellow-500 rounded-full shadow-[0_0_6px_#eab308]" /></div>
-          <div className="flex gap-1"><div className="w-2 h-2 bg-rose-500 rounded-full" /></div>
-        </div>
-        <div className="flex-1 flex flex-col gap-[2px] bg-neutral-700 px-1 py-1">
-          {[...Array(6)].map((_, i) => <div key={i} className="flex-1 bg-neutral-800 rounded-[2px]" />)}
-        </div>
-        <div className="w-[25%] h-full bg-yellow-500/10 border-l border-yellow-500/30 flex items-center justify-center">
-          <span className="text-[8px] font-black text-yellow-500 rotate-90 tracking-[0.2em]">SIL3</span>
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-yellow-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        <Box sx={{ width: '30%', height: '100%', borderRight: 1, borderColor: '#404040', bgcolor: '#171717', p: 0.75, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+          </Box>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#eab308', boxShadow: '0 0 6px #eab308' }} />
+          </Box>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#f43f5e' }} />
+          </Box>
+        </Box>
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', bgcolor: '#404040', px: 0.5, py: 0.5 }}>
+          {[...Array(6)].map((_, i) => (
+            <Box key={i} sx={{ flex: 1, bgcolor: '#262626', borderRadius: '2px' }} />
+          ))}
+        </Box>
+        <Box sx={{ width: '25%', height: '100%', bgcolor: 'rgba(234,179,8,0.1)', borderLeft: 1, borderColor: 'rgba(234,179,8,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography sx={{ fontSize: 8, fontWeight: 900, color: '#eab308', transform: 'rotate(90deg)', letterSpacing: '0.2em' }}>
+            SIL3
+          </Typography>
+        </Box>
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#eab308' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 断路器 Circuit Breaker =====
+// ────────────────────────────────────────────────────────────────────
+// Circuit Breaker
+// ────────────────────────────────────────────────────────────────────
 export function CircuitBreakerNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[130px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(130)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[100px] w-[100px] bg-neutral-800 border-2 rounded-2xl flex flex-col items-center justify-center gap-2 p-2 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-orange-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 100,
+          width: 100,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(249,115,22,0.5)',
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 1,
+          p: 1,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="w-10 h-6 bg-neutral-950 rounded-md border border-orange-500/40 flex items-center justify-center relative">
-          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-2 bg-orange-500 rounded-t-sm" />
-          <span className="text-[7px] font-black text-orange-400">I{'>'}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-1 h-6 bg-neutral-600 rounded-full relative">
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-orange-500 rounded-full shadow-[0_0_6px_#f97316]" />
-          </div>
-          <div className="text-[8px] font-bold text-orange-400 font-mono">63A</div>
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-orange-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        <Box
+          sx={{
+            width: 40,
+            height: 24,
+            bgcolor: '#0a0a0a',
+            borderRadius: 1,
+            border: 1,
+            borderColor: 'rgba(249,115,22,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+          }}
+        >
+          <Box sx={{ position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)', width: 12, height: 8, bgcolor: '#f97316', borderTopLeftRadius: 4, borderTopRightRadius: 4 }} />
+          <Typography sx={{ fontSize: 7, fontWeight: 900, color: '#fb923c' }}>I{'>'}</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 4, height: 24, bgcolor: '#525252', borderRadius: 999, position: 'relative' }}>
+            <Box sx={{ position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)', width: 10, height: 10, bgcolor: '#f97316', borderRadius: '50%', boxShadow: '0 0 6px #f97316' }} />
+          </Box>
+          <Typography sx={{ fontSize: 8, fontWeight: 700, color: '#fb923c', fontFamily: '"JetBrains Mono", monospace' }}>
+            63A
+          </Typography>
+        </Box>
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#fb923c' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 接触器 Contactor =====
+// ────────────────────────────────────────────────────────────────────
+// Contactor
+// ────────────────────────────────────────────────────────────────────
 export function ContactorNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[140px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(140)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[95px] w-[115px] bg-neutral-800 border-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 p-2 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-sky-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 95,
+          width: 115,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(14,165,233,0.5)',
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 0.75,
+          p: 1,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="w-full h-5 bg-neutral-950 rounded-lg flex items-center justify-center">
-          <div className="w-8 h-1.5 bg-sky-500/60 rounded-full" />
-        </div>
-        <div className="flex gap-3">
-          <div className="flex flex-col gap-1">
-            <div className="w-5 h-5 rounded-md bg-neutral-900 border border-sky-500/30 flex items-center justify-center">
-              <span className="text-[6px] font-black text-sky-400">L1</span>
-            </div>
-            <div className="w-5 h-5 rounded-md bg-neutral-900 border border-sky-500/30 flex items-center justify-center">
-              <span className="text-[6px] font-black text-sky-400">L2</span>
-            </div>
-            <div className="w-5 h-5 rounded-md bg-neutral-900 border border-sky-500/30 flex items-center justify-center">
-              <span className="text-[6px] font-black text-sky-400">L3</span>
-            </div>
-          </div>
-          <div className="flex flex-col gap-1">
-            <div className="w-5 h-5 rounded-md bg-neutral-900 border border-sky-500/20 flex items-center justify-center">
-              <span className="text-[6px] font-black text-sky-500/40">T1</span>
-            </div>
-            <div className="w-5 h-5 rounded-md bg-neutral-900 border border-sky-500/20 flex items-center justify-center">
-              <span className="text-[6px] font-black text-sky-500/40">T2</span>
-            </div>
-            <div className="w-5 h-5 rounded-md bg-neutral-900 border border-sky-500/20 flex items-center justify-center">
-              <span className="text-[6px] font-black text-sky-500/40">T3</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-sky-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        <Box sx={{ width: '100%', height: 20, bgcolor: '#0a0a0a', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Box sx={{ width: 32, height: 6, bgcolor: 'rgba(14,165,233,0.6)', borderRadius: 999 }} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {['L1', 'L2', 'L3'].map((label) => (
+              <Box key={label} sx={{ width: 20, height: 20, borderRadius: 1, bgcolor: '#171717', border: 1, borderColor: 'rgba(14,165,233,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Typography sx={{ fontSize: 6, fontWeight: 900, color: '#38bdf8' }}>{label}</Typography>
+              </Box>
+            ))}
+          </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {['T1', 'T2', 'T3'].map((label) => (
+              <Box key={label} sx={{ width: 20, height: 20, borderRadius: 1, bgcolor: '#171717', border: 1, borderColor: 'rgba(14,165,233,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Typography sx={{ fontSize: 6, fontWeight: 900, color: 'rgba(56,189,248,0.4)' }}>{label}</Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#38bdf8' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 中间继电器 Relay =====
+// ────────────────────────────────────────────────────────────────────
+// Relay (Intermediate Relay)
+// ────────────────────────────────────────────────────────────────────
 export function RelayNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[120px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(120)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[85px] w-[95px] bg-neutral-800 border-2 rounded-2xl flex flex-col items-center justify-center gap-1 p-2 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-teal-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 85,
+          width: 95,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(20,184,166,0.5)',
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 0.5,
+          p: 1,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="w-full h-4 bg-neutral-950 rounded-md flex items-center justify-center">
-          <div className="w-8 h-1 bg-teal-500/50 rounded-full" />
-        </div>
-        <div className="grid grid-cols-2 gap-1.5">
-          <div className="w-6 h-6 rounded-md bg-neutral-900 border border-teal-500/20 flex items-center justify-center">
-            <div className="w-2 h-2 rounded-sm bg-teal-500/60" />
-          </div>
-          <div className="w-6 h-6 rounded-md bg-neutral-900 border border-teal-500/20 flex items-center justify-center">
-            <div className="w-2 h-2 rounded-sm bg-teal-500/60" />
-          </div>
-          <div className="w-6 h-6 rounded-md bg-neutral-900 border border-teal-500/20 flex items-center justify-center">
-            <div className="w-2 h-2 rounded-sm bg-teal-500/40" />
-          </div>
-          <div className="w-6 h-6 rounded-md bg-neutral-900 border border-teal-500/20 flex items-center justify-center">
-            <div className="w-2 h-2 rounded-sm bg-teal-500/40" />
-          </div>
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-teal-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        <Box sx={{ width: '100%', height: 16, bgcolor: '#0a0a0a', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Box sx={{ width: 32, height: 4, bgcolor: 'rgba(20,184,166,0.5)', borderRadius: 999 }} />
+        </Box>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0.75 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <Box key={i} sx={{ width: 24, height: 24, borderRadius: 1, bgcolor: '#171717', border: 1, borderColor: 'rgba(20,184,166,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Box sx={{ width: 8, height: 8, borderRadius: '2px', bgcolor: i < 2 ? 'rgba(20,184,166,0.6)' : 'rgba(20,184,166,0.4)' }} />
+            </Box>
+          ))}
+        </Box>
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#14b8a6' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 急停按钮 E-Stop =====
+// ────────────────────────────────────────────────────────────────────
+// E-Stop (Emergency Stop Button)
+// ────────────────────────────────────────────────────────────────────
 export function EStopNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[110px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(110)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[90px] w-[85px] bg-neutral-800 border-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-red-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 90,
+          width: 85,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(239,68,68,0.5)',
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 0.75,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="w-12 h-7 bg-red-600 rounded-t-full shadow-[0_0_10px_rgba(220,38,38,0.4)] flex items-center justify-center">
-          <span className="text-[7px] font-black text-white tracking-wider">STOP</span>
-        </div>
-        <div className="w-7 h-4 bg-yellow-500 rounded-b-md flex items-center justify-center">
-          <div className="w-5 h-1.5 bg-yellow-700/50 rounded-full" />
-        </div>
-        <div className="flex gap-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-          <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-red-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        <Box
+          sx={{
+            width: 48,
+            height: 28,
+            bgcolor: '#dc2626',
+            borderTopLeftRadius: 999,
+            borderTopRightRadius: 999,
+            boxShadow: '0 0 10px rgba(220,38,38,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Typography sx={{ fontSize: 7, fontWeight: 900, color: '#fff', letterSpacing: '0.05em' }}>
+            STOP
+          </Typography>
+        </Box>
+        <Box sx={{ width: 28, height: 16, bgcolor: '#eab308', borderBottomLeftRadius: 6, borderBottomRightRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Box sx={{ width: 20, height: 6, bgcolor: 'rgba(161,98,7,0.5)', borderRadius: 999 }} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#ef4444' }} />
+          <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#ef4444' }} />
+        </Box>
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#ef4444' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 变压器 Transformer =====
+// ────────────────────────────────────────────────────────────────────
+// Transformer
+// ────────────────────────────────────────────────────────────────────
 export function TransformerNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[150px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(150)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[105px] w-[130px] bg-neutral-800 border-2 rounded-2xl flex items-center justify-center gap-3 p-2 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-violet-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 105,
+          width: 130,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(139,92,246,0.5)',
+          borderRadius: 4,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 1.5,
+          p: 1,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[8px] font-bold text-violet-400 font-mono">480V</span>
-          <div className="w-8 h-12 bg-neutral-950 rounded-lg border border-violet-500/30 flex items-center justify-center relative">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5" opacity="0.5">
+        {[
+          { label: '480V', opacity: 0.5 },
+          { label: '24V', opacity: 0.3 },
+        ].map((side) => (
+          <Box key={side.label} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+            <Typography sx={{ fontSize: 8, fontWeight: 700, color: '#a78bfa', fontFamily: '"JetBrains Mono", monospace' }}>
+              {side.label}
+            </Typography>
+            <Box
+              sx={{
+                width: 32,
+                height: 48,
+                bgcolor: '#0a0a0a',
+                borderRadius: 1,
+                border: 1,
+                borderColor: 'rgba(139,92,246,0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+              }}
+            >
+              <Box
+                component="svg"
+                width={20}
+                height={20}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#a78bfa"
+                strokeWidth="1.5"
+                sx={{ opacity: side.opacity as number }}
+              >
                 <path d="M12 3v3m0 12v3M5 12H2m20 0h-3M7.5 7.5l-2-2m13 13l2 2M16.5 7.5l2-2M7.5 16.5l-2 2" />
                 <circle cx="12" cy="12" r="3" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[8px] font-bold text-violet-400 font-mono">24V</span>
-          <div className="w-8 h-12 bg-neutral-950 rounded-lg border border-violet-500/30 flex items-center justify-center relative">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5" opacity="0.3">
-                <path d="M12 3v3m0 12v3M5 12H2m20 0h-3M7.5 7.5l-2-2m13 13l2 2M16.5 7.5l2-2M7.5 16.5l-2 2" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-violet-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+              </Box>
+            </Box>
+          </Box>
+        ))}
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#a78bfa' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 熔断器 Fuse =====
+// ────────────────────────────────────────────────────────────────────
+// Fuse
+// ────────────────────────────────────────────────────────────────────
 export function FuseNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[100px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(100)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[80px] w-[60px] bg-neutral-800 border-2 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-red-500/30 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 80,
+          width: 60,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(239,68,68,0.3)',
+          borderRadius: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 0.75,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="w-5 h-3 bg-neutral-600 rounded-t-sm" />
-        <div className="w-4 h-8 bg-neutral-950 rounded-sm border border-neutral-700 flex items-center justify-center relative">
-          <div className="w-0.5 h-5 bg-red-500/60 rounded-full absolute" />
-          <div className="w-2.5 h-1 bg-red-500/40 rounded-full absolute top-1.5" />
-        </div>
-        <div className="w-5 h-3 bg-neutral-600 rounded-b-sm" />
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-red-400' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        <Box sx={{ width: 20, height: 12, bgcolor: '#525252', borderTopLeftRadius: 4, borderTopRightRadius: 4 }} />
+        <Box
+          sx={{
+            width: 16,
+            height: 32,
+            bgcolor: '#0a0a0a',
+            borderRadius: '2px',
+            border: 1,
+            borderColor: '#404040',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+          }}
+        >
+          <Box sx={{ width: 2, height: 20, bgcolor: 'rgba(239,68,68,0.6)', borderRadius: 999, position: 'absolute' }} />
+          <Box sx={{ width: 10, height: 4, bgcolor: 'rgba(239,68,68,0.4)', borderRadius: 999, position: 'absolute', top: 6 }} />
+        </Box>
+        <Box sx={{ width: 20, height: 12, bgcolor: '#525252', borderBottomLeftRadius: 4, borderBottomRightRadius: 4 }} />
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#ef4444' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }
 
-// ===== 隔离开关 Disconnect Switch =====
+// ────────────────────────────────────────────────────────────────────
+// Disconnect Switch
+// ────────────────────────────────────────────────────────────────────
 export function DisconnectNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
-    <div className="w-[120px] text-center flex flex-col items-center group">
+    <Box sx={nodeContainerSx(120)}>
       <NodeHandles selected={selected} />
-      <div
-        className={`h-[90px] w-[90px] bg-neutral-800 border-2 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 ${
-          selected
-            ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.5)]'
-            : 'border-gray-500/50 shadow-xl'
-        }`}
+      <Box
+        sx={{
+          height: 90,
+          width: 90,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(115,115,115,0.5)',
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 0.75,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
       >
-        <div className="w-3 h-4 bg-neutral-500 rounded-sm" />
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-8 bg-neutral-600 rounded-l-sm" />
-          <div className="w-8 h-3 bg-amber-500/80 rounded-sm rotate-12 transform origin-center shadow-[0_0_6px_rgba(245,158,11,0.3)]" />
-          <div className="w-2 h-8 bg-neutral-600 rounded-r-sm" />
-        </div>
-        <div className="w-3 h-4 bg-neutral-500 rounded-sm" />
-      </div>
-      <span
-        className={`mt-4 font-bold uppercase text-xs tracking-wider transition-colors ${
-          selected ? 'text-gray-300' : 'text-neutral-300'
-        }`}
-      >
-        {data.label}
-      </span>
-    </div>
+        <Box sx={{ width: 12, height: 16, bgcolor: '#737373', borderRadius: '2px' }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ width: 8, height: 32, bgcolor: '#525252', borderTopLeftRadius: 4, borderBottomLeftRadius: 4 }} />
+          <Box
+            sx={{
+              width: 32,
+              height: 12,
+              bgcolor: 'rgba(245,158,11,0.8)',
+              borderRadius: '2px',
+              transform: 'rotate(12deg)',
+              boxShadow: '0 0 6px rgba(245,158,11,0.3)',
+            }}
+          />
+          <Box sx={{ width: 8, height: 32, bgcolor: '#525252', borderTopRightRadius: 4, borderBottomRightRadius: 4 }} />
+        </Box>
+        <Box sx={{ width: 12, height: 16, bgcolor: '#737373', borderRadius: '2px' }} />
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#d4d4d4' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
   );
 }

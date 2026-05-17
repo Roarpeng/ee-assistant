@@ -2,16 +2,9 @@ services:
   frontend:
     build:
       context: ./frontend
-      extra_hosts:
-        - "host.docker.internal:host-gateway"
-      args:
-        HTTP_PROXY: http://host.docker.internal:3128
-        HTTPS_PROXY: http://host.docker.internal:3128
-        NO_PROXY: localhost,127.0.0.1,host.docker.internal
     ports:
       - "8090:80"
     environment:
-      # 运行时清空 proxy:nginx/容器内服务通过 backend service 名直连,无需走代理
       HTTP_PROXY: ""
       HTTPS_PROXY: ""
       NO_PROXY: "*"
@@ -24,13 +17,6 @@ services:
   backend:
     build:
       context: ./backend
-      extra_hosts:
-        - "host.docker.internal:host-gateway"
-      args:
-        HTTP_PROXY: http://host.docker.internal:3128
-        HTTPS_PROXY: http://host.docker.internal:3128
-        NO_PROXY: localhost,127.0.0.1,host.docker.internal
-    # Runtime 也需要 extra_hosts:Docker Desktop 默认不为 Linux 容器注入 host.docker.internal
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
@@ -43,14 +29,12 @@ services:
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
-      # LLM 调用 (api.deepseek.com / api.siliconflow.cn) 必须走宿主代理出外网,
-      # 但内部依赖 (postgres/qdrant/minio) 通过 service name 直连必须绕开代理。
-      HTTP_PROXY: http://host.docker.internal:3128
-      HTTPS_PROXY: http://host.docker.internal:3128
-      NO_PROXY: localhost,127.0.0.1,host.docker.internal,postgres,qdrant,minio
-      http_proxy: http://host.docker.internal:3128
-      https_proxy: http://host.docker.internal:3128
-      no_proxy: localhost,127.0.0.1,host.docker.internal,postgres,qdrant,minio
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      NO_PROXY: "*"
+      http_proxy: ""
+      https_proxy: ""
+      no_proxy: "*"
     depends_on:
       - postgres
       - qdrant
@@ -70,7 +54,7 @@ services:
   qdrant:
     image: qdrant/qdrant:latest
     ports:
-      - "6333:6333"
+      - "6335:6333"
     volumes:
       - qdrant_data:/qdrant/storage
 
@@ -78,8 +62,8 @@ services:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9002:9000"
+      - "9003:9001"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin

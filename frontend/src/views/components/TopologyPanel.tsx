@@ -12,10 +12,31 @@ import ReactFlow, {
   Edge,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { Box, Paper, Typography, Button, alpha } from '@mui/material';
+import { AccountTree as AccountTreeIcon } from '@mui/icons-material';
 import { useStore } from '../../models/store';
 import type { NodeData, EdgeData } from '../../models/store';
 import { t } from '../../services/i18n';
-import { PLCNode, HMINode, IONode, VFDNode, ServoNode, PowerNode, SwitchNode, SafetyRelayNode, SensorNode, IPCNode, SafetyPLCNode, CircuitBreakerNode, ContactorNode, RelayNode, EStopNode, TransformerNode, FuseNode, DisconnectNode } from './CustomNodes';
+import {
+  PLCNode,
+  HMINode,
+  IONode,
+  VFDNode,
+  ServoNode,
+  PowerNode,
+  SwitchNode,
+  SafetyRelayNode,
+  SensorNode,
+  IPCNode,
+  SafetyPLCNode,
+  CircuitBreakerNode,
+  ContactorNode,
+  RelayNode,
+  EStopNode,
+  TransformerNode,
+  FuseNode,
+  DisconnectNode,
+} from './CustomNodes';
 import { CanvasContextMenu } from './CanvasContextMenu';
 import { NodeInfoCard } from './NodeInfoCard';
 import { IOBudgetBar } from './IOBudgetBar';
@@ -37,11 +58,11 @@ import { toSvg } from 'html-to-image';
 // Color tokens MUST stay in sync with HANDLE_COLOR in CustomNodes.tsx so
 // edges visually match the handles they enter/exit.
 const CATEGORY_COLORS = {
-  power: '#f59e0b',     // amber  — 220V/24V/main supply
-  network: '#3b82f6',   // blue   — PROFINET/EtherCAT/Modbus/etc.
-  safety: '#ef4444',    // red    — STO/E-stop/safety bus
-  feedback: '#10b981',  // green  — sensor/encoder/IO return
-  default: '#737373',   // neutral — unknown / mixed
+  power: '#f59e0b', // amber  — 220V/24V/main supply
+  network: '#3b82f6', // blue   — PROFINET/EtherCAT/Modbus/etc.
+  safety: '#ef4444', // red    — STO/E-stop/safety bus
+  feedback: '#10b981', // green  — sensor/encoder/IO return
+  default: '#737373', // neutral — unknown / mixed
 } as const;
 type EdgeCategoryKey = keyof typeof CATEGORY_COLORS;
 
@@ -52,8 +73,10 @@ function classifyProtocol(p?: string): EdgeCategoryKey {
   if (!s) return 'default';
   if (/POWER|VOLT|220V|230V|380V|400V|480V|24V|12V|VAC|VDC|MAINS|AC_LINE|DC_LINE/.test(s)) return 'power';
   if (/SAFETY|E-?STOP|EMERGENCY|STO|GUARD|SS1|SS2/.test(s)) return 'safety';
-  if (/PROFINET|ETHERCAT|ETHERNET|MODBUS|PROFIBUS|CANOPEN|CAN_BUS|RS485|RS232|OPC|TCP|MQTT|DEVICENET|IO_?LINK/.test(s)) return 'network';
-  if (/SIGNAL|FEEDBACK|SENSOR|PULSE|ENCODER|PT100|PT1000|4-20|0-10V|ANALOG|DIGITAL_IO|^DI$|^DO$|^AI$|^AO$/.test(s)) return 'feedback';
+  if (/PROFINET|ETHERCAT|ETHERNET|MODBUS|PROFIBUS|CANOPEN|CAN_BUS|RS485|RS232|OPC|TCP|MQTT|DEVICENET|IO_?LINK/.test(s))
+    return 'network';
+  if (/SIGNAL|FEEDBACK|SENSOR|PULSE|ENCODER|PT100|PT1000|4-20|0-10V|ANALOG|DIGITAL_IO|^DI$|^DO$|^AI$|^AO$/.test(s))
+    return 'feedback';
   return 'default';
 }
 
@@ -100,11 +123,24 @@ const nodeTypes = {
 };
 
 const NODE_TYPE_TO_BOM: Record<string, string> = {
-  plc: 'PLC', safety_plc: '安全PLC', hmi: 'HMI', ipc: 'IPC',
-  io: 'IO模块', vfd: '变频器', servo: '伺服驱动器', power: '电源模块',
-  switch: '交换机', disconnect: '隔离开关', circuit_breaker: '断路器',
-  contactor: '接触器', relay: '继电器', safety_relay: '安全继电器',
-  estop: '急停按钮', transformer: '变压器', fuse: '熔断器', sensor: '传感器',
+  plc: 'PLC',
+  safety_plc: '安全PLC',
+  hmi: 'HMI',
+  ipc: 'IPC',
+  io: 'IO模块',
+  vfd: '变频器',
+  servo: '伺服驱动器',
+  power: '电源模块',
+  switch: '交换机',
+  disconnect: '隔离开关',
+  circuit_breaker: '断路器',
+  contactor: '接触器',
+  relay: '继电器',
+  safety_relay: '安全继电器',
+  estop: '急停按钮',
+  transformer: '变压器',
+  fuse: '熔断器',
+  sensor: '传感器',
 };
 
 export function TopologyPanel() {
@@ -119,7 +155,10 @@ export function TopologyPanel() {
   const tr = t(language);
 
   const [contextMenu, setContextMenu] = useState<{
-    x: number; y: number; nodes: NodeData[]; mode: 'single' | 'selection';
+    x: number;
+    y: number;
+    nodes: NodeData[];
+    mode: 'single' | 'selection';
   } | null>(null);
 
   const setPreviewNodeId = useStore((s) => s.setPreviewNodeId);
@@ -139,15 +178,7 @@ export function TopologyPanel() {
   const dragStartPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
   // Yjs CRDT observer: incrementally syncs topology into ReactFlow local state.
-  // Unlike the old Zustand effect, this does NOT replace all nodes — it diffs
-  // and preserves user drag positions via the draggingNodeIdsRef guard.
   useEffect(() => {
-    // Build a fully-styled ReactFlow edge from a normalized topology edge.
-    // - Resolves category from the explicit field, falling back to handle
-    //   prefix and finally protocol regex
-    // - Picks stroke + marker color from CATEGORY_COLORS
-    // - Animates only network edges (rotating dash makes packet flow obvious;
-    //   power/safety stay solid because they should look "always on")
     const buildStyledEdge = (snap: EdgeData) => {
       const category: EdgeCategoryKey =
         (snap.category as EdgeCategoryKey | undefined) ||
@@ -179,13 +210,10 @@ export function TopologyPanel() {
       const snapNodeIds = new Set(snapshot.nodes.map((n) => n.id));
 
       setNodes((current) => {
-        // Remove nodes absent from snapshot
         let next = current.filter((n) => snapNodeIds.has(n.id));
-
         for (const snap of snapshot.nodes) {
           const existingIdx = next.findIndex((n) => n.id === snap.id);
           if (existingIdx < 0) {
-            // New node
             next.push({
               id: snap.id,
               type: snap.type,
@@ -193,7 +221,6 @@ export function TopologyPanel() {
               data: { label: snap.label, status: snap.status || 'ok' },
             });
           } else if (!draggingIds.has(snap.id)) {
-            // Update type/label/status — x,y preserved if dragging
             const existing = next[existingIdx];
             next[existingIdx] = {
               ...existing,
@@ -208,14 +235,10 @@ export function TopologyPanel() {
       setEdges((current) => {
         const snapEdgeIds = new Set(snapshot.edges.map((e) => e.id));
         const snapById = new Map(snapshot.edges.map((e) => [e.id, e] as const));
-        // Drop deleted edges
         let next = current.filter((e) => snapEdgeIds.has(e.id));
-        // Update existing — handle/category may have been re-classified
         next = next.map((e) => {
           const snap = snapById.get(e.id);
           if (!snap) return e;
-          // If the existing edge already has matching handles, keep ReactFlow's
-          // own selection state; otherwise re-build to apply new styling.
           if (
             e.sourceHandle === snap.sourceHandle &&
             e.targetHandle === snap.targetHandle &&
@@ -225,7 +248,6 @@ export function TopologyPanel() {
           }
           return { ...e, ...buildStyledEdge(snap) };
         });
-        // Append new edges
         for (const snap of snapshot.edges) {
           if (!next.some((e) => e.id === snap.id)) {
             next.push(buildStyledEdge(snap));
@@ -234,7 +256,6 @@ export function TopologyPanel() {
         return next;
       });
 
-      // Keep Zustand in sync for non-ReactFlow subscribers
       useStore.getState().syncTopologyFromYjs();
     });
 
@@ -250,7 +271,6 @@ export function TopologyPanel() {
   const handleSyncToCode = useCallback(async () => {
     if (isSyncing || !project) return;
     setIsSyncing(true);
-    // Read from Yjs snapshot (authoritative source)
     const snapshot = getTopologySnapshot();
     try {
       const data = await api.updateCodeFromTopology(project.id, snapshot);
@@ -285,17 +305,15 @@ export function TopologyPanel() {
       await api.confirmTopology(project.id);
       setTopologyStatus('confirmed');
 
-      // Generate BOM from topology nodes
       const bomItems = snapshot.nodes.map((node, idx) => ({
         id: String(idx + 1),
         name: node.label || `${NODE_TYPE_TO_BOM[node.type] || node.type} ${node.id.slice(-4)}`,
         mfg: node.details?.manufacturer || '待选型',
         pn: node.details?.partNumber || '',
         qty: 1,
-        specs: [
-          node.type ? `类型: ${NODE_TYPE_TO_BOM[node.type] || node.type}` : '',
-          node.details?.specifications || '',
-        ].filter(Boolean).join(', '),
+        specs: [node.type ? `类型: ${NODE_TYPE_TO_BOM[node.type] || node.type}` : '', node.details?.specifications || '']
+          .filter(Boolean)
+          .join(', '),
       }));
       setBOM(bomItems);
     } catch (err) {
@@ -311,10 +329,8 @@ export function TopologyPanel() {
     const y = Math.random() * 200 + 100;
     const label = `New ${type.toUpperCase()}`;
 
-    // Write to Yjs first (CRDT source of truth)
     addUserNode({ id, type, label, x, y, status: 'ok' });
 
-    // Then update ReactFlow local state
     setNodes((nds) =>
       nds.concat({
         id,
@@ -330,13 +346,9 @@ export function TopologyPanel() {
     (changes: any) => {
       onNodesChange(changes);
 
-      // Track drag state & persist position to Yjs on drag end
       for (const c of changes) {
         if (c.type === 'position') {
           if (c.dragging) {
-            // First position-change of this drag: snapshot the current
-            // (pre-drag) position so we can ship it as `before` to the
-            // memory-flywheel feedback API on release.
             if (!draggingNodeIdsRef.current.has(c.id)) {
               const startNode = nodesRef.current.find((n) => n.id === c.id);
               if (startNode) {
@@ -352,11 +364,6 @@ export function TopologyPanel() {
             const rfNode = nodesRef.current.find((n) => n.id === c.id);
             if (rfNode) {
               updateNodePosition(c.id, rfNode.position.x, rfNode.position.y);
-              // Fire the M2 `topology_edit` decision after persist. We
-              // only post when we have a real before/after pair AND the
-              // position actually changed — a stray click on a node
-              // shouldn't create noisy feedback rows. All errors are
-              // swallowed: a flaky backend must never break drag UX.
               const before = dragStartPositionsRef.current.get(c.id);
               dragStartPositionsRef.current.delete(c.id);
               if (
@@ -377,7 +384,6 @@ export function TopologyPanel() {
         }
       }
 
-      // Handle structural changes (remove) — sync to Yjs & trigger codegen
       const removedIds = changes
         .filter((c: any) => c.type === 'remove')
         .map((c: any) => c.id);
@@ -417,17 +423,14 @@ export function TopologyPanel() {
       const target = params.target;
       if (!source || !target) return;
 
-      // Infer category from whichever handle the user grabbed; fall back to
-      // network if both handles are unspecified (rare — usually means
-      // user dropped on the node body, not a handle).
       const sourceHandle = params.sourceHandle ?? undefined;
       const targetHandle = params.targetHandle ?? undefined;
       const category =
         handleToCategory(sourceHandle) !== 'default'
           ? handleToCategory(sourceHandle)
           : handleToCategory(targetHandle) !== 'default'
-          ? handleToCategory(targetHandle)
-          : 'network';
+            ? handleToCategory(targetHandle)
+            : 'network';
       const protocol = CATEGORY_DEFAULT_PROTOCOL[category];
       const color = CATEGORY_COLORS[category];
       const id = `e_${source}_${target}_${Date.now()}`;
@@ -451,9 +454,6 @@ export function TopologyPanel() {
         markerEnd: { type: MarkerType.ArrowClosed, color },
       };
 
-      // Write to Yjs (CRDT source of truth) with the inferred handle/category.
-      // EdgeData.category is the strict 4-value union (no 'default'), so we
-      // only persist a category when classification produced a real one.
       addUserEdge({
         id,
         source,
@@ -488,11 +488,10 @@ export function TopologyPanel() {
 
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
-      // Re-classify based on the new handle the user dropped on, so the
-      // edge keeps matching its electrical category.
-      const newCategory = handleToCategory(newConnection.sourceHandle ?? undefined) !== 'default'
-        ? handleToCategory(newConnection.sourceHandle ?? undefined)
-        : handleToCategory(newConnection.targetHandle ?? undefined);
+      const newCategory =
+        handleToCategory(newConnection.sourceHandle ?? undefined) !== 'default'
+          ? handleToCategory(newConnection.sourceHandle ?? undefined)
+          : handleToCategory(newConnection.targetHandle ?? undefined);
       const color = newCategory !== 'default' ? CATEGORY_COLORS[newCategory] : undefined;
       setEdges((els) =>
         els.map((e) => {
@@ -580,65 +579,206 @@ export function TopologyPanel() {
 
   const hasTopology = topology.nodes.length > 0;
 
+  const NODE_PALETTE = [
+    ['plc', 'PLC'],
+    ['safety_plc', 'SafePLC'],
+    ['hmi', 'HMI'],
+    ['ipc', 'IPC'],
+    ['io', 'IO'],
+    ['vfd', 'VFD'],
+    ['servo', 'Servo'],
+    ['power', 'Power'],
+    ['switch', 'Switch'],
+    ['disconnect', 'Disc.'],
+    ['circuit_breaker', 'CB'],
+    ['contactor', 'Cont.'],
+    ['relay', 'Relay'],
+    ['safety_relay', 'SafeRel'],
+    ['estop', 'E-Stop'],
+    ['transformer', 'Trans.'],
+    ['fuse', 'Fuse'],
+    ['sensor', 'Sensor'],
+  ] as const;
+
   return (
-    <div className="w-full h-full relative overflow-hidden flex flex-col p-8 rounded-[2.5rem]">
-      <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-app-accent/20 rounded-full blur-[100px]" />
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        p: 4,
+        borderRadius: 5,
+      }}
+    >
+      {/* Decorative blur */}
+      <Box
+        sx={(theme) => ({
+          position: 'absolute',
+          right: -80,
+          bottom: -80,
+          width: 320,
+          height: 320,
+          bgcolor: alpha(theme.palette.primary.main, 0.1),
+          borderRadius: '50%',
+          filter: 'blur(100px)',
+          pointerEvents: 'none',
+        })}
+      />
 
       {!hasTopology ? (
         /* Empty state: direct users to start from chat */
-        <div className="flex-1 flex flex-col items-center justify-center relative z-10">
-          <div className="w-24 h-24 mb-6 rounded-3xl bg-app-accent/10 border border-indigo-500/20 flex items-center justify-center">
-            <svg className="w-10 h-10 text-app-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v2.25A2.25 2.25 0 006 10.5zm0 9.75h2.25A2.25 2.25 0 0010.5 18v-2.25a2.25 2.25 0 00-2.25-2.25H6a2.25 2.25 0 00-2.25 2.25V18A2.25 2.25 0 006 20.25zm9.75-9.75H18a2.25 2.25 0 002.25-2.25V6A2.25 2.25 0 0018 3.75h-2.25A2.25 2.25 0 0013.5 6v2.25a2.25 2.25 0 002.25 2.25z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-bold text-app-text-secondary mb-2">{tr.topology.empty}</h3>
-          <p className="text-sm text-app-text-tertiary text-center max-w-xs leading-relaxed">
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            zIndex: 10,
+          }}
+        >
+          <Box
+            sx={(theme) => ({
+              width: 96,
+              height: 96,
+              mb: 4,
+              borderRadius: 3,
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              border: 1,
+              borderColor: alpha(theme.palette.primary.main, 0.2),
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            })}
+          >
+            <AccountTreeIcon
+              sx={(theme) => ({
+                fontSize: 40,
+                color: theme.palette.primary.main,
+              })}
+            />
+          </Box>
+          <Typography
+            variant="titleLarge"
+            sx={{ color: 'text.secondary', mb: 1, fontWeight: 700 }}
+          >
+            {tr.topology.empty}
+          </Typography>
+          <Typography
+            variant="bodyMedium"
+            color="text.disabled"
+            sx={{ textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}
+          >
             {tr.topology.emptyHint}
-          </p>
-        </div>
+          </Typography>
+        </Box>
       ) : (
         <>
           {/* Toolbar: only visible when topology exists */}
-          <div className="flex justify-between items-center relative z-10 shrink-0 mb-4">
-            <div className="flex items-center gap-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-app-accent/10 border border-indigo-500/20 rounded-full">
-                <span className="w-1.5 h-1.5 bg-app-accent rounded-full animate-pulse" />
-                <span className="text-[10px] font-bold text-app-accent uppercase tracking-widest">
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              position: 'relative',
+              zIndex: 10,
+              flexShrink: 0,
+              mb: 2,
+              gap: 2,
+              flexWrap: 'wrap',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              {/* Status badge */}
+              <Box
+                sx={(theme) => ({
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 1.5,
+                  py: 0.5,
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  border: 1,
+                  borderColor: alpha(theme.palette.primary.main, 0.2),
+                  borderRadius: 999,
+                })}
+              >
+                <Box
+                  sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    bgcolor: 'primary.light',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    '@keyframes pulse': {
+                      '0%, 100%': { opacity: 1 },
+                      '50%': { opacity: 0.4 },
+                    },
+                  }}
+                />
+                <Typography
+                  variant="labelSmall"
+                  sx={{
+                    color: 'primary.light',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                  }}
+                >
                   {tr.topology.active}
-                </span>
-              </div>
-              <div className="flex bg-app-bg-tertiary rounded-xl p-1 gap-1 flex-wrap max-w-[600px]">
-                {[
-                  ['plc', 'PLC'],
-                  ['safety_plc', 'SafePLC'],
-                  ['hmi', 'HMI'],
-                  ['ipc', 'IPC'],
-                  ['io', 'IO'],
-                  ['vfd', 'VFD'],
-                  ['servo', 'Servo'],
-                  ['power', 'Power'],
-                  ['switch', 'Switch'],
-                  ['disconnect', 'Disc.'],
-                  ['circuit_breaker', 'CB'],
-                  ['contactor', 'Cont.'],
-                  ['relay', 'Relay'],
-                  ['safety_relay', 'SafeRel'],
-                  ['estop', 'E-Stop'],
-                  ['transformer', 'Trans.'],
-                  ['fuse', 'Fuse'],
-                  ['sensor', 'Sensor'],
-                ].map(([type, label]) => (
-                  <button
+                </Typography>
+              </Box>
+
+              {/* Node palette */}
+              <Box
+                sx={(theme) => ({
+                  display: 'flex',
+                  bgcolor: theme.palette.surfaceContainer || alpha(theme.palette.common.white, 0.05),
+                  borderRadius: 2,
+                  p: 0.5,
+                  gap: 0.5,
+                  flexWrap: 'wrap',
+                  maxWidth: 600,
+                })}
+              >
+                {NODE_PALETTE.map(([type, label]) => (
+                  <Button
                     key={type}
+                    size="small"
                     onClick={() => addNode(type)}
-                    className="px-2 py-1.5 text-[11px] font-bold text-app-text-secondary hover:text-app-text-primary hover:bg-app-bg-tertiary rounded-lg transition-colors"
+                    sx={{
+                      px: 1,
+                      py: 0.5,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: 'text.secondary',
+                      minWidth: 0,
+                      lineHeight: 1.4,
+                      borderRadius: 1,
+                      textTransform: 'none',
+                      '&:hover': {
+                        color: 'text.primary',
+                        bgcolor: 'action.hover',
+                      },
+                    }}
                   >
                     + {label}
-                  </button>
+                  </Button>
                 ))}
-                <div className="w-px bg-app-bg-tertiary my-1 mx-1" />
-                <button
+                <Box
+                  sx={{
+                    width: 1,
+                    my: 0.5,
+                    mx: 0.5,
+                    bgcolor: 'divider',
+                  }}
+                />
+                <Button
+                  size="small"
                   onClick={() => {
                     const nodeRemovals = nodes.filter((n) => n.selected).map((n) => ({ type: 'remove' as const, id: n.id }));
                     const edgeRemovals = edges.filter((e) => e.selected).map((e) => ({ type: 'remove' as const, id: e.id }));
@@ -646,48 +786,117 @@ export function TopologyPanel() {
                     if (edgeRemovals.length > 0) handleEdgesChange(edgeRemovals);
                   }}
                   disabled={!nodes.some((n) => n.selected) && !edges.some((e) => e.selected)}
-                  className="px-3 py-1.5 text-xs font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg transition-colors"
+                  sx={{
+                    px: 1.5,
+                    py: 0.5,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: '#f87171',
+                    minWidth: 0,
+                    lineHeight: 1.4,
+                    borderRadius: 1,
+                    textTransform: 'none',
+                    '&:hover': {
+                      color: '#fca5a5',
+                      bgcolor: 'rgba(244,63,94,0.2)',
+                    },
+                    '&.Mui-disabled': {
+                      opacity: 0.3,
+                    },
+                  }}
                 >
                   {tr.topology.delete}
-                </button>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button
+                </Button>
+              </Box>
+            </Box>
+
+            {/* Action buttons */}
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+              <Button
+                variant="outlined"
+                size="small"
                 onClick={handleSaveTopologyDraft}
                 disabled={isSavingTopology || !project}
-                className="px-4 py-2.5 bg-app-bg-tertiary border border-app-border rounded-2xl text-sm font-bold hover:bg-app-bg-tertiary disabled:opacity-50 transition-colors"
+                sx={{
+                  borderRadius: 4,
+                  fontWeight: 700,
+                  fontSize: 13,
+                  borderColor: 'divider',
+                  color: 'text.secondary',
+                }}
               >
                 {isSavingTopology ? '保存中...' : topologyStatus === 'draft' ? '已保存草稿' : '保存草稿'}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
                 onClick={handleConfirmTopology}
                 disabled={isSavingTopology || !project}
-                className={`px-4 py-2.5 border rounded-2xl text-sm font-bold disabled:opacity-50 transition-colors ${
-                  topologyStatus === 'confirmed'
-                    ? 'bg-emerald-600 border-emerald-500 text-app-text-primary'
-                    : 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/20'
-                }`}
+                sx={{
+                  borderRadius: 4,
+                  fontWeight: 700,
+                  fontSize: 13,
+                  ...(topologyStatus === 'confirmed'
+                    ? {
+                        bgcolor: '#059669',
+                        borderColor: '#10b981',
+                        color: 'text.primary',
+                        '&:hover': { bgcolor: '#047857' },
+                      }
+                    : {
+                        bgcolor: 'rgba(16,185,129,0.1)',
+                        borderColor: 'rgba(16,185,129,0.4)',
+                        color: '#6ee7b7',
+                        '&:hover': { bgcolor: 'rgba(16,185,129,0.2)' },
+                      }),
+                }}
               >
                 {topologyStatus === 'confirmed' ? '拓扑已确认' : '确认拓扑'}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
                 onClick={handleSyncToCode}
                 disabled={isSyncing || !project}
-                className="px-6 py-2.5 bg-app-accent border border-indigo-500 rounded-2xl text-sm font-bold text-app-text-primary hover:bg-app-accent-hover disabled:opacity-50 transition-colors shadow-lg shadow-indigo-500/20"
+                sx={{
+                  borderRadius: 4,
+                  fontWeight: 700,
+                  fontSize: 13,
+                  boxShadow: '0 4px 14px rgba(99,102,241,0.2)',
+                }}
               >
                 {isSyncing ? tr.topology.syncing : tr.topology.sync}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
                 onClick={handleExportSvg}
-                className="px-6 py-2.5 bg-app-bg-tertiary border border-app-border rounded-2xl text-sm font-bold hover:bg-app-bg-tertiary transition-colors"
+                sx={{
+                  borderRadius: 4,
+                  fontWeight: 700,
+                  fontSize: 13,
+                  borderColor: 'divider',
+                }}
               >
                 {tr.topology.exportSvg}
-              </button>
-            </div>
-          </div>
+              </Button>
+            </Box>
+          </Box>
 
-          <div className="flex-1 relative z-10 p-0 rounded-3xl overflow-hidden border border-app-border/50 bg-app-bg-primary">
+          {/* ReactFlow Canvas */}
+          <Paper
+            variant="outlined"
+            sx={(theme) => ({
+              flex: 1,
+              position: 'relative',
+              zIndex: 10,
+              borderRadius: 3,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.black, 0.2) : alpha(theme.palette.common.white, 0.5),
+            })}
+          >
             <IOBudgetBar budget={budget} />
             <ReactFlow
               key={`rf-${project?.id || 'default'}`}
@@ -715,8 +924,22 @@ export function TopologyPanel() {
               attributionPosition="bottom-right"
               className="react-flow-dark"
             >
-              <Background color="var(--color-grid)" variant={BackgroundVariant.Dots} gap={24} size={2} />
-              <Controls className="bg-app-bg-tertiary border-app-border fill-app-text-secondary text-app-text-secondary" />
+              <Background
+                color="#334155"
+                variant={BackgroundVariant.Dots}
+                gap={24}
+                size={2}
+              />
+              <Controls
+                showZoom
+                showFitView
+                showInteractive
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                }}
+                className="react-flow__controls-dark"
+              />
             </ReactFlow>
             {contextMenu && (
               <CanvasContextMenu
@@ -728,9 +951,9 @@ export function TopologyPanel() {
               />
             )}
             <NodeInfoCard />
-          </div>
+          </Paper>
         </>
       )}
-    </div>
+    </Box>
   );
 }
