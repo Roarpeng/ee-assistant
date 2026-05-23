@@ -93,6 +93,40 @@ export function ChatPanel() {
   const normalizeTopologyPayload = (raw: any): { nodes: NodeData[]; edges: EdgeData[] } => {
     const nodesIn: any[] = Array.isArray(raw?.nodes) ? raw.nodes : [];
     const nodes: NodeData[] = [];
+    
+    // 1. 预分配所有节点的层级以完成工业重力排序
+    const nodeLayers = new Map<string, { layer: number; index: number }>();
+    const layerCounts = [0, 0, 0, 0]; // 4 个层级的节点计数
+
+    nodesIn.forEach((n, i) => {
+      if (!n || typeof n !== 'object') return;
+      const id = String(n.id ?? `node_${i}`).trim();
+      const type = String(n.type ?? '').toLowerCase();
+      const data = n.data && typeof n.data === 'object' ? n.data : {};
+      const labelRaw = String(n.label ?? data.label ?? '').toLowerCase();
+
+      let layer = 3; // 默认第四层 (现场设备层)
+      if (
+        type.includes('plc') || type.includes('ipc') ||
+        labelRaw.includes('plc') || labelRaw.includes('控制器') || labelRaw.includes('s7-') || labelRaw.includes('1200')
+      ) {
+        layer = 0; // 第一层：控制决策层
+      } else if (
+        type.includes('power') || type.includes('switch') ||
+        labelRaw.includes('电源') || labelRaw.includes('开关') || labelRaw.includes('交换机') || labelRaw.includes('qf')
+      ) {
+        layer = 1; // 第二层：配电与辅助层
+      } else if (
+        type.includes('vfd') || type.includes('servo') || type.includes('contactor') || type.includes('relay') || type.includes('breaker') ||
+        labelRaw.includes('继电器') || labelRaw.includes('接触器') || labelRaw.includes('断路器') || labelRaw.includes('驱动器') || labelRaw.includes('变频器') || labelRaw.includes('km')
+      ) {
+        layer = 2; // 第三层：配电与执行驱动层
+      }
+
+      nodeLayers.set(id, { layer, index: layerCounts[layer] });
+      layerCounts[layer]++;
+    });
+
     nodesIn.forEach((n, i) => {
       if (!n || typeof n !== 'object') return;
       const id = String(n.id ?? `node_${i}`).trim();
@@ -105,8 +139,13 @@ export function ChatPanel() {
         [data.manufacturer, data.model].filter(Boolean).join(' ').trim() ??
         '';
       const label = String(labelRaw || (n.type ?? 'NODE')).slice(0, 60);
-      const x = Number.isFinite(+n.x) ? +n.x : Number.isFinite(+pos.x) ? +pos.x : 120 + (i % 6) * 220;
-      const y = Number.isFinite(+n.y) ? +n.y : Number.isFinite(+pos.y) ? +pos.y : 60 + Math.floor(i / 6) * 140;
+      
+      const layout = nodeLayers.get(id) || { layer: 3, index: i };
+      const layerYMap = [60, 220, 380, 540]; // 4 个层级在 Y 轴的像素高度
+
+      const x = Number.isFinite(+n.x) ? +n.x : Number.isFinite(+pos.x) ? +pos.x : 200 + (layout.index * 240);
+      const y = Number.isFinite(+n.y) ? +n.y : Number.isFinite(+pos.y) ? +pos.y : layerYMap[layout.layer];
+
       nodes.push({
         id,
         type: String(n.type ?? 'io').toLowerCase(),
@@ -127,13 +166,74 @@ export function ChatPanel() {
       if (!source || !target || !validIds.has(source) || !validIds.has(target)) return;
       const data = e.data && typeof e.data === 'object' ? e.data : {};
       const protocol = String(e.protocol ?? e.label ?? data.protocol ?? data.label ?? 'PROFINET').slice(0, 32);
-      const sourceHandle = typeof e.sourceHandle === 'string' ? e.sourceHandle : undefined;
-      const targetHandle = typeof e.targetHandle === 'string' ? e.targetHandle : undefined;
-      const category =
+      
+      let sourceHandle = typeof e.sourceHandle === 'string' ? e.sourceHandle : undefined;
+      let targetHandle = typeof e.targetHandle === 'string' ? e.targetHandle : undefined;
+      let category =
         e.category === 'power' || e.category === 'network' ||
         e.category === 'safety' || e.category === 'feedback'
           ? e.category
           : undefined;
+
+      try {
+        if (!category) {
+          const s = protocol.toUpperCase().trim();
+          if (/POWER|VOLT|220V|230V|380V|400V|480V|24V|12V|VAC|VDC|MAINS|AC_LINE|DC_LINE/.test(s)) {
+            category = 'power';
+          } else if (/SAFETY|E-?STOP|EMERGENCY|STO|GUARD|SS1|SS2/.test(s)) {
+            category = 'safety';
+          } else if (/PROFINET|ETHERCAT|ETHERNET|MODBUS|PROFIBUS|CANOPEN|CAN_BUS|RS485|RS232|OPC|TCP|MQTT|DEVICENET|IO_?LINK/.test(s)) {
+            category = 'network';
+          } else if (/SIGNAL|FEEDBACK|SENSOR|PULSE|ENCODER|PT100|PT1000|4-20|0-10V|ANALOG|DIGITAL_IO|^DI$|^DO$|^AI$|^AO$/.test(s)) {
+            category = 'feedback';
+          } else {
+            category = 'network';
+          }
+        }
+
+        if (!sourceHandle || !targetHandle) {
+          const sNode = nodes.find((n) => n.id === source);
+          const tNode = nodes.find((n) => n.id === target);
+          if (sNode && tNode) {
+            if (category === 'power') {
+              if (sNode.y <= tNode.y) {
+                sourceHandle = 'pwr-bottom';
+                targetHandle = 'pwr-top';
+              } else {
+                sourceHandle = 'pwr-top';
+                targetHandle = 'pwr-bottom';
+              }
+            } else if (category === 'feedback') {
+              if (sNode.y >= tNode.y) {
+                sourceHandle = 'fb-top';
+                targetHandle = 'fb-bottom';
+              } else {
+                sourceHandle = 'fb-bottom';
+                targetHandle = 'fb-top';
+              }
+            } else if (category === 'safety') {
+              if (sNode.x <= tNode.x) {
+                sourceHandle = 'safe-right';
+                targetHandle = 'safe-left';
+              } else {
+                sourceHandle = 'safe-left';
+                targetHandle = 'safe-right';
+              }
+            } else {
+              if (sNode.x <= tNode.x) {
+                sourceHandle = 'net-right';
+                targetHandle = 'net-left';
+              } else {
+                sourceHandle = 'net-left';
+                targetHandle = 'net-right';
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to auto-route edge connection handles:', err);
+      }
+
       edges.push({
         id: String(e.id ?? `e_${i}_${source}_${target}`),
         source,
@@ -171,6 +271,9 @@ export function ChatPanel() {
         .map((m: any) => `// ${m.name} (${m.module_type})\n${m.code}`)
         .join('\n\n');
       useStore.getState().setSCLCode(codeText);
+    }
+    if (state.mermaid_code || state.schematic?.mermaid_code) {
+      useStore.getState().setMermaidCode(state.mermaid_code || state.schematic?.mermaid_code);
     }
     if (state.project_meta) {
       useStore.getState().setProjectMeta({
@@ -424,67 +527,69 @@ export function ChatPanel() {
   return (
     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', px: 2.5, py: 2.5, overflow: 'hidden', minHeight: 0 }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexShrink: 0 }}>
-        <Box>
-          <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-            {tr.chat.agent}
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-            <Chip
-              label="快速对话"
-              size="small"
-              sx={{
-                bgcolor: 'rgba(16,185,129,0.1)',
-                color: '#34D399',
-                border: '1px solid rgba(16,185,129,0.2)',
-                fontWeight: 700,
-                fontSize: '0.625rem',
-                height: 22,
-                '& .MuiChip-label': { px: 0.5 },
-              }}
-            />
-            <Chip
-              label="LangGraph 生成"
-              size="small"
-              sx={{
-                bgcolor: 'rgba(129,140,248,0.1)',
-                color: 'primary.light',
-                border: '1px solid rgba(129,140,248,0.2)',
-                fontWeight: 700,
-                fontSize: '0.625rem',
-                height: 22,
-                '& .MuiChip-label': { px: 0.5 },
-              }}
-            />
-          </Box>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-          <Button
-            size="small"
-            onClick={() => { interruptedRef.current = false; interruptedRef2.current = null; newProject({ preserveCanvas: false }); }}
-            title={tr.chat.newProject}
-            sx={{ fontSize: '0.625rem', minWidth: 0, px: 1, py: 0.5, color: 'text.secondary', '&:hover': { color: 'primary.light', bgcolor: 'rgba(129,140,248,0.08)' } }}
-          >
-            + {tr.chat.newProject}
-          </Button>
-          <Button
-            size="small"
-            onClick={() => { interruptedRef.current = false; interruptedRef2.current = null; newProject({ preserveCanvas: true }); }}
-            title="沿用当前画布继续"
-            sx={{ fontSize: '0.625rem', minWidth: 0, px: 1, py: 0.5, color: 'text.secondary', '&:hover': { color: '#34D399', bgcolor: 'rgba(16,185,129,0.08)' } }}
-          >
-            沿用画布
-          </Button>
-          <Button
-            size="small"
-            onClick={clearChat}
-            title={tr.chat.clearChat}
-            startIcon={<DeleteIcon sx={{ fontSize: 13 }} />}
-            sx={{ fontSize: '0.625rem', minWidth: 0, px: 1, py: 0.5, color: 'text.secondary', '&:hover': { color: '#FBBF24', bgcolor: 'rgba(251,191,36,0.08)' } }}
-          >
-            {tr.chat.clearChat}
-          </Button>
-        </Box>
+      <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mb: 2.5, flexShrink: 0, borderBottom: '1px solid', borderColor: 'divider', pb: 1.5 }}>
+        <Button
+          size="small"
+          onClick={() => { interruptedRef.current = false; interruptedRef2.current = null; newProject({ preserveCanvas: false }); }}
+          title={tr.chat.newProject}
+          sx={{
+            fontSize: '0.725rem',
+            fontWeight: 700,
+            textTransform: 'none',
+            px: 1.5,
+            py: 0.75,
+            color: 'text.primary',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: '6px',
+            bgcolor: 'background.paper',
+            '&:hover': { color: 'primary.light', bgcolor: 'rgba(129,140,248,0.08)', borderColor: 'primary.light' }
+          }}
+        >
+          + {tr.chat.newProject}
+        </Button>
+        <Button
+          size="small"
+          onClick={() => { interruptedRef.current = false; interruptedRef2.current = null; newProject({ preserveCanvas: true }); }}
+          title="沿用当前画布继续"
+          sx={{
+            fontSize: '0.725rem',
+            fontWeight: 700,
+            textTransform: 'none',
+            px: 1.5,
+            py: 0.75,
+            color: 'text.primary',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: '6px',
+            bgcolor: 'background.paper',
+            '&:hover': { color: '#34D399', bgcolor: 'rgba(16,185,129,0.08)', borderColor: '#34D399' }
+          }}
+        >
+          沿用画布
+        </Button>
+        <Button
+          size="small"
+          onClick={clearChat}
+          title={tr.chat.clearChat}
+          startIcon={<DeleteIcon sx={{ fontSize: 13 }} />}
+          sx={{
+            fontSize: '0.725rem',
+            fontWeight: 700,
+            textTransform: 'none',
+            px: 1.5,
+            py: 0.75,
+            color: 'text.secondary',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: '6px',
+            bgcolor: 'background.paper',
+            ml: 'auto',
+            '&:hover': { color: '#FBBF24', bgcolor: 'rgba(251,191,36,0.08)', borderColor: '#FBBF24' }
+          }}
+        >
+          {tr.chat.clearChat}
+        </Button>
       </Box>
 
       {/* Chat context link banner */}
@@ -687,11 +792,16 @@ export function ChatPanel() {
         sx={{
           mt: 2.5,
           flexShrink: 0,
-          borderRadius: 4,
+          borderRadius: '12px',
           bgcolor: 'background.default',
           borderColor: 'divider',
-          p: 1,
-          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+          p: 1.5,
+          boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+          '&:focus-within': {
+            borderColor: 'primary.light',
+            boxShadow: '0 8px 30px rgba(99, 102, 241, 0.15)',
+          },
+          transition: 'border-color 0.2s, box-shadow 0.2s',
         }}
       >
         <TextField
@@ -712,6 +822,7 @@ export function ChatPanel() {
           sx={{
             '& .MuiOutlinedInput-root': {
               bgcolor: 'transparent',
+              p: 0,
               '& fieldset': { border: 'none' },
             },
             '& .MuiInputBase-input': {
@@ -722,7 +833,7 @@ export function ChatPanel() {
             },
           }}
         />
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid', borderColor: 'divider', pt: 1, px: 0.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid', borderColor: 'divider', pt: 1.5, mt: 1, px: 0.5 }}>
           <Typography sx={{ fontSize: '0.625rem', color: 'text.disabled' }}>
             Enter 发送 · Shift+Enter 换行 · 输出前自动核准
           </Typography>
@@ -731,7 +842,19 @@ export function ChatPanel() {
             disabled={isProcessing || !inputValue.trim()}
             variant="contained"
             endIcon={isProcessing ? <CircularProgress size={14} color="inherit" /> : <SendIcon sx={{ fontSize: 16 }} />}
-            sx={{ fontWeight: 700, fontSize: '0.75rem', px: 2.5, py: 1, minWidth: 0, borderRadius: 3 }}
+            sx={{
+              fontWeight: 700,
+              fontSize: '0.75rem',
+              px: 2.5,
+              py: 0.75,
+              minWidth: 0,
+              borderRadius: '6px',
+              textTransform: 'none',
+              boxShadow: 'none',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+              }
+            }}
           >
             {isProcessing ? '处理中' : tr.chat.send}
           </Button>

@@ -86,7 +86,7 @@ export function AppLayout({ initialTab }: { initialTab?: 'chat' | 'knowledge' })
     ['topology', tr.header.topology],
     ['wiring', tr.header.wiring],
     ['bom', tr.header.bom],
-    ['code', tr.header.code],
+    ['code', language === 'zh' ? '电气原理图' : 'Schematics'],
     ['cabinet', tr.header.cabinet],
     ['guide', tr.header.guide],
   ];

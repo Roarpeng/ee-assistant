@@ -26,10 +26,9 @@ class Project(Base):
     )
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
-    title: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    topic_tags: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
     requirement: Mapped["Requirement | None"] = relationship(back_populates="project", uselist=False, cascade="all, delete-orphan")
+
     bom_items: Mapped[list["BOMItem"]] = relationship(back_populates="project", cascade="all, delete-orphan")
     schematic: Mapped["Schematic | None"] = relationship(back_populates="project", uselist=False, cascade="all, delete-orphan")
     code_modules: Mapped[list["STModule"]] = relationship(back_populates="project", cascade="all, delete-orphan")

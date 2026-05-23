@@ -84,23 +84,27 @@ class RAGEngine:
         return detect_provider(base_url)
 
     async def init_collection(self):
-        cols = await self.qdrant.get_collections()
-        names = [c.name for c in cols.collections]
-        
-        if self.collection in names:
-            # Check existing collection dimensions
-            info = await self.qdrant.get_collection(collection_name=self.collection)
-            existing_size = info.config.params.vectors.size
-            if existing_size != self._embed_dim:
-                print(f"Dimension mismatch in Qdrant (Existing: {existing_size}, Config: {self._embed_dim}). Re-creating collection.")
-                await self.qdrant.delete_collection(collection_name=self.collection)
-                names.remove(self.collection)
+        try:
+            cols = await self.qdrant.get_collections()
+            names = [c.name for c in cols.collections]
+            
+            if self.collection in names:
+                # Check existing collection dimensions
+                info = await self.qdrant.get_collection(collection_name=self.collection)
+                existing_size = info.config.params.vectors.size
+                if existing_size != self._embed_dim:
+                    print(f"Dimension mismatch in Qdrant (Existing: {existing_size}, Config: {self._embed_dim}). Re-creating collection.")
+                    await self.qdrant.delete_collection(collection_name=self.collection)
+                    names.remove(self.collection)
 
-        if self.collection not in names:
-            await self.qdrant.create_collection(
-                collection_name=self.collection,
-                vectors_config=VectorParams(size=self._embed_dim, distance=Distance.COSINE),
-            )
+            if self.collection not in names:
+                await self.qdrant.create_collection(
+                    collection_name=self.collection,
+                    vectors_config=VectorParams(size=self._embed_dim, distance=Distance.COSINE),
+                )
+        except Exception as e:
+            print(f"Warning: Failed to connect to Qdrant or initialize collection: {e}. RAG engine vector path will be disabled.")
+
 
     async def embed(self, texts: list[str], batch_size: int = 20) -> list[list[float]]:
         client = self._get_embed_client()

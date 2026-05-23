@@ -148,6 +148,7 @@ export const api = {
     return request<{ sclCode: string }>(`/projects/${projectId}/codegen`, {
       method: 'POST',
       body: JSON.stringify({
+        project_id: projectId,
         topology,
         llm_config: {
           api_key: settings.chat.apiKey,

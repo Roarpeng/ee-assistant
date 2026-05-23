@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     llm_model: str = ""
     llm_max_tokens: int = 4096
 
-    model_config = {"extra": "ignore", "populate_by_name": True}
+    model_config = {"extra": "ignore", "populate_by_name": True, "env_file": ".env"}
 
     # ---------- Effective Chat config ----------
     # Priority: CHAT_* (generic) → DASHSCOPE → ARK → DEEPSEEK → ANTHROPIC → OPENAI

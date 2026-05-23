@@ -55,11 +55,17 @@ async def build_graph():
 
     async with _lock:
         if _checkpointer is None:
-            _checkpointer_ctx = AsyncPostgresSaver.from_conn_string(_pg_conn_str())
-            _checkpointer = await _checkpointer_ctx.__aenter__()
+            if "sqlite" in os.getenv("DATABASE_URL", ""):
+                from langgraph.checkpoint.memory import MemorySaver
+                _checkpointer = MemorySaver()
+                _setup_done = True
+            else:
+                _checkpointer_ctx = AsyncPostgresSaver.from_conn_string(_pg_conn_str())
+                _checkpointer = await _checkpointer_ctx.__aenter__()
         if not _setup_done:
             await _checkpointer.setup()
             _setup_done = True
+
 
         if _compiled_graph is not None:
             return _compiled_graph

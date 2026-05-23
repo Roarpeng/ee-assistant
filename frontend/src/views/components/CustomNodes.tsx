@@ -14,18 +14,18 @@ const HANDLE_COLOR = {
 type HandleCategory = keyof typeof HANDLE_COLOR;
 
 function handleStyle(category: HandleCategory, selected?: boolean): CSSProperties {
-  const color = HANDLE_COLOR[category];
+  const color = HANDLE_COLOR[category] || '#737373';
   return {
     background: color,
-    borderColor: selected ? '#ffffff' : '#0a0a0a',
-    boxShadow: selected ? `0 0 8px ${color}` : 'none',
+    borderColor: selected ? '#ffffff' : '#171717',
+    boxShadow: selected ? `0 0 10px ${color}` : `0 0 4px ${color}80`,
     width: 9,
     height: 9,
     borderRadius: 9,
     borderWidth: 1.5,
     borderStyle: 'solid',
     transition: 'opacity 200ms, transform 200ms, box-shadow 200ms',
-    opacity: selected ? 1 : 0,
+    opacity: selected ? 1 : 0.45,
     zIndex: 50,
   };
 }

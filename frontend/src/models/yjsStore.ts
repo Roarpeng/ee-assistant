@@ -7,8 +7,9 @@ const ydoc = new Y.Doc();
 
 // y-webrtc provider for local multi-tab / future multi-user collaboration.
 // In single-user mode, if no peers connect, the CRDT operates locally.
+// We set signaling to [] to prevent infinite websocket connection failures to the public server.
 const webrtcProvider = new WebrtcProvider('ele-topology', ydoc, {
-  signaling: ['wss://signaling.yjs.dev'],
+  signaling: [],
 });
 // y-webrtc will attempt P2P; failures are non-fatal (CRDT works locally)
 
@@ -112,6 +113,9 @@ export function mergeAITopology(aiNodes: NodeData[], aiEdges: EdgeData[]): void 
         yEdges.push([edgeToYMap(aiEdge)]);
       }
     }
+    
+    // Auto-apply gravity alignment and routing after merging AI topology updates
+    applyGravityLayoutToYjs();
   });
 }
 
@@ -128,10 +132,46 @@ export function updateNodePosition(nodeId: string, x: number, y: number): void {
   }
 }
 
+export function updateTopologyLayout(
+  nodes: { id: string; x: number; y: number }[],
+  edges: { id: string; sourceHandle?: string; targetHandle?: string }[]
+): void {
+  ydoc.transact(() => {
+    const nodesArr = yNodes.toArray();
+    for (const item of nodes) {
+      const idx = nodesArr.findIndex((n) => n.get('id') === item.id);
+      if (idx >= 0) {
+        yNodes.get(idx).set('x', item.x);
+        yNodes.get(idx).set('y', item.y);
+      }
+    }
+    const edgesArr = yEdges.toArray();
+    for (const item of edges) {
+      const idx = edgesArr.findIndex((e) => e.get('id') === item.id);
+      if (idx >= 0) {
+        const edgeMap = yEdges.get(idx);
+        if (item.sourceHandle) {
+          edgeMap.set('sourceHandle', item.sourceHandle);
+        } else {
+          edgeMap.delete('sourceHandle');
+        }
+        if (item.targetHandle) {
+          edgeMap.set('targetHandle', item.targetHandle);
+        } else {
+          edgeMap.delete('targetHandle');
+        }
+      }
+    }
+  });
+}
+
 // ── User canvas mutations ──
 
 export function addUserNode(node: NodeData): void {
-  yNodes.push([nodeToYMap(node)]);
+  ydoc.transact(() => {
+    yNodes.push([nodeToYMap(node)]);
+    applyGravityLayoutToYjs();
+  });
 }
 
 export function removeUserNodes(nodeIds: string[]): void {
@@ -195,4 +235,124 @@ export function resetYjsDoc(): void {
 export function destroyYjsProvider(): void {
   webrtcProvider.destroy();
   ydoc.destroy();
+}
+
+// ─── Underlying Auto-Gravity Topology Alignment & Terminal Healing Engine ───
+export function applyGravityLayoutToYjs(): void {
+  const nodes = yNodes.toArray().map(yMapToNode);
+  if (nodes.length === 0) return;
+
+  const nodeLayers = nodes.map((n) => {
+    const type = String(n.type ?? '').toLowerCase();
+    const label = String(n.label ?? '').toLowerCase();
+    let layer = 3;
+
+    if (
+      type.includes('plc') || type.includes('ipc') ||
+      label.includes('plc') || label.includes('控制器') || label.includes('s7-') || label.includes('1200')
+    ) {
+      layer = 0;
+    } else if (
+      type.includes('power') || type.includes('switch') ||
+      label.includes('电源') || label.includes('开关') || label.includes('交换机') || label.includes('qf')
+    ) {
+      layer = 1;
+    } else if (
+      type.includes('vfd') || type.includes('servo') || type.includes('contactor') || type.includes('relay') || type.includes('breaker') ||
+      label.includes('继电器') || label.includes('接触器') || label.includes('断路器') || label.includes('驱动器') || label.includes('变频器') || label.includes('km')
+    ) {
+      layer = 2;
+    }
+    return { node: n, layer };
+  });
+
+  const layerYMap = [60, 240, 420, 600];
+  const nodesByLayer: NodeData[][] = [[], [], [], []];
+  nodeLayers.forEach((item) => {
+    nodesByLayer[item.layer].push(item.node);
+  });
+  nodesByLayer.forEach((arr) => {
+    arr.sort((a, b) => a.x - b.x);
+  });
+
+  const minSpacing = 240;
+  const updatedNodes = new Map<string, { x: number; y: number }>();
+
+  nodesByLayer.forEach((arr, layerIdx) => {
+    const N = arr.length;
+    if (N === 0) return;
+    const y = layerYMap[layerIdx];
+    const layerWidth = (N - 1) * minSpacing;
+    const startX = 600 - layerWidth / 2;
+
+    arr.forEach((node, idx) => {
+      const x = N === 1 ? 600 : startX + idx * minSpacing;
+      updatedNodes.set(node.id, { x, y });
+    });
+  });
+
+  // Write computed uniform grid positions back to yNodes
+  const nodesArr = yNodes.toArray();
+  for (let idx = 0; idx < nodesArr.length; idx++) {
+    const yNode = yNodes.get(idx);
+    const nodeId = yNode.get('id');
+    const pos = updatedNodes.get(nodeId);
+    if (pos) {
+      yNode.set('x', pos.x);
+      yNode.set('y', pos.y);
+    }
+  }
+
+  // Heal handles/ports automatically based on gravity hierarchy差
+  const edges = yEdges.toArray().map(yMapToEdge);
+  const edgesArr = yEdges.toArray();
+  edges.forEach((edge, idx) => {
+    const sourcePos = updatedNodes.get(edge.source);
+    const targetPos = updatedNodes.get(edge.target);
+    if (!sourcePos || !targetPos) return;
+
+    const category = edge.category || 'network';
+    let sourceHandle: string | undefined;
+    let targetHandle: string | undefined;
+
+    if (category === 'power') {
+      if (sourcePos.y <= targetPos.y) {
+        sourceHandle = 'pwr-bottom';
+        targetHandle = 'pwr-top';
+      } else {
+        sourceHandle = 'pwr-top';
+        targetHandle = 'pwr-bottom';
+      }
+    } else if (category === 'feedback') {
+      if (sourcePos.y >= targetPos.y) {
+        sourceHandle = 'fb-top';
+        targetHandle = 'fb-bottom';
+      } else {
+        sourceHandle = 'fb-bottom';
+        targetHandle = 'fb-top';
+      }
+    } else if (category === 'safety') {
+      if (sourcePos.x <= targetPos.x) {
+        sourceHandle = 'safe-right';
+        targetHandle = 'safe-left';
+      } else {
+        sourceHandle = 'safe-left';
+        targetHandle = 'safe-right';
+      }
+    } else {
+      if (sourcePos.x <= targetPos.x) {
+        sourceHandle = 'net-right';
+        targetHandle = 'net-left';
+      } else {
+        sourceHandle = 'net-left';
+        targetHandle = 'net-right';
+      }
+    }
+
+    const yEdge = yEdges.get(idx);
+    if (yEdge) {
+      if (sourceHandle) yEdge.set('sourceHandle', sourceHandle);
+      if (targetHandle) yEdge.set('targetHandle', targetHandle);
+    }
+  });
 }

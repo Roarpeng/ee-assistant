@@ -233,3 +233,16 @@ async def knowledge_doc_progress(websocket: WebSocket, doc_id: str):
             await websocket.receive_text()
     except WebSocketDisconnect:
         knowledge_progress.unregister(doc_id)
+
+
+from pydantic import BaseModel
+
+class DebugLogInput(BaseModel):
+    error: str
+    stack: str | None = None
+
+@app.post("/api/debug/log")
+async def receive_debug_log(body: DebugLogInput):
+    print(f"\n\n[FRONTEND ERROR] {body.error}\nSTACK:\n{body.stack}\n\n", flush=True)
+    return {"status": "logged"}
+

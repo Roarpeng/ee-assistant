@@ -1,8 +1,16 @@
 import os
+import sys
+import asyncio
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 os.environ["ANTHROPIC_API_KEY"] = "test-key"
 os.environ["OPENAI_API_KEY"] = "test-key"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./test.db"
+os.environ["POSTGRES_HOST"] = "localhost"
+
+
 
 import pytest_asyncio
 from app.db.models import Base

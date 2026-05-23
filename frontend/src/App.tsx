@@ -1,17 +1,10 @@
 import { useEffect, useState } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { AppLayout } from './views/components/AppLayout';
-import { HeroLanding } from './views/components/HeroLanding';
 import { useStore } from './models/store';
 import { lightTheme, darkTheme } from './theme/md3';
-
-const EXAMPLES = [
-  '恒温水箱 PLC 控制系统, 需 PLd 安全等级',
-  '3 轴伺服定位平台, EtherCAT 总线',
-  '传送带 VFD 调速 + 急停 + 接触器互锁',
-  '注塑机温度多段 PID, 8 路热电偶',
-  '立体仓库穿梭车, 安全光幕 + STO',
-];
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 
 export default function App() {
   const project = useStore((s) => s.project);
@@ -19,16 +12,27 @@ export default function App() {
   const loadChatHistory = useStore((s) => s.loadChatHistory);
   const themeMode = useStore((s) => s.theme);
 
-  // When true, show AppLayout directly with knowledge tab (no project needed)
+  const [isInitializing, setIsInitializing] = useState(true);
   const [forceKnowledge, setForceKnowledge] = useState(false);
 
   useEffect(() => {
-    void useStore.getState().bootstrapOrg();
-  }, []);
-
-  useEffect(() => {
-    if (!project) void loadChatHistory();
-  }, [project, loadChatHistory]);
+    const init = async () => {
+      try {
+        await useStore.getState().bootstrapOrg();
+        await loadChatHistory();
+        const currentProject = useStore.getState().project;
+        if (!currentProject) {
+          // 静默新建一个项目以直接进入对话
+          await newProject({ preserveCanvas: false });
+        }
+      } catch (err) {
+        console.error('Failed to initialize app', err);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+    void init();
+  }, [loadChatHistory, newProject]);
 
   // Direct entry to knowledge base — no project required
   if (forceKnowledge) {
@@ -39,16 +43,12 @@ export default function App() {
     );
   }
 
-  if (!project) {
+  if (isInitializing) {
     return (
       <ThemeProvider theme={themeMode === 'dark' || themeMode === 'engineering' ? darkTheme : lightTheme}>
-        <HeroLanding
-          examples={EXAMPLES}
-          onSubmit={(prompt) => {
-            void newProject({ preserveCanvas: false, seedPrompt: prompt });
-          }}
-          onOpenKnowledge={() => setForceKnowledge(true)}
-        />
+        <Box sx={{ display: 'flex', width: '100vw', height: '100vh', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
+          <CircularProgress color="primary" />
+        </Box>
       </ThemeProvider>
     );
   }
@@ -59,3 +59,4 @@ export default function App() {
     </ThemeProvider>
   );
 }
+

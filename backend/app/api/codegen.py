@@ -22,8 +22,10 @@ async def generate_code(project_id: str, body: CodegenInput, session: AsyncSessi
                  selectinload(Project.code_modules))
     )
     project = result.scalar()
-    if not project or not project.requirement:
-        raise HTTPException(status_code=400, detail="Project must have requirements first")
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if not project.requirement:
+        return project
 
     project.status = "generating_code"
     await session.commit()

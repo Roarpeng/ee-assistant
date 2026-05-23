@@ -171,6 +171,7 @@ interface AppState {
   yTopologyVersion: number; // incremented on every Yjs→Zustand sync
   bom: BOMItem[];
   sclCode: string;
+  mermaidCode: string;
   project: { id: string; name: string } | null;
   stage: AnalysisStage;
   messages: ChatMessage[];
@@ -214,6 +215,7 @@ interface AppState {
   syncTopologyFromYjs: () => void;
   setBOM: (bom: BOMItem[]) => void;
   setSCLCode: (code: string) => void;
+  setMermaidCode: (code: string) => void;
   setProjectMeta: (meta: { safetyLevel?: string; bomCost?: number }) => void;
   setIOItems: (items: AppState['ioItems']) => void;
   setCommissioningSteps: (steps: AppState['commissioningSteps']) => void;
@@ -275,6 +277,7 @@ export const useStore = create<AppState>((set, get) => ({
   yTopologyVersion: 0,
   bom: [],
   sclCode: '',
+  mermaidCode: '',
 
   project: null,
   stage: 'idle',
@@ -320,6 +323,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
   setBOM: (bom) => set({ bom }),
   setSCLCode: (sclCode) => set({ sclCode }),
+  setMermaidCode: (mermaidCode) => set({ mermaidCode }),
   setProjectMeta: ({ safetyLevel, bomCost }) =>
     set((s) => ({
       safetyLevel: safetyLevel !== undefined ? safetyLevel : s.safetyLevel,
@@ -410,6 +414,7 @@ export const useStore = create<AppState>((set, get) => ({
       yTopologyVersion: 0,
       bom: [],
       sclCode: '',
+      mermaidCode: '',
       messages: [],
       chatContext: null,
       previewNodeId: null,
@@ -479,6 +484,7 @@ export const useStore = create<AppState>((set, get) => ({
         yTopologyVersion: preserveCanvas ? preservedCanvas.yTopologyVersion : 0,
         bom: preserveCanvas ? preservedCanvas.bom : [],
         sclCode: preserveCanvas ? preservedCanvas.sclCode : '',
+        mermaidCode: '',
         messages: [],
         chatContext: null,
         previewNodeId: null,

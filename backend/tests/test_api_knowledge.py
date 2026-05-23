@@ -89,9 +89,12 @@ async def test_delete_doc_keeps_graph_nodes():
         session.add_all([doc, node])
         await session.commit()
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        response = await ac.delete("/api/knowledge/docs/doc-to-delete")
-    assert response.status_code == 204
+    with patch("app.api.knowledge.rag_engine.delete_doc_chunks") as mock_delete:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.delete("/api/knowledge/docs/doc-to-delete")
+        assert response.status_code == 204
+        assert mock_delete.called
+
 
     async with async_session() as session:
         result = await session.execute(select(ComponentNode).where(ComponentNode.id == "node-id"))

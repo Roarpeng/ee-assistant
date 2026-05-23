@@ -51,6 +51,7 @@ import {
   addUserEdge,
   removeUserEdges,
   getTopologySnapshot,
+  updateTopologyLayout,
 } from '../../models/yjsStore';
 import { toSvg } from 'html-to-image';
 
@@ -174,8 +175,10 @@ export function TopologyPanel() {
   const draggingNodeIdsRef = useRef<Set<string>>(new Set());
   // M2 memory-flywheel: capture each node's pre-drag position so we can
   // emit a `topology_edit` decision with a meaningful before/after pair
-  // once the user releases the mouse. Cleared per drag.
   const dragStartPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+
+  // Ref container to avoid block-scoped variable 'handleAutoGravityLayout' used before its declaration errors.
+  const handleAutoGravityLayoutRef = useRef<() => void>(() => {});
 
   // Yjs CRDT observer: incrementally syncs topology into ReactFlow local state.
   useEffect(() => {
@@ -257,6 +260,69 @@ export function TopologyPanel() {
       });
 
       useStore.getState().syncTopologyFromYjs();
+
+      // ─── 自动重力规整检测 ───
+      if (draggingIds.size === 0 && snapshot.nodes.length > 0) {
+        const nodeLayers = snapshot.nodes.map((n) => {
+          const type = String(n.type ?? '').toLowerCase();
+          const label = String(n.label ?? '').toLowerCase();
+          let layer = 3;
+          if (
+            type.includes('plc') || type.includes('ipc') ||
+            label.includes('plc') || label.includes('控制器') || label.includes('s7-') || label.includes('1200')
+          ) {
+            layer = 0;
+          } else if (
+            type.includes('power') || type.includes('switch') ||
+            label.includes('电源') || label.includes('开关') || label.includes('交换机') || label.includes('qf')
+          ) {
+            layer = 1;
+          } else if (
+            type.includes('vfd') || type.includes('servo') || type.includes('contactor') || type.includes('relay') || type.includes('breaker') ||
+            label.includes('继电器') || label.includes('接触器') || label.includes('断路器') || label.includes('驱动器') || label.includes('变频器') || label.includes('km')
+          ) {
+            layer = 2;
+          }
+          return { node: n, layer };
+        });
+
+        const layerYMap = [60, 240, 420, 600];
+        const nodesByLayer: NodeData[][] = [[], [], [], []];
+        nodeLayers.forEach((item) => {
+          nodesByLayer[item.layer].push(item.node);
+        });
+        nodesByLayer.forEach((arr) => {
+          arr.sort((a, b) => a.x - b.x);
+        });
+
+        let needsLayout = false;
+        const minSpacing = 240;
+        
+        for (let layerIdx = 0; layerIdx < 4; layerIdx++) {
+          const arr = nodesByLayer[layerIdx];
+          const N = arr.length;
+          if (N === 0) continue;
+          const y = layerYMap[layerIdx];
+          const layerWidth = (N - 1) * minSpacing;
+          const startX = 600 - layerWidth / 2;
+
+          for (let idx = 0; idx < N; idx++) {
+            const node = arr[idx];
+            const expectedX = N === 1 ? 600 : startX + idx * minSpacing;
+            if (Math.abs(node.x - expectedX) > 1 || node.y !== y) {
+              needsLayout = true;
+              break;
+            }
+          }
+          if (needsLayout) break;
+        }
+
+        if (needsLayout) {
+          setTimeout(() => {
+            handleAutoGravityLayoutRef.current();
+          }, 100);
+        }
+      }
     });
 
     return unsub;
@@ -276,7 +342,12 @@ export function TopologyPanel() {
       const data = await api.updateCodeFromTopology(project.id, snapshot);
       if (data.sclCode) setSCLCode(data.sclCode);
     } catch (err) {
-      console.error('Failed to sync code', err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (errMsg.includes('Project must have requirements first')) {
+        console.warn('Sync topology skipped: project has no requirements yet.');
+      } else {
+        console.error('Failed to sync code', err);
+      }
     } finally {
       setIsSyncing(false);
     }
@@ -364,6 +435,10 @@ export function TopologyPanel() {
             const rfNode = nodesRef.current.find((n) => n.id === c.id);
             if (rfNode) {
               updateNodePosition(c.id, rfNode.position.x, rfNode.position.y);
+              setTimeout(() => {
+                handleAutoGravityLayoutRef.current();
+              }, 50);
+
               const before = dragStartPositionsRef.current.get(c.id);
               dragStartPositionsRef.current.delete(c.id);
               if (
@@ -485,6 +560,131 @@ export function TopologyPanel() {
       console.error('Export failed:', err);
     }
   }, [project?.id]);
+
+  const handleAutoGravityLayout = useCallback(() => {
+    try {
+      const snap = getTopologySnapshot();
+      if (snap.nodes.length === 0) return;
+
+      const nodeLayers: { node: NodeData; layer: number }[] = snap.nodes.map((n) => {
+        const type = String(n.type ?? '').toLowerCase();
+        const label = String(n.label ?? '').toLowerCase();
+        let layer = 3;
+
+        if (
+          type.includes('plc') || type.includes('ipc') ||
+          label.includes('plc') || label.includes('控制器') || label.includes('s7-') || label.includes('1200')
+        ) {
+          layer = 0;
+        } else if (
+          type.includes('power') || type.includes('switch') ||
+          label.includes('电源') || label.includes('开关') || label.includes('交换机') || label.includes('qf')
+        ) {
+          layer = 1;
+        } else if (
+          type.includes('vfd') || type.includes('servo') || type.includes('contactor') || type.includes('relay') || type.includes('breaker') ||
+          label.includes('继电器') || label.includes('接触器') || label.includes('断路器') || label.includes('驱动器') || label.includes('变频器') || label.includes('km')
+        ) {
+          layer = 2;
+        }
+        return { node: n, layer };
+      });
+
+      const layerYMap = [60, 240, 420, 600];
+      const nodesByLayer: NodeData[][] = [[], [], [], []];
+      
+      nodeLayers.forEach((item) => {
+        nodesByLayer[item.layer].push(item.node);
+      });
+      
+      nodesByLayer.forEach((arr) => {
+        arr.sort((a, b) => a.x - b.x);
+      });
+
+      const updatedNodes: { id: string; x: number; y: number }[] = [];
+      const updatedPositions = new Map<string, { x: number; y: number }>();
+
+      const minSpacing = 240;
+
+      nodesByLayer.forEach((arr, layerIdx) => {
+        const N = arr.length;
+        if (N === 0) return;
+        const y = layerYMap[layerIdx];
+        const layerWidth = (N - 1) * minSpacing;
+        const startX = 600 - layerWidth / 2;
+
+        arr.forEach((node, idx) => {
+          const x = N === 1 ? 600 : startX + idx * minSpacing;
+          updatedNodes.push({ id: node.id, x, y });
+          updatedPositions.set(node.id, { x, y });
+        });
+      });
+
+      const updatedEdges: { id: string; sourceHandle?: string; targetHandle?: string }[] = [];
+
+      snap.edges.forEach((edge) => {
+        const sourcePos = updatedPositions.get(edge.source);
+        const targetPos = updatedPositions.get(edge.target);
+        if (!sourcePos || !targetPos) return;
+
+        const category =
+          edge.category === 'power' || edge.category === 'network' ||
+          edge.category === 'safety' || edge.category === 'feedback'
+            ? edge.category
+            : handleToCategory(edge.sourceHandle) !== 'default'
+              ? handleToCategory(edge.sourceHandle)
+              : handleToCategory(edge.targetHandle) !== 'default'
+                ? handleToCategory(edge.targetHandle)
+                : classifyProtocol(edge.protocol);
+
+        let sourceHandle: string | undefined;
+        let targetHandle: string | undefined;
+
+        if (category === 'power') {
+          if (sourcePos.y <= targetPos.y) {
+            sourceHandle = 'pwr-bottom';
+            targetHandle = 'pwr-top';
+          } else {
+            sourceHandle = 'pwr-top';
+            targetHandle = 'pwr-bottom';
+          }
+        } else if (category === 'feedback') {
+          if (sourcePos.y >= targetPos.y) {
+            sourceHandle = 'fb-top';
+            targetHandle = 'fb-bottom';
+          } else {
+            sourceHandle = 'fb-bottom';
+            targetHandle = 'fb-top';
+          }
+        } else if (category === 'safety') {
+          if (sourcePos.x <= targetPos.x) {
+            sourceHandle = 'safe-right';
+            targetHandle = 'safe-left';
+          } else {
+            sourceHandle = 'safe-left';
+            targetHandle = 'safe-right';
+          }
+        } else {
+          if (sourcePos.x <= targetPos.x) {
+            sourceHandle = 'net-right';
+            targetHandle = 'net-left';
+          } else {
+            sourceHandle = 'net-left';
+            targetHandle = 'net-right';
+          }
+        }
+
+        updatedEdges.push({ id: edge.id, sourceHandle, targetHandle });
+      });
+
+      updateTopologyLayout(updatedNodes, updatedEdges);
+      setTimeout(handleSyncToCode, 500);
+    } catch (err) {
+      console.error('Failed to align auto-gravity layout:', err);
+    }
+  }, [handleSyncToCode]);
+
+  handleAutoGravityLayoutRef.current = handleAutoGravityLayout;
 
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
