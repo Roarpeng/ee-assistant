@@ -466,3 +466,43 @@ class ReportOut(BaseModel):
     metrics: dict = Field(default_factory=dict)
     created_at: datetime
     model_config = {"from_attributes": True}
+
+
+# ── Component Graph Visualizer & Editor Schemas ──
+
+class ComponentGraphNodeCreate(BaseModel):
+    name: str
+    component_type: str
+    properties: dict = Field(default_factory=dict)
+    source_doc_id: str | None = None
+
+
+class ComponentGraphNodeOut(BaseModel):
+    id: str
+    name: str
+    component_type: str
+    properties: dict = Field(default_factory=dict)
+    community: str | None = None
+    source_doc_id: str | None = None
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+class ComponentGraphEdgeCreate(BaseModel):
+    source_id: str
+    target_id: str
+    relation: str
+    properties: dict = Field(default_factory=dict)
+    confidence: str = "extracted"
+    source_doc_id: str | None = None
+
+
+class ComponentGraphEdgeOut(BaseModel):
+    id: str
+    source_id: str
+    target_id: str
+    relation: str
+    properties: dict = Field(default_factory=dict)
+    confidence: str
+    source_doc_id: str | None = None
+    model_config = {"from_attributes": True}

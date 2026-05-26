@@ -279,6 +279,37 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(msg),
     }),
+
+  // Component Graph CRUD APIs
+  getGraphNodes: (q?: string, componentType?: string) => {
+    let url = '/knowledge/graph/nodes';
+    const params = [];
+    if (q) params.push(`q=${encodeURIComponent(q)}`);
+    if (componentType) params.push(`component_type=${encodeURIComponent(componentType)}`);
+    if (params.length > 0) url += `?${params.join('&')}`;
+    return request<any[]>(url);
+  },
+
+  upsertGraphNode: (node: { name: string; component_type: string; properties?: Record<string, any>; source_doc_id?: string }) =>
+    request<any>('/knowledge/graph/nodes', {
+      method: 'POST',
+      body: JSON.stringify(node),
+    }),
+
+  deleteGraphNode: (nodeId: string) =>
+    request<void>(`/knowledge/graph/nodes/${nodeId}`, { method: 'DELETE' }),
+
+  getGraphEdges: () =>
+    request<any[]>('/knowledge/graph/edges'),
+
+  createGraphEdge: (edge: { source_id: string; target_id: string; relation: string; properties?: Record<string, any>; confidence?: string; source_doc_id?: string }) =>
+    request<any>('/knowledge/graph/edges', {
+      method: 'POST',
+      body: JSON.stringify(edge),
+    }),
+
+  deleteGraphEdge: (edgeId: string) =>
+    request<void>(`/knowledge/graph/edges/${edgeId}`, { method: 'DELETE' }),
 };
 
 export interface ServerChatMessage {

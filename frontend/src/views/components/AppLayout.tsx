@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../../models/store';
 import { t } from '../../services/i18n';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -12,6 +13,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import TranslateIcon from '@mui/icons-material/Translate';
 import EngineeringIcon from '@mui/icons-material/Engineering';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { ChatPanel } from './ChatPanel';
 import { TopologyPanel } from './TopologyPanel';
 import { BOMPanel } from './BOMPanel';
@@ -23,6 +25,7 @@ import { InfoPanel } from './InfoPanel';
 import { WiringPanel } from './WiringPanel';
 import { GuidePanel } from './GuidePanel';
 import { CabinetPanel } from './CabinetPanel';
+import { ReportExporter } from './ReportExporter';
 
 export function AppLayout({ initialTab }: { initialTab?: 'chat' | 'knowledge' }) {
   const project = useStore((s) => s.project);
@@ -47,6 +50,7 @@ export function AppLayout({ initialTab }: { initialTab?: 'chat' | 'knowledge' })
     }
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
   const isDragging = useRef(false);
   const chatWidthRef = useRef(chatWidth);
   chatWidthRef.current = chatWidth;
@@ -452,8 +456,36 @@ export function AppLayout({ initialTab }: { initialTab?: 'chat' | 'knowledge' })
             ))}
           </Tabs>
 
-          {/* Spacer to balance the header */}
-          <Box sx={{ width: 72 }} />
+          {/* Export PDF Button */}
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<PictureAsPdfIcon sx={{ fontSize: 14 }} />}
+            onClick={() => setIsReportOpen(true)}
+            disabled={!project}
+            sx={{
+              bgcolor: 'rgba(78, 201, 255, 0.15)',
+              color: '#4ec9ff',
+              border: '1px solid rgba(78, 201, 255, 0.25)',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              borderRadius: 2,
+              px: 1.5,
+              py: 0.75,
+              textTransform: 'none',
+              '&:hover': {
+                bgcolor: 'rgba(78, 201, 255, 0.25)',
+                borderColor: '#4ec9ff',
+              },
+              '&.Mui-disabled': {
+                opacity: 0.4,
+                color: 'text.disabled',
+                borderColor: 'divider',
+              }
+            }}
+          >
+            导出方案书 (PDF)
+          </Button>
         </Box>
 
         {/* Canvas content area */}
@@ -495,6 +527,7 @@ export function AppLayout({ initialTab }: { initialTab?: 'chat' | 'knowledge' })
       </Box>
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <ReportExporter open={isReportOpen} onClose={() => setIsReportOpen(false)} />
     </Box>
   );
 }

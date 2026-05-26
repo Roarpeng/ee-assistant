@@ -12,8 +12,12 @@ from app.core.schemas import (
     KnowledgeSearch,
     KnowledgeURLIngest,
     ProgressEvent,
+    ComponentGraphNodeOut,
+    ComponentGraphNodeCreate,
+    ComponentGraphEdgeOut,
+    ComponentGraphEdgeCreate,
 )
-from app.db.models import KnowledgeDoc
+from app.db.models import KnowledgeDoc, ComponentNode, ComponentEdge
 from app.db.repository import get_session
 from app.core.rag_engine import rag_engine
 from app.core.entity_extractor import entity_extractor
@@ -242,6 +246,103 @@ async def search(body: KnowledgeSearch):
         manufacturer_filter=body.manufacturer_filter,
     )
     return {"results": results}
+
+
+# ── Component Graph Visualizer & Editor CRUD Endpoints ──
+
+@router.get("/graph/nodes", response_model=list[ComponentGraphNodeOut])
+async def get_graph_nodes(
+    q: str | None = None,
+    component_type: str | None = None,
+    session: AsyncSession = Depends(get_session)
+):
+    query = select(ComponentNode)
+    if q:
+        query = query.where(ComponentNode.name.ilike(f"%{q}%"))
+    if component_type:
+        query = query.where(ComponentNode.component_type.ilike(f"%{component_type}%"))
+    query = query.order_by(ComponentNode.created_at.desc())
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
+@router.post("/graph/nodes", response_model=ComponentGraphNodeOut, status_code=201)
+async def upsert_graph_node(
+    body: ComponentGraphNodeCreate,
+    session: AsyncSession = Depends(get_session)
+):
+    graph = ComponentGraph(session)
+    node = await graph.upsert_node(
+        name=body.name,
+        component_type=body.component_type,
+        properties=body.properties,
+        source_doc_id=body.source_doc_id
+    )
+    await session.commit()
+    await session.refresh(node)
+    return node
+
+
+@router.delete("/graph/nodes/{node_id}", status_code=204)
+async def delete_graph_node(
+    node_id: str,
+    session: AsyncSession = Depends(get_session)
+):
+    from sqlalchemy import delete
+    await session.execute(
+        delete(ComponentEdge).where(
+            (ComponentEdge.source_id == node_id) | (ComponentEdge.target_id == node_id)
+        )
+    )
+    result = await session.execute(select(ComponentNode).where(ComponentNode.id == node_id))
+    node = result.scalar()
+    if not node:
+        raise HTTPException(status_code=404, detail="Component node not found")
+    await session.delete(node)
+    await session.commit()
+
+
+@router.get("/graph/edges", response_model=list[ComponentGraphEdgeOut])
+async def get_graph_edges(session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(ComponentEdge))
+    return result.scalars().all()
+
+
+@router.post("/graph/edges", response_model=ComponentGraphEdgeOut, status_code=201)
+async def create_graph_edge(
+    body: ComponentGraphEdgeCreate,
+    session: AsyncSession = Depends(get_session)
+):
+    src_res = await session.execute(select(ComponentNode).where(ComponentNode.id == body.source_id))
+    tgt_res = await session.execute(select(ComponentNode).where(ComponentNode.id == body.target_id))
+    if not src_res.scalar() or not tgt_res.scalar():
+        raise HTTPException(status_code=400, detail="Source or Target node does not exist")
+
+    graph = ComponentGraph(session)
+    edge = await graph.add_edge(
+        source_id=body.source_id,
+        target_id=body.target_id,
+        relation=body.relation,
+        properties=body.properties,
+        confidence=body.confidence,
+        source_doc_id=body.source_doc_id
+    )
+    await session.commit()
+    await session.refresh(edge)
+    return edge
+
+
+@router.delete("/graph/edges/{edge_id}", status_code=204)
+async def delete_graph_edge(
+    edge_id: str,
+    session: AsyncSession = Depends(get_session)
+):
+    result = await session.execute(select(ComponentEdge).where(ComponentEdge.id == edge_id))
+    edge = result.scalar()
+    if not edge:
+        raise HTTPException(status_code=404, detail="Component edge not found")
+    await session.delete(edge)
+    await session.commit()
 
 
 async def _delete_single_doc(doc_id: str, session: AsyncSession):

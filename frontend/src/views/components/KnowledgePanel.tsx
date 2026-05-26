@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useStore, type KnowledgeDoc, type KnowledgeDocStatus, type KnowledgeSourceType } from '../../models/store';
 import { t } from '../../services/i18n';
 import { api } from '../../services/api';
@@ -108,6 +108,7 @@ interface UploadQueueState {
 }
 
 export function KnowledgePanel() {
+  const [mainTab, setMainTab] = useState<'docs' | 'graph'>('docs');
   const language = useStore((s) => s.language);
   const tr = t(language);
 
@@ -370,7 +371,47 @@ export function KnowledgePanel() {
 
   return (
     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-      {/* Header */}
+      {/* Tab Selector */}
+      <Box sx={{ px: 3, pt: 1.5, display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.06)', gap: 1, flexShrink: 0, bgcolor: 'background.paper' }}>
+        <Button
+          onClick={() => setMainTab('docs')}
+          variant="text"
+          size="small"
+          sx={{
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            borderRadius: 0,
+            borderBottom: mainTab === 'docs' ? '2px solid #4ec9ff' : 'none',
+            color: mainTab === 'docs' ? '#4ec9ff' : 'text.disabled',
+            pb: 1,
+            '&:hover': { bgcolor: 'rgba(78,201,255,0.05)' }
+          }}
+        >
+          文献知识库 (Documents)
+        </Button>
+        <Button
+          onClick={() => setMainTab('graph')}
+          variant="text"
+          size="small"
+          sx={{
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            borderRadius: 0,
+            borderBottom: mainTab === 'graph' ? '2px solid #4ec9ff' : 'none',
+            color: mainTab === 'graph' ? '#4ec9ff' : 'text.disabled',
+            pb: 1,
+            '&:hover': { bgcolor: 'rgba(78,201,255,0.05)' }
+          }}
+        >
+          元器件图谱 (Component Graph)
+        </Button>
+      </Box>
+
+      {mainTab === 'graph' ? (
+        <ComponentGraphView />
+      ) : (
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+          {/* Header */}
       <Box sx={{ px: 3, py: 3, pb: 1, borderBottom: '1px solid', borderColor: 'divider', flexShrink: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <Typography sx={{ fontSize: '0.875rem', fontWeight: 700, color: 'text.secondary', letterSpacing: '0.025em' }}>
@@ -918,6 +959,675 @@ export function KnowledgePanel() {
           )}
         </Paper>
       </Box>
+    </Box>
+      )}
+    </Box>
+  );
+}
+
+
+// ── Component Graph Visualizer & Editor (Louvain Clustering SVG Canvas) ──
+
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import MenuItem from '@mui/material/MenuItem';
+
+const RELATION_COLORS: Record<string, string> = {
+  REQUIRES_POWER: '#FB7185', // Rose
+  OUTPUTS_SIGNAL: '#60A5FA', // Blue
+  USES_PROTOCOL: '#34D399', // Emerald
+  COMPATIBLE_WITH: '#818CF8', // Indigo
+  ALTERNATIVE_TO: '#FBBF24', // Amber
+  MOUNTS_ON: '#A78BFA', // Violet
+  CONTROLS: '#F472B6', // Pink
+  REQUIRES_ACCESSORY: '#CBD5E1', // Slate
+};
+
+const COMMUNITY_PALETTE = [
+  '#4EC9FF', '#4ADE80', '#A78BFA', '#FB7185', '#FBBF24', '#F472B6',
+  '#38BDF8', '#34D399', '#818CF8', '#F87171', '#F59E0B', '#EC4899'
+];
+
+interface GraphNode {
+  id: string;
+  name: string;
+  component_type: string;
+  properties: Record<string, any>;
+  community?: string | null;
+  source_doc_id?: string | null;
+  created_at?: string;
+}
+
+interface GraphEdge {
+  id: string;
+  source_id: string;
+  target_id: string;
+  relation: string;
+  properties: Record<string, any>;
+  confidence: string;
+}
+
+function ComponentGraphView() {
+  const [nodes, setNodes] = useState<GraphNode[]>([]);
+  const [edges, setEdges] = useState<GraphEdge[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [error, setError] = useState('');
+
+  // SVG 平移缩放状态
+  const [pan, setPan] = useState({ x: 150, y: 150 });
+  const [zoom, setZoom] = useState(0.8);
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+
+  // 弹窗状态
+  const [nodeDialogOpen, setNodeDialogOpen] = useState(false);
+  const [edgeDialogOpen, setEdgeDialogOpen] = useState(false);
+
+  // 表单状态
+  const [newNodeName, setNewNodeName] = useState('');
+  const [newNodeType, setNewNodeType] = useState('PLC');
+  const [newNodePropsText, setNewNodePropsText] = useState('{\n  "brand": "Siemens"\n}');
+
+  const [newEdgeSource, setNewEdgeSource] = useState('');
+  const [newEdgeTarget, setNewEdgeTarget] = useState('');
+  const [newEdgeRelation, setNewEdgeRelation] = useState('COMPATIBLE_WITH');
+  const [newEdgePropsText, setNewEdgePropsText] = useState('{}');
+
+  useEffect(() => {
+    loadGraphData();
+  }, []);
+
+  async function loadGraphData() {
+    setLoading(true);
+    setError('');
+    try {
+      const [nodesData, edgesData] = await Promise.all([
+        api.getGraphNodes(),
+        api.getGraphEdges(),
+      ]);
+      setNodes(nodesData);
+      setEdges(edgesData);
+    } catch (err: any) {
+      setError(`加载图谱失败: ${err.message || '网络错误'}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // 1. 核心的社区聚类布局计算逻辑 (Louvain Clustering Space Layout)
+  const nodePositions = useMemo(() => {
+    const posMap: Record<string, { x: number; y: number }> = {};
+    if (nodes.length === 0) return posMap;
+
+    // 按社区分类
+    const communities: Record<string, string[]> = {};
+    nodes.forEach((n) => {
+      const cId = n.community || 'unclustered';
+      if (!communities[cId]) communities[cId] = [];
+      communities[cId].push(n.id);
+    });
+
+    const cIds = Object.keys(communities);
+    const numCommunities = cIds.length;
+
+    // 分配每个社区的中心点 (圆环状排布聚类中心)
+    const centerX = 350;
+    const centerY = 280;
+    const clusterRadius = Math.max(160, numCommunities * 50);
+
+    const communityCenters: Record<string, { x: number; y: number }> = {};
+    cIds.forEach((cId, idx) => {
+      const angle = (idx / numCommunities) * 2 * Math.PI;
+      communityCenters[cId] = {
+        x: centerX + clusterRadius * Math.cos(angle),
+        y: centerY + clusterRadius * Math.sin(angle),
+      };
+    });
+
+    // 为每个社区内的节点计算局部的星状分布
+    cIds.forEach((cId) => {
+      const nodeIds = communities[cId];
+      const center = communityCenters[cId];
+      const nItems = nodeIds.length;
+
+      nodeIds.forEach((id, idx) => {
+        if (nItems === 1) {
+          posMap[id] = { x: center.x, y: center.y };
+        } else {
+          // 星形围绕中心
+          const angle = (idx / nItems) * 2 * Math.PI;
+          const nodeRadius = 50 + Math.min(10 * nItems, 40); // 节点离中心距离
+          posMap[id] = {
+            x: center.x + nodeRadius * Math.cos(angle),
+            y: center.y + nodeRadius * Math.sin(angle),
+          };
+        }
+      });
+    });
+
+    return posMap;
+  }, [nodes]);
+
+  // 2. 平移缩放事件处理
+  function handleMouseDown(e: React.MouseEvent<SVGSVGElement>) {
+    if ((e.target as HTMLElement).tagName === 'circle' || (e.target as HTMLElement).tagName === 'text') {
+      return; // 选中节点时不平移
+    }
+    setIsPanning(true);
+    setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+  }
+
+  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
+    if (!isPanning) return;
+    setPan({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
+  }
+
+  function handleMouseUp() {
+    setIsPanning(false);
+  }
+
+  function handleWheel(e: React.WheelEvent<SVGSVGElement>) {
+    e.preventDefault();
+    const nextZoom = e.deltaY < 0 ? Math.min(zoom + 0.1, 2) : Math.max(zoom - 0.1, 0.3);
+    setZoom(nextZoom);
+  }
+
+  // 3. 弹窗提交
+  async function handleAddNode() {
+    let parsedProps = {};
+    try {
+      parsedProps = JSON.parse(newNodePropsText);
+    } catch {
+      alert('属性 JSON 格式错误');
+      return;
+    }
+    try {
+      const added = await api.upsertGraphNode({
+        name: newNodeName,
+        component_type: newNodeType,
+        properties: parsedProps,
+      });
+      setNodes([added, ...nodes]);
+      setNodeDialogOpen(false);
+      setNewNodeName('');
+      setNewNodePropsText('{\n  "brand": "Siemens"\n}');
+    } catch (err: any) {
+      alert(`创建失败: ${err.message || '网络错误'}`);
+    }
+  }
+
+  async function handleAddEdge() {
+    if (!newEdgeSource || !newEdgeTarget) {
+      alert('请选择源节点和目标节点');
+      return;
+    }
+    if (newEdgeSource === newEdgeTarget) {
+      alert('源节点和目标节点不能相同');
+      return;
+    }
+    let parsedProps = {};
+    try {
+      parsedProps = JSON.parse(newEdgePropsText);
+    } catch {
+      alert('属性 JSON 格式错误');
+      return;
+    }
+    try {
+      const added = await api.createGraphEdge({
+        source_id: newEdgeSource,
+        target_id: newEdgeTarget,
+        relation: newEdgeRelation,
+        properties: parsedProps,
+      });
+      setEdges([added, ...edges]);
+      setEdgeDialogOpen(false);
+      setNewEdgeSource('');
+      setNewEdgeTarget('');
+      setNewEdgePropsText('{}');
+    } catch (err: any) {
+      alert(`建立关系失败: ${err.message || '网络错误'}`);
+    }
+  }
+
+  async function handleDeleteNode(nodeId: string) {
+    if (!confirm('确定要删除该元器件节点吗？相关的连接边也将被同时级联清理！')) return;
+    try {
+      await api.deleteGraphNode(nodeId);
+      setNodes(nodes.filter((n) => n.id !== nodeId));
+      setEdges(edges.filter((e) => e.source_id !== nodeId && e.target_id !== nodeId));
+      setSelectedNode(null);
+    } catch (err: any) {
+      alert(`删除失败: ${err.message}`);
+    }
+  }
+
+  // 获取社区颜色
+  function getCommunityColor(node: GraphNode) {
+    if (!node.community || node.community === 'unclustered') return '#64748B'; // Slate 500
+    const hash = node.community.split(' ').pop() || '0';
+    const idx = parseInt(hash) || 0;
+    return COMMUNITY_PALETTE[idx % COMMUNITY_PALETTE.length];
+  }
+
+  return (
+    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+      {/* 顶部工具栏 */}
+      <Box
+        sx={{
+          px: 3,
+          py: 1.5,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexShrink: 0,
+          bgcolor: 'rgba(20,24,29,0.3)',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: 'text.secondary' }}>
+            图谱节点: <span style={{ color: '#fff' }}>{nodes.length}</span> · 关系边: <span style={{ color: '#fff' }}>{edges.length}</span>
+          </Typography>
+          <IconButton size="small" onClick={loadGraphData} disabled={loading} title="刷新图谱">
+            <RefreshIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            size="small"
+            variant="contained"
+            onClick={() => setNodeDialogOpen(true)}
+            sx={{ fontSize: '0.75rem', py: 0.5, fontWeight: 700 }}
+          >
+            + 新增元器件
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => setEdgeDialogOpen(true)}
+            sx={{ fontSize: '0.75rem', py: 0.5, fontWeight: 700 }}
+          >
+            + 建立关系
+          </Button>
+        </Box>
+      </Box>
+
+      {/* 画布与详情双栏 */}
+      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+        {/* SVG 画布 */}
+        <Box
+          sx={{
+            flex: 1,
+            height: '100%',
+            position: 'relative',
+            bgcolor: '#080a0d',
+            cursor: isPanning ? 'grabbing' : 'grab',
+            userSelect: 'none',
+          }}
+        >
+          {loading && (
+            <Typography sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'text.disabled', fontSize: '0.8rem', zIndex: 10 }}>
+              正在加载并分析图谱拓扑...
+            </Typography>
+          )}
+
+          {error && (
+            <Typography sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'error.main', fontSize: '0.8rem', zIndex: 10 }}>
+              {error}
+            </Typography>
+          )}
+
+          <svg
+            width="100%"
+            height="100%"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onWheel={handleWheel}
+            style={{ display: 'block' }}
+          >
+            {/* 网格背景 */}
+            <defs>
+              <pattern id="graph-grid" width="30" height="30" patternUnits="userSpaceOnUse">
+                <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+              </pattern>
+              {/* 各类型箭头定义 */}
+              {Object.keys(RELATION_COLORS).map((rel) => (
+                <marker
+                  key={rel}
+                  id={`arrow-${rel}`}
+                  markerWidth="8"
+                  markerHeight="6"
+                  refX="18"
+                  refY="3"
+                  orient="auto"
+                  markerUnits="strokeWidth"
+                >
+                  <path d="M0,0 L8,3 L0,6 Z" fill={RELATION_COLORS[rel]} />
+                </marker>
+              ))}
+            </defs>
+            <rect width="100%" height="100%" fill="url(#graph-grid)" />
+
+            {/* 平移缩放包络组 */}
+            <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+              {/* 绘制关系边 */}
+              {edges.map((edge) => {
+                const src = nodePositions[edge.source_id];
+                const tgt = nodePositions[edge.target_id];
+                if (!src || !tgt) return null;
+
+                const color = RELATION_COLORS[edge.relation] || '#64748B';
+                return (
+                  <g key={edge.id} className="graph-edge-group">
+                    <line
+                      x1={src.x}
+                      y1={src.y}
+                      x2={tgt.x}
+                      y2={tgt.y}
+                      stroke={color}
+                      strokeWidth="1.5"
+                      strokeDasharray={edge.confidence === 'inferred' ? '4 3' : 'none'}
+                      markerEnd={`url(#arrow-${edge.relation})`}
+                      style={{ opacity: 0.65, transition: 'all 0.2s' }}
+                    />
+                    {/* 关系文字 */}
+                    <text
+                      x={(src.x + tgt.x) / 2}
+                      y={(src.y + tgt.y) / 2 - 4}
+                      fill={color}
+                      fontSize="7"
+                      fontFamily='"JetBrains Mono", monospace'
+                      textAnchor="middle"
+                      style={{
+                        opacity: 0.7,
+                        paintOrder: 'stroke',
+                        stroke: '#080a0d',
+                        strokeWidth: 2,
+                        strokeLinejoin: 'round',
+                      }}
+                    >
+                      {edge.relation.replace('REQUIRES_', '').replace('COMPATIBLE_WITH', '兼容').replace('ALTERNATIVE_TO', '替代')}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* 绘制节点 */}
+              {nodes.map((node) => {
+                const pos = nodePositions[node.id];
+                if (!pos) return null;
+
+                const color = getCommunityColor(node);
+                const isSelected = selectedNode?.id === node.id;
+
+                return (
+                  <g
+                    key={node.id}
+                    transform={`translate(${pos.x}, ${pos.y})`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedNode(node);
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <circle
+                      r="10"
+                      fill="#0b0d10"
+                      stroke={color}
+                      strokeWidth={isSelected ? 3.5 : 2}
+                      style={{
+                        transition: 'stroke-width 150ms',
+                        filter: isSelected ? 'drop-shadow(0px 0px 6px rgba(78,201,255,0.4))' : 'none',
+                      }}
+                    />
+                    <circle r="4" fill={color} />
+                    <text
+                      y="-16"
+                      fill="#fff"
+                      fontSize="9"
+                      fontWeight={isSelected ? 700 : 500}
+                      textAnchor="middle"
+                      style={{
+                        paintOrder: 'stroke',
+                        stroke: '#080a0d',
+                        strokeWidth: 2.5,
+                        strokeLinejoin: 'round',
+                      }}
+                    >
+                      {node.name}
+                    </text>
+                    <text
+                      y="20"
+                      fill="rgba(255,255,255,0.4)"
+                      fontSize="6"
+                      fontFamily='"JetBrains Mono", monospace'
+                      textAnchor="middle"
+                    >
+                      {node.component_type}
+                    </text>
+                  </g>
+                );
+              })}
+            </g>
+          </svg>
+        </Box>
+
+        {/* 侧边 Node 详情 / Properties JSON 面板 */}
+        {selectedNode && (
+          <Paper
+            variant="outlined"
+            sx={{
+              width: 260,
+              height: '100%',
+              borderLeft: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 0,
+              bgcolor: '#0a0d11',
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              flexShrink: 0,
+              overflowY: 'auto',
+            }}
+          >
+            <Box>
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, mb: 1, color: '#fff' }}>
+                元器件详情
+              </Typography>
+              <Box sx={{ borderBottom: '1px solid rgba(255,255,255,0.06)', pb: 1, mb: 2 }}>
+                <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled' }}>名称</Typography>
+                <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'primary.light' }}>
+                  {selectedNode.name}
+                </Typography>
+              </Box>
+              <Box sx={{ borderBottom: '1px solid rgba(255,255,255,0.06)', pb: 1, mb: 2 }}>
+                <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled' }}>工业类别</Typography>
+                <Chip
+                  label={selectedNode.component_type}
+                  size="small"
+                  sx={{
+                    height: 18,
+                    fontSize: '0.625rem',
+                    bgcolor: 'rgba(78,201,255,0.12)',
+                    color: '#4ec9ff',
+                    fontWeight: 700,
+                  }}
+                />
+              </Box>
+              {selectedNode.community && (
+                <Box sx={{ borderBottom: '1px solid rgba(255,255,255,0.06)', pb: 1, mb: 2 }}>
+                  <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled' }}>Louvain 社区聚类</Typography>
+                  <Typography sx={{ fontSize: '0.75rem', fontFamily: 'monospace', color: getCommunityColor(selectedNode) }}>
+                    {selectedNode.community}
+                  </Typography>
+                </Box>
+              )}
+              <Box sx={{ mb: 2 }}>
+                <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', mb: 0.5 }}>属性数据 (JSON)</Typography>
+                <Box
+                  component="pre"
+                  sx={{
+                    p: 1.5,
+                    bgcolor: '#05070a',
+                    border: '1px solid rgba(255,255,255,0.04)',
+                    borderRadius: 1.5,
+                    fontSize: '0.7rem',
+                    fontFamily: '"JetBrains Mono", monospace',
+                    color: 'rgba(255,255,255,0.7)',
+                    overflowX: 'auto',
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {JSON.stringify(selectedNode.properties, null, 2)}
+                </Box>
+              </Box>
+            </Box>
+
+            <Box sx={{ pt: 2, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                color="error"
+                size="small"
+                onClick={() => handleDeleteNode(selectedNode.id)}
+                sx={{
+                  fontSize: '0.75rem',
+                  py: 0.5,
+                  borderColor: 'rgba(239,68,68,0.3)',
+                  color: '#f87171',
+                  '&:hover': { bgcolor: 'rgba(239,68,68,0.08)', borderColor: '#f87171' },
+                }}
+              >
+                删除元器件
+              </Button>
+            </Box>
+          </Paper>
+        )}
+      </Box>
+
+      {/* 新增元器件对话框 */}
+      <Dialog open={nodeDialogOpen} onClose={() => setNodeDialogOpen(false)} PaperProps={{ sx: { bgcolor: '#0b0d10', border: '1px solid rgba(255,255,255,0.1)' } }}>
+        <DialogTitle sx={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>新增元器件节点</DialogTitle>
+        <DialogContent>
+          <TextField
+            margin="dense"
+            label="元器件名称 (如: Siemens S7-1200)"
+            fullWidth
+            variant="outlined"
+            size="small"
+            value={newNodeName}
+            onChange={(e) => setNewNodeName(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="器件类别"
+            fullWidth
+            select
+            variant="outlined"
+            size="small"
+            value={newNodeType}
+            onChange={(e) => setNewNodeType(e.target.value)}
+            sx={{ mb: 2 }}
+          >
+            {['PLC', 'HMI', 'Contactor', 'OverloadRelay', 'CircuitBreaker', 'VFD', 'Sensor', 'PowerSupply', 'SafetyRelay'].map((t) => (
+              <MenuItem key={t} value={t}>{t}</MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            margin="dense"
+            label="参数属性 (JSON)"
+            fullWidth
+            multiline
+            rows={4}
+            variant="outlined"
+            size="small"
+            value={newNodePropsText}
+            onChange={(e) => setNewNodePropsText(e.target.value)}
+            InputProps={{ sx: { fontFamily: 'monospace', fontSize: '0.75rem' } }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setNodeDialogOpen(false)} size="small" sx={{ color: 'text.disabled' }}>取消</Button>
+          <Button onClick={handleAddNode} disabled={!newNodeName.trim()} variant="contained" size="small">保存</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 建立关系对话框 */}
+      <Dialog open={edgeDialogOpen} onClose={() => setEdgeDialogOpen(false)} PaperProps={{ sx: { bgcolor: '#0b0d10', border: '1px solid rgba(255,255,255,0.1)' } }}>
+        <DialogTitle sx={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>建立元器件关系</DialogTitle>
+        <DialogContent>
+          <TextField
+            margin="dense"
+            label="源元器件 (Source)"
+            fullWidth
+            select
+            variant="outlined"
+            size="small"
+            value={newEdgeSource}
+            onChange={(e) => setNewEdgeSource(e.target.value)}
+            sx={{ mb: 2 }}
+          >
+            {nodes.map((n) => (
+              <MenuItem key={n.id} value={n.id}>{n.name} ({n.component_type})</MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            margin="dense"
+            label="目标元器件 (Target)"
+            fullWidth
+            select
+            variant="outlined"
+            size="small"
+            value={newEdgeTarget}
+            onChange={(e) => setNewEdgeTarget(e.target.value)}
+            sx={{ mb: 2 }}
+          >
+            {nodes.map((n) => (
+              <MenuItem key={n.id} value={n.id}>{n.name} ({n.component_type})</MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            margin="dense"
+            label="关系类型 (Relation)"
+            fullWidth
+            select
+            variant="outlined"
+            size="small"
+            value={newEdgeRelation}
+            onChange={(e) => setNewEdgeRelation(e.target.value)}
+            sx={{ mb: 2 }}
+          >
+            {Object.keys(RELATION_COLORS).map((r) => (
+              <MenuItem key={r} value={r}>{r}</MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            margin="dense"
+            label="关系附加属性 (JSON)"
+            fullWidth
+            multiline
+            rows={2}
+            variant="outlined"
+            size="small"
+            value={newEdgePropsText}
+            onChange={(e) => setNewEdgePropsText(e.target.value)}
+            InputProps={{ sx: { fontFamily: 'monospace', fontSize: '0.75rem' } }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEdgeDialogOpen(false)} size="small" sx={{ color: 'text.disabled' }}>取消</Button>
+          <Button onClick={handleAddEdge} disabled={!newEdgeSource || !newEdgeTarget} variant="contained" size="small">建立</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
