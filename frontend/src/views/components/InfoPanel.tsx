@@ -10,6 +10,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import CircularProgress from '@mui/material/CircularProgress';
+import { t } from '../../services/i18n';
+import { useStore } from '../../models/store';
 
 interface Props {
   projectName: string;
@@ -17,6 +21,9 @@ interface Props {
   bomCost?: number;
   components: Array<{ id: string; label: string; type: string }>;
   nodes: Array<{ id: string }>;
+  onExportPackage?: () => void;
+  exportBusy?: boolean;
+  canExport?: boolean;
 }
 
 interface SafetyPLResult {
@@ -190,7 +197,12 @@ export function InfoPanel({
   bomCost,
   components,
   nodes,
+  onExportPackage,
+  exportBusy = false,
+  canExport = false,
 }: Props) {
+  const language = useStore((s) => s.language);
+  const tr = t(language);
   const [isExpandOpen, setIsExpandOpen] = useState(false);
   const safetyPL = calculateISO13849(components);
 
@@ -261,9 +273,28 @@ export function InfoPanel({
       >
         [ fig.00 ] project overview &middot; rev a
       </Typography>
-      <Typography sx={{ mb: 3, fontWeight: 800, fontSize: '1.75rem', color: 'text.primary', letterSpacing: '-0.02em' }}>
-        {projectName || '未命名项目'}
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2, mb: 3 }}>
+        <Typography sx={{ fontWeight: 800, fontSize: '1.75rem', color: 'text.primary', letterSpacing: '-0.02em' }}>
+          {projectName || '未命名项目'}
+        </Typography>
+        {onExportPackage && (
+          <Button
+            variant="contained"
+            size="small"
+            disabled={!canExport || exportBusy}
+            startIcon={exportBusy ? <CircularProgress size={16} color="inherit" /> : <FileDownloadIcon />}
+            onClick={onExportPackage}
+            sx={{ flexShrink: 0, fontWeight: 700, whiteSpace: 'nowrap' }}
+          >
+            {exportBusy ? tr.export.exporting : tr.export.package}
+          </Button>
+        )}
+      </Box>
+      {onExportPackage && (
+        <Typography variant="caption" sx={{ display: 'block', mb: 2, color: 'text.disabled' }}>
+          {tr.export.packageHint}
+        </Typography>
+      )}
 
       <Stack direction="row" spacing={2} sx={{ mb: 3.5 }}>
         <Stat label="期望安全等级" value={safetyLevel ?? '—'} />

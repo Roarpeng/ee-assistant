@@ -1,5 +1,12 @@
 # Volta
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Stars](https://img.shields.io/github/stars/Roarpeng/ee-assistant?style=social)](https://github.com/Roarpeng/ee-assistant/stargazers)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Node.js 18+](https://img.shields.io/badge/node.js-18+-green.svg)](https://nodejs.org/)
+[![Docker](https://img.shields.io/badge/docker-supported-blue.svg)](https://www.docker.com/)
+[![CI](https://github.com/Roarpeng/ee-assistant/workflows/CI/badge.svg)](https://github.com/Roarpeng/ee-assistant/actions)
+
 **Topology-first electrical engineering AI** — from natural language to confirmed topology, BOM, schematics, and PLC ST code.
 
 Volta（伏特）是面向工业自动化的电气工程设计工作台：以**可编辑拓扑为单一真相源**，LangGraph 多智能体负责需求拆解、双路 RAG 选型、规则校验与派生产物生成。
@@ -109,7 +116,15 @@ See [docs/DEMO.md](docs/DEMO.md) for a guided walkthrough.
 
 ### License
 
-See repository license file. Contributions welcome via issues and PRs.
+[MIT License](LICENSE) — Contributions welcome via [issues](https://github.com/Roarpeng/ee-assistant/issues) and [PRs](https://github.com/Roarpeng/ee-assistant/pulls). See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### Support
+
+- 📖 [Documentation](docs/)
+- 💬 [GitHub Discussions](https://github.com/Roarpeng/ee-assistant/discussions)
+- 🐛 [Bug Reports](https://github.com/Roarpeng/ee-assistant/issues/new?template=bug_report.md)
+- 💡 [Feature Requests](https://github.com/Roarpeng/ee-assistant/issues/new?template=feature_request.md)
+- 📧 [Security](mailto:security@volta.dev)
 
 ---
 

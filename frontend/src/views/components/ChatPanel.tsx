@@ -15,8 +15,10 @@ import Button from '@mui/material/Button';
 import SendIcon from '@mui/icons-material/Send';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ChatIcon from '@mui/icons-material/Chat';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import Tooltip from '@mui/material/Tooltip';
 
-const ENGINEERING_ANALYSIS_RE = /完整|生成|设计.*(系统|方案|控制)|选型|BOM|物料|拓扑|PLC|ST|SCL|代码|需求分析|控制系统|电气方案/;
+import { shouldRunFullAnalysis } from '../../utils/analysisRouting';
 
 export function ChatPanel() {
   const store = useStore();
@@ -321,10 +323,10 @@ export function ChatPanel() {
     };
   };
 
-  const shouldRunFullAnalysis = (message: string) => {
+  const runFullAnalysisForMessage = (message: string) => {
     const userTurns = useStore.getState().messages.filter((m) => m.role === 'user').length;
     const hasCanvas = topology.nodes.length > 0 || bom.length > 0 || Boolean(chatContext);
-    return !hasCanvas && userTurns <= 1 && ENGINEERING_ANALYSIS_RE.test(message);
+    return shouldRunFullAnalysis(message, { hasCanvas, userTurns });
   };
 
   const readStream = async (
@@ -415,12 +417,14 @@ export function ChatPanel() {
     }
   };
 
-  const handleSend = async () => {
-    if (!inputValue.trim() || isProcessing) return;
+  const dispatchUserMessage = async (
+    userMessage: string,
+    opts?: { forceFullAnalysis?: boolean },
+  ) => {
+    if (!userMessage.trim() || isProcessing) return;
 
-    const userMessage = inputValue.trim();
-    setInputValue('');
-    store.addMessage({ id: '', role: 'user', content: userMessage, timestamp: 0 });
+    const text = userMessage.trim();
+    store.addMessage({ id: '', role: 'user', content: text, timestamp: 0 });
 
     // Attach canvas context if present
     const currentCtx = useStore.getState().chatContext;
@@ -456,15 +460,15 @@ export function ChatPanel() {
       interruptedRef.current = false;
       let manualSelections: any[];
       try {
-        const parsed = JSON.parse(userMessage);
+        const parsed = JSON.parse(text);
         manualSelections = Array.isArray(parsed) ? parsed : [parsed];
       } catch {
         // Free-text fallback
         manualSelections = [{
           category: interruptedRef2.current?.not_found_categories?.[0] || '',
           manufacturer: '',
-          order_number: userMessage.trim(),
-          model: userMessage.trim(),
+          order_number: text,
+          model: text,
         }];
       }
       interruptedRef2.current = null;
@@ -492,7 +496,8 @@ export function ChatPanel() {
       return;
     }
 
-    const runFullAnalysis = shouldRunFullAnalysis(userMessage);
+    const runFullAnalysis =
+      opts?.forceFullAnalysis === true || runFullAnalysisForMessage(text);
     store.addMessage({
       id: '',
       role: 'assistant',
@@ -509,8 +514,8 @@ export function ChatPanel() {
         .map(m => ({ role: m.role, content: m.content }));
 
       const response = runFullAnalysis
-        ? await api.analyzeV2SSE(p.id, userMessage, history)
-        : await api.chatSSE(p.id, userMessage, history, buildCanvasContext());
+        ? await api.analyzeV2SSE(p.id, text, history)
+        : await api.chatSSE(p.id, text, history, buildCanvasContext());
       await readStream(response, runFullAnalysis ? 'analysis' : 'chat');
     } catch (error: any) {
       store.addMessage({
@@ -522,6 +527,20 @@ export function ChatPanel() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleSend = async () => {
+    if (!inputValue.trim() || isProcessing) return;
+    const userMessage = inputValue.trim();
+    setInputValue('');
+    await dispatchUserMessage(userMessage);
+  };
+
+  const handleFullAnalysis = async () => {
+    if (isProcessing) return;
+    const userMessage = inputValue.trim() || tr.chat.fullAnalysisDefault;
+    setInputValue('');
+    await dispatchUserMessage(userMessage, { forceFullAnalysis: true });
   };
 
   return (
@@ -655,9 +674,9 @@ export function ChatPanel() {
             </Typography>
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 1, mt: 3 }}>
               {[
+                tr.chat.fullAnalysisDefault,
                 '基于当前画布检查供电与安全回路',
                 '设计一套带急停和两台电机的输送线控制系统',
-                '帮我审查 BOM 是否缺少必要附件',
               ].map((prompt) => (
                 <Paper
                   key={prompt}
@@ -833,12 +852,33 @@ export function ChatPanel() {
             },
           }}
         />
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid', borderColor: 'divider', pt: 1.5, mt: 1, px: 0.5 }}>
-          <Typography sx={{ fontSize: '0.625rem', color: 'text.disabled' }}>
-            Enter 发送 · Shift+Enter 换行 · 输出前自动核准
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid', borderColor: 'divider', pt: 1.5, mt: 1, px: 0.5, gap: 1 }}>
+          <Typography sx={{ fontSize: '0.625rem', color: 'text.disabled', flex: 1 }}>
+            Enter 发送 · Shift+Enter 换行
           </Typography>
+          <Tooltip title={tr.chat.fullAnalysisHint}>
+            <span>
+              <Button
+                onClick={() => void handleFullAnalysis()}
+                disabled={isProcessing}
+                variant="outlined"
+                size="small"
+                startIcon={<AutoAwesomeIcon sx={{ fontSize: 16 }} />}
+                sx={{
+                  fontWeight: 700,
+                  fontSize: '0.7rem',
+                  textTransform: 'none',
+                  borderColor: 'rgba(129,140,248,0.4)',
+                  color: 'primary.light',
+                  flexShrink: 0,
+                }}
+              >
+                {tr.chat.fullAnalysis}
+              </Button>
+            </span>
+          </Tooltip>
           <Button
-            onClick={handleSend}
+            onClick={() => void handleSend()}
             disabled={isProcessing || !inputValue.trim()}
             variant="contained"
             endIcon={isProcessing ? <CircularProgress size={14} color="inherit" /> : <SendIcon sx={{ fontSize: 16 }} />}

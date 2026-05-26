@@ -33,6 +33,7 @@ import {
   type EditFeedback,
 } from '../../services/feedback';
 import { MemorySourcePopover } from './MemorySourcePopover';
+import { downloadBomExcel } from '../../services/spreadsheet';
 
 /**
  * Maps a BOMItem onto the (category, manufacturer, model) triple the
@@ -56,8 +57,28 @@ export function BOMPanel() {
     model: string;
   } | null>(null);
   const [negativeBusyId, setNegativeBusyId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [activeOnly, setActiveOnly] = useState(false);
 
   const projectId = project?.id ?? null;
+
+  const q = search.trim().toLowerCase();
+  const visibleBom = bomData.filter((item) => {
+    if (activeOnly && item.active === false) return false;
+    if (!q) return true;
+    return (
+      item.name.toLowerCase().includes(q) ||
+      item.mfg.toLowerCase().includes(q) ||
+      item.pn.toLowerCase().includes(q) ||
+      item.specs.toLowerCase().includes(q)
+    );
+  });
+
+  function handleExportExcel() {
+    if (visibleBom.length === 0) return;
+    const base = (project?.name ?? 'bom').replace(/[^\w\u4e00-\u9fff-]+/g, '_');
+    downloadBomExcel(visibleBom, `${base || 'bom'}.xlsx`);
+  }
 
   // Future-proof: inline BOM-row edits (qty / specs override) should call
   // this helper so they're captured as `bom_edit` decisions for the
@@ -166,6 +187,8 @@ export function BOMPanel() {
           variant="contained"
           color="inherit"
           startIcon={<FileDownloadIcon />}
+          disabled={visibleBom.length === 0}
+          onClick={handleExportExcel}
           sx={{
             bgcolor: 'common.white',
             color: 'common.black',
@@ -191,14 +214,15 @@ export function BOMPanel() {
         }}
       >
         <Button
-          variant="outlined"
+          variant={activeOnly ? 'contained' : 'outlined'}
           startIcon={<FilterListIcon />}
+          onClick={() => setActiveOnly((v) => !v)}
           sx={{
             borderRadius: 4,
             fontWeight: 700,
             fontSize: 13,
             borderColor: 'divider',
-            color: 'text.secondary',
+            color: activeOnly ? 'primary.contrastText' : 'text.secondary',
           }}
         >
           {tr.bom.filter}
@@ -206,6 +230,8 @@ export function BOMPanel() {
         <TextField
           placeholder={tr.bom.search}
           size="small"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -276,7 +302,7 @@ export function BOMPanel() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {bomData.map((item) => {
+              {visibleBom.map((item) => {
                 const proc = buildProcurementUrl({ manufacturer: item.mfg, model: item.pn });
                 return (
                   <TableRow

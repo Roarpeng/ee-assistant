@@ -20,6 +20,8 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import SearchIcon from '@mui/icons-material/Search';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 const STATUS_STYLE: Record<KnowledgeDocStatus, { bg: string; color: string }> = {
   uploading: { bg: 'rgba(107,114,128,0.2)', color: '#9CA3AF' },
@@ -121,6 +123,12 @@ export function KnowledgePanel() {
   const setLoading = useStore((s) => s.setKnowledgeLoading);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchMode, setSearchMode] = useState<'docs' | 'semantic'>('docs');
+  const [semanticHits, setSemanticHits] = useState<
+    Array<{ id: string; content: string; score: number; metadata?: Record<string, unknown> }>
+  >([]);
+  const [semanticLoading, setSemanticLoading] = useState(false);
+  const [semanticError, setSemanticError] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [queueState, setQueueState] = useState<UploadQueueState | null>(null);
@@ -317,14 +325,37 @@ export function KnowledgePanel() {
     }
   }
 
-  const filteredDocs = searchQuery
-    ? docs.filter(
-        (d) =>
-          d.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          d.manufacturer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          d.category_tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    : docs;
+  async function runSemanticSearch() {
+    const q = searchQuery.trim();
+    if (!q) {
+      setSemanticHits([]);
+      setSemanticError('');
+      return;
+    }
+    setSemanticLoading(true);
+    setSemanticError('');
+    try {
+      const data = await api.searchKnowledge(q);
+      setSemanticHits(data?.results ?? []);
+    } catch (err: unknown) {
+      setSemanticHits([]);
+      setSemanticError(err instanceof Error ? err.message : tr.knowledge.semanticNoHits);
+    } finally {
+      setSemanticLoading(false);
+    }
+  }
+
+  const filteredDocs =
+    searchMode === 'semantic'
+      ? docs
+      : searchQuery
+        ? docs.filter(
+            (d) =>
+              d.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              d.manufacturer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              d.category_tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())),
+          )
+        : docs;
 
   const formatDate = (d: string) => {
     try {
@@ -364,32 +395,102 @@ export function KnowledgePanel() {
             {selectionMode ? tr.knowledge.exitSelect : tr.knowledge.select}
           </Button>
         </Box>
-        <TextField
-          placeholder={tr.knowledge.search}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          variant="outlined"
-          fullWidth
-          size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              bgcolor: 'background.default',
-              borderRadius: 3,
-              '& fieldset': { borderColor: 'divider' },
-              '&:hover fieldset': { borderColor: 'primary.main' },
-              '&.Mui-focused fieldset': { borderColor: 'primary.main' },
-            },
-            '& .MuiInputBase-input': { fontSize: '0.875rem', color: 'text.primary', '&::placeholder': { color: 'text.disabled', opacity: 1 } },
-          }}
-        />
+        <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={searchMode}
+            onChange={(_, v) => {
+              if (v) {
+                setSearchMode(v);
+                setSemanticHits([]);
+                setSemanticError('');
+              }
+            }}
+          >
+            <ToggleButton value="docs">{tr.knowledge.searchDocs}</ToggleButton>
+            <ToggleButton value="semantic">{tr.knowledge.searchSemantic}</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <TextField
+            placeholder={tr.knowledge.search}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (searchMode === 'semantic' && e.key === 'Enter') {
+                e.preventDefault();
+                void runSemanticSearch();
+              }
+            }}
+            variant="outlined"
+            fullWidth
+            size="small"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                bgcolor: 'background.default',
+                borderRadius: 3,
+                '& fieldset': { borderColor: 'divider' },
+                '&:hover fieldset': { borderColor: 'primary.main' },
+                '&.Mui-focused fieldset': { borderColor: 'primary.main' },
+              },
+              '& .MuiInputBase-input': {
+                fontSize: '0.875rem',
+                color: 'text.primary',
+                '&::placeholder': { color: 'text.disabled', opacity: 1 },
+              },
+            }}
+          />
+          {searchMode === 'semantic' && (
+            <Button
+              variant="contained"
+              size="small"
+              disabled={semanticLoading || !searchQuery.trim()}
+              onClick={() => void runSemanticSearch()}
+              sx={{ flexShrink: 0, fontWeight: 700 }}
+            >
+              {semanticLoading ? tr.knowledge.semanticSearching : tr.knowledge.semanticSearch}
+            </Button>
+          )}
+        </Box>
       </Box>
+
+      {searchMode === 'semantic' && (
+        <Box sx={{ px: 3, pb: 2, borderBottom: '1px solid', borderColor: 'divider', flexShrink: 0 }}>
+          {semanticError && (
+            <Typography sx={{ fontSize: '0.75rem', color: 'error.main', mb: 1 }}>{semanticError}</Typography>
+          )}
+          {!semanticLoading && semanticHits.length === 0 && !semanticError && (
+            <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled' }}>
+              {searchQuery.trim() ? tr.knowledge.semanticNoHits : tr.knowledge.semanticEmpty}
+            </Typography>
+          )}
+          {semanticHits.map((hit) => (
+            <Paper key={String(hit.id)} variant="outlined" sx={{ p: 1.5, mb: 1, borderRadius: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5, gap: 1 }}>
+                <Typography sx={{ fontSize: '0.7rem', color: 'text.disabled' }}>
+                  {(hit.metadata?.filename as string) ?? (hit.metadata?.doc_id as string) ?? 'chunk'}
+                </Typography>
+                <Chip
+                  size="small"
+                  label={`${tr.knowledge.score} ${(hit.score * 100).toFixed(0)}%`}
+                  sx={{ height: 20, fontSize: '0.65rem' }}
+                />
+              </Box>
+              <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', whiteSpace: 'pre-wrap' }}>
+                {hit.content.length > 320 ? `${hit.content.slice(0, 320)}…` : hit.content}
+              </Typography>
+            </Paper>
+          ))}
+        </Box>
+      )}
 
       {/* Document list */}
       <List sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2, display: 'flex', flexDirection: 'column', gap: 0, '&::-webkit-scrollbar': { width: 6 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 3 } }}>

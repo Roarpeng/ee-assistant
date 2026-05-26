@@ -8,7 +8,13 @@ import {
   TableRow,
   Typography,
   Box,
+  Button,
+  Chip,
 } from '@mui/material';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { downloadWiringExcel } from '../../services/spreadsheet';
+import { t } from '../../services/i18n';
+import { useStore } from '../../models/store';
 
 // M2 memory-flywheel hook (Track C):
 //   When inline editing of wire spec / terminal / signal lands, call
@@ -33,6 +39,10 @@ interface Props {
 }
 
 export function WiringPanel({ ioItems }: Props) {
+  const language = useStore((s) => s.language);
+  const project = useStore((s) => s.project);
+  const tr = t(language);
+
   if (ioItems.length === 0) {
     return (
       <Box
@@ -65,15 +75,31 @@ export function WiringPanel({ ioItems }: Props) {
       >
         [ fig.04 ] terminal &middot; wiring list
       </Typography>
-      <Typography variant="headlineSmall" sx={{ mb: 3, fontWeight: 700 }}>
-        接线表
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, gap: 2 }}>
+        <Typography variant="headlineSmall" sx={{ fontWeight: 700 }}>
+          接线表
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Chip label={tr.wiring.rowCount(ioItems.length)} size="small" variant="outlined" />
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<FileDownloadIcon />}
+            onClick={() => {
+              const base = (project?.name ?? 'wiring').replace(/[^\w\u4e00-\u9fff-]+/g, '_');
+              downloadWiringExcel(ioItems, `${base || 'wiring'}.xlsx`);
+            }}
+          >
+            {tr.wiring.export}
+          </Button>
+        </Box>
+      </Box>
       <TableContainer
         component={Paper}
         variant="outlined"
-        sx={{ borderRadius: 2 }}
+        sx={{ borderRadius: 2, maxHeight: 'calc(100% - 120px)' }}
       >
-        <Table size="small" sx={{ fontFamily: '"JetBrains Mono", monospace' }}>
+        <Table size="small" stickyHeader sx={{ fontFamily: '"JetBrains Mono", monospace' }}>
           <TableHead>
             <TableRow
               sx={(theme) => ({

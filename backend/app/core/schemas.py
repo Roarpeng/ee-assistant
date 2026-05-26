@@ -94,6 +94,7 @@ class KnowledgeSearch(BaseModel):
     category_filter: list[str] | None = None
     manufacturer_filter: str | None = None
     top_k: int = 5
+    embedding_config: dict | None = None
 
 
 class IOItemOut(BaseModel):

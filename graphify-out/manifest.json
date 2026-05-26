@@ -1,794 +1,882 @@
 {
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\env.py": {
-    "mtime": 1778484650.4143262,
-    "hash": "ae62400665bd82052b304871b23a580c"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\alembic\\env.py": {
+    "mtime": 1777630354.8065276,
+    "hash": "0c91ef10aa7440625b472aab13fb9b9d"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\001_initial_tables.py": {
-    "mtime": 1778484650.416329,
-    "hash": "0289361ad16f27db00d849c06662b3ed"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\alembic\\versions\\001_initial_tables.py": {
+    "mtime": 1777631731.4333425,
+    "hash": "5246dacc0c3001c64863ac8fa84ab85d"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\002_add_knowledge_status_and_fk_ondelete.py": {
-    "mtime": 1778484650.416329,
-    "hash": "89c799d6eee78cba9e1f584f4b90d135"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\alembic\\versions\\002_add_knowledge_status_and_fk_ondelete.py": {
+    "mtime": 1777870721.123841,
+    "hash": "2b6d6baac3879ebc9172a929d8541627"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\002_langgraph_checkpoint.py": {
-    "mtime": 1778734313.4382787,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\alembic\\versions\\002_langgraph_checkpoint.py": {
+    "mtime": 1779495852.2630901,
     "hash": "59573e75f3b8753a9f15b91de5616342"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\003_add_knowledge_source_type_and_url.py": {
-    "mtime": 1778484650.4173272,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\alembic\\versions\\003_add_knowledge_source_type_and_url.py": {
+    "mtime": 1779495852.2650857,
     "hash": "2754a6a2ad8aeadd36b9a51128879045"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\003_chat_messages.py": {
-    "mtime": 1778734308.3386424,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\alembic\\versions\\003_chat_messages.py": {
+    "mtime": 1779495852.2650857,
     "hash": "0ef42cbf60ebd1a2c4979f28cfacc310"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\004_organizations.py": {
-    "mtime": 1778744710.6124022,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\alembic\\versions\\004_organizations.py": {
+    "mtime": 1779495852.2660863,
     "hash": "1c2ae3b7c64abf27ab3f1135441927cf"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\005_projects_org_fk.py": {
-    "mtime": 1778744713.3585484,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\alembic\\versions\\005_projects_org_fk.py": {
+    "mtime": 1779495852.2660863,
     "hash": "5daea4b6b6d2dddc65cd765455dcc890"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\006_decisions_runhistory_weights.py": {
-    "mtime": 1778746746.3545089,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\alembic\\versions\\006_decisions_runhistory_weights.py": {
+    "mtime": 1779495852.267086,
     "hash": "7f173087775c6dbf28d4fd2660a1aee5"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\007_episodic_memories_and_reports.py": {
-    "mtime": 1778748956.6516807,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\alembic\\versions\\007_episodic_memories_and_reports.py": {
+    "mtime": 1779495852.267086,
     "hash": "20749a8128fa916c018213c749c4319c"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\alembic\\versions\\a4d5b3e39d74_add_component_graph_tables.py": {
-    "mtime": 1778484650.4173272,
-    "hash": "61a260e58b76a98b23d072cedf9b63dd"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\alembic\\versions\\008_add_project_title_and_topic_tags.py": {
+    "mtime": 1779495852.2680871,
+    "hash": "83846b8164f4c3a0bd69f75271bd7ca1"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\config.py": {
-    "mtime": 1778484650.424839,
-    "hash": "ada3834acbd93d6f5508656f13aae080"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\alembic\\versions\\a4d5b3e39d74_add_component_graph_tables.py": {
+    "mtime": 1777784454.6094823,
+    "hash": "c696783be2d63335742acab86f2e5f63"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\main.py": {
-    "mtime": 1778759202.696205,
-    "hash": "b36354afa17226a6d701b6498308ed1c"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\config.py": {
+    "mtime": 1779518423.9915426,
+    "hash": "9bff4c686d708ae010812ae341c41732"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\__init__.py": {
-    "mtime": 1778484650.4188328,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\main.py": {
+    "mtime": 1779519597.9076462,
+    "hash": "b55a6386dcc9f2ee81864d2db3c03c5a"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\__init__.py": {
+    "mtime": 1777629040.1159322,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\admin_memory.py": {
-    "mtime": 1778748809.8038318,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\admin_memory.py": {
+    "mtime": 1779495852.2690828,
     "hash": "3344a6aac20c7385f62f1fa96f1b681f"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\analysis.py": {
-    "mtime": 1778734527.4969635,
-    "hash": "d27548e52c0ef00674a9d6662acb3cd3"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\analysis.py": {
+    "mtime": 1779496208.0168002,
+    "hash": "bd555c269099f6302ced47cdf43740f7"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\clarify_answer.py": {
-    "mtime": 1778744810.0139222,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\clarify_answer.py": {
+    "mtime": 1779495852.2715957,
     "hash": "45e142eb1c4221f578307941094e4caa"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\codegen.py": {
-    "mtime": 1778484650.4208393,
-    "hash": "a2e1686c7bc640e5d13181be55ad5d72"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\codegen.py": {
+    "mtime": 1779520881.342879,
+    "hash": "dea646ef94d5c30548809d97dece642e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\episodes.py": {
-    "mtime": 1778748685.6207223,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\episodes.py": {
+    "mtime": 1779495852.2715957,
     "hash": "b797738fa8d5072e92364b21c987a7ef"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\feedback.py": {
-    "mtime": 1778746832.9922523,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\feedback.py": {
+    "mtime": 1779495852.2726064,
     "hash": "0a45c99986fab1b21ae25bce19a20d34"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\knowledge.py": {
-    "mtime": 1778484650.4218392,
-    "hash": "af20ffa0d71c44d223d6746986a04286"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\knowledge.py": {
+    "mtime": 1779797414.7648945,
+    "hash": "c4cbaf2ca6c1b561b216826b770264bc"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\memory_sources.py": {
-    "mtime": 1778747734.0223358,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\memory_sources.py": {
+    "mtime": 1779495852.276607,
     "hash": "423d689ae754a4dcbe9ff88f5a38dc44"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\messages.py": {
-    "mtime": 1778734431.1236398,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\messages.py": {
+    "mtime": 1779495852.2776408,
     "hash": "c921f2aee04127857ccc167f018fa5c0"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\orgs.py": {
-    "mtime": 1778744765.5563178,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\orgs.py": {
+    "mtime": 1779495852.2776408,
     "hash": "36fd61354e42643e8dd64c9574da35a1"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\projects.py": {
-    "mtime": 1778484650.4218392,
-    "hash": "2e01cf6382af4574f9f3ee92c6e3b0aa"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\projects.py": {
+    "mtime": 1779496230.3183985,
+    "hash": "c8865f6846059f182bcf32ce4b31ab7b"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\schematic.py": {
-    "mtime": 1778484650.422839,
-    "hash": "3f4ff32e5e4c7d44844d985527373975"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\schematic.py": {
+    "mtime": 1777642961.1744478,
+    "hash": "494b5f6dc35b65a8ec4e23d8000c066a"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\selection.py": {
-    "mtime": 1778484650.4238396,
-    "hash": "b492f81a70c23a5140b36d6e71e255a2"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\selection.py": {
+    "mtime": 1777640880.727155,
+    "hash": "a67363759627bb72ceac067f3c8ce402"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\topology.py": {
-    "mtime": 1778484650.4238396,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\topology.py": {
+    "mtime": 1779495852.2806077,
     "hash": "10e7973349fc5742be09ff23f413e047"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\api\\__init__.py": {
-    "mtime": 1778484650.419842,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\api\\__init__.py": {
+    "mtime": 1777633616.2071295,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\bom_prices.py": {
-    "mtime": 1778730895.3473678,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\bom_prices.py": {
+    "mtime": 1779495852.284128,
     "hash": "3d42a1c4af76f310161dd2db764d7ed5"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\chat_orchestrator.py": {
-    "mtime": 1778484650.4258387,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\chat_orchestrator.py": {
+    "mtime": 1779495852.285141,
     "hash": "499697752e76fd2bd931a2229c493a2a"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\clarification_detector.py": {
-    "mtime": 1778732086.3862154,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\clarification_detector.py": {
+    "mtime": 1779495852.2861276,
     "hash": "7a1ef350568d5d3e081790d9c3d847ae"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\commissioning_generator.py": {
-    "mtime": 1778731589.4445572,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\clustering.py": {
+    "mtime": 1779495852.28713,
+    "hash": "1b521f66561ae1ebc85a387b8ce096bc"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\commissioning_generator.py": {
+    "mtime": 1779495852.28713,
     "hash": "2de593286d397cfc13885d45e8d5b6ca"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\community_detector.py": {
-    "mtime": 1778484650.426838,
-    "hash": "ac396c64c88318998e65fb1556183ccb"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\community_detector.py": {
+    "mtime": 1777784785.196996,
+    "hash": "42f11a3f9ea89f7dfc0755b4d1e4ede7"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\component_normalizer.py": {
-    "mtime": 1778484650.4278557,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\component_normalizer.py": {
+    "mtime": 1779495852.2911377,
     "hash": "b4009ae5c0a26c1b2d61239b19373244"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\component_taxonomy.py": {
-    "mtime": 1778484650.4278557,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\component_taxonomy.py": {
+    "mtime": 1779495852.2921536,
     "hash": "4d87d367fd67f398599b85a65bc207f2"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\consolidation_service.py": {
-    "mtime": 1778748798.4367073,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\consolidation_service.py": {
+    "mtime": 1779495852.2938633,
     "hash": "f53de8307b94a407a6e81eeda51166f9"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\decisions_service.py": {
-    "mtime": 1778746808.4130511,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\decisions_service.py": {
+    "mtime": 1779495852.2938633,
     "hash": "2bb8b5247104e96c38955ac4b5319390"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\entity_extractor.py": {
-    "mtime": 1778484650.4278557,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\entity_extractor.py": {
+    "mtime": 1779495852.296874,
     "hash": "2a7fcd87cc702ca12e739a511b736cf6"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\episode_extractor.py": {
-    "mtime": 1778748654.0348868,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\episode_extractor.py": {
+    "mtime": 1779495852.297874,
     "hash": "e2800b60e49c12a74014d07b5564f582"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\episode_retrieval.py": {
-    "mtime": 1778748780.1201944,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\episode_retrieval.py": {
+    "mtime": 1779495852.297874,
     "hash": "1b798e0ff07268abfbcea033bb64bbcf"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\extractors.py": {
-    "mtime": 1778484650.4293213,
-    "hash": "417fee23be6bbee7edc4e983189c646e"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\extractors.py": {
+    "mtime": 1779495852.2988732,
+    "hash": "70e35b89da42d7ac38c74b361ba2d0e8"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\graph_rag.py": {
-    "mtime": 1778484650.4336774,
-    "hash": "22c397aaad7c1c26fbd9b87bd6bf4338"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\graph_rag.py": {
+    "mtime": 1777957102.6280684,
+    "hash": "29b8ef8e19bde724e3ce8c3adefc9a1e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\io_budget.py": {
-    "mtime": 1778731242.8451703,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\io_budget.py": {
+    "mtime": 1779495852.3070076,
     "hash": "ecfcde75a18de85f4ef0392f2b8a0225"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\knowledge_graph.py": {
-    "mtime": 1778484650.4336774,
-    "hash": "a82b5109aa55da45a59ec394f17c88e7"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\knowledge_graph.py": {
+    "mtime": 1777957175.168447,
+    "hash": "d57a2feea93dc0e5c7200fe41908358e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\llm_service.py": {
-    "mtime": 1778484650.434683,
-    "hash": "dd826f075bbe7d12b4fd6cac28ef866a"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\llm_providers.py": {
+    "mtime": 1779495852.308006,
+    "hash": "b8605d65cfb08faba3da80a7f20f5fa6"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\orchestrator.py": {
-    "mtime": 1778748672.2397985,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\llm_service.py": {
+    "mtime": 1779496167.960254,
+    "hash": "e00d811d64d2fceaec6398b0ca2e07f5"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\orchestrator.py": {
+    "mtime": 1779495852.3145347,
     "hash": "018aa724e0c4ddaf32ec580ef327129e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\org_prefs_keys.py": {
-    "mtime": 1778744711.5461488,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\org_prefs_keys.py": {
+    "mtime": 1779495852.3155665,
     "hash": "300b070f3e8bcc1560d4e73b4f49bed3"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\org_prefs_service.py": {
-    "mtime": 1778744733.2037182,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\org_prefs_service.py": {
+    "mtime": 1779495852.316567,
     "hash": "a19140567790b43af5eeb722dbac61db"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\plc_catalog.py": {
-    "mtime": 1778730820.1598704,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\plc_catalog.py": {
+    "mtime": 1779495852.3175695,
     "hash": "9fdb182ce32685285ce291a2bcb04f9e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\project_meta.py": {
-    "mtime": 1778731001.3227153,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\project_meta.py": {
+    "mtime": 1779495852.3190968,
     "hash": "2fbf8acd14ec533c4d9f45a2716aaaeb"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\rag_engine.py": {
-    "mtime": 1778484650.435683,
-    "hash": "865e84686ea64828cc81ca6e43c9520b"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\rag_engine.py": {
+    "mtime": 1779518424.0020597,
+    "hash": "682acbf8bddc2031b451ad232b56da0f"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\rule_engine.py": {
-    "mtime": 1778484650.4366827,
-    "hash": "7f0bd25a113e4e8a2848513ff157a7fa"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\rule_engine.py": {
+    "mtime": 1777640824.928504,
+    "hash": "1725ac94f75802d3023ae24fb4e84545"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\run_history_service.py": {
-    "mtime": 1778747002.0083034,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\run_history_service.py": {
+    "mtime": 1779495852.3231187,
     "hash": "33ce2cfb0e6aba75f2374bbe669088a6"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\schemas.py": {
-    "mtime": 1778748874.2973833,
-    "hash": "1a0e2919e66a3fa1272eb654b871962a"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\schemas.py": {
+    "mtime": 1779797413.0945213,
+    "hash": "dd0a5340ba0c3db457b7575e136d5835"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\topology_lint.py": {
-    "mtime": 1778484650.4376833,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\topology_lint.py": {
+    "mtime": 1779495852.326118,
     "hash": "075d41073436632642956b318cf2a70c"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\url_fetcher.py": {
-    "mtime": 1778484650.4376833,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\url_fetcher.py": {
+    "mtime": 1779495852.3271182,
     "hash": "22ac7827ed867846cf3c44da613b09aa"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\wiring_generator.py": {
-    "mtime": 1778731851.7047563,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\wiring_generator.py": {
+    "mtime": 1779495852.3281531,
     "hash": "65f6d4176747fc7fbe05bd8d914f852f"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\__init__.py": {
-    "mtime": 1778484650.4258387,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\__init__.py": {
+    "mtime": 1777633609.5415635,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\graph\\agents.py": {
-    "mtime": 1778748860.1747105,
-    "hash": "e545edb44cc7cf6f0f0d785fca7bd4cc"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\graph\\agents.py": {
+    "mtime": 1779496168.0699394,
+    "hash": "3a75219247c35c86b610c5fbeff28e74"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\graph\\builder.py": {
-    "mtime": 1778734507.7153254,
-    "hash": "00b06d49ef50a1e7a294ba9045f1b831"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\graph\\builder.py": {
+    "mtime": 1779518423.9975524,
+    "hash": "9da1b406ec4f9f3feda91821fbd8ec4c"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\graph\\state.py": {
-    "mtime": 1778748820.7100155,
-    "hash": "5c0d0b2bad6b5e71e6759407946f8eca"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\graph\\state.py": {
+    "mtime": 1779495853.2208273,
+    "hash": "b80421e721aa54f60436480a214bdc90"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\core\\graph\\__init__.py": {
-    "mtime": 1778484650.4304116,
-    "hash": "0e3c9c299e3106b5c0b82f72b68e8129"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\core\\graph\\__init__.py": {
+    "mtime": 1777785047.8330915,
+    "hash": "f635cdbf5eb2b04cec0adcb4745eb0fc"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\db\\models.py": {
-    "mtime": 1778748844.8638268,
-    "hash": "423ed760eaa45cd1d8ea8fd932b8af37"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\db\\models.py": {
+    "mtime": 1779518424.0076113,
+    "hash": "95b7bea17b2d67f02d442b76a036bd19"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\db\\repository.py": {
-    "mtime": 1778484650.4396963,
-    "hash": "5a455aab09f8ce0b0ecf3afb3a462595"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\db\\repository.py": {
+    "mtime": 1777629590.1014116,
+    "hash": "bbe669783ec5bec56efe1bacff277c3f"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\db\\__init__.py": {
-    "mtime": 1778484650.4386826,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\db\\__init__.py": {
+    "mtime": 1777629586.8718686,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\middleware\\org_auth.py": {
-    "mtime": 1778744729.5248997,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\middleware\\org_auth.py": {
+    "mtime": 1779495852.335637,
     "hash": "9eee09773b8db9d15e935965d520f323"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\app\\middleware\\__init__.py": {
-    "mtime": 1778744720.630592,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\app\\middleware\\__init__.py": {
+    "mtime": 1779495852.3346376,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\conftest.py": {
-    "mtime": 1778484650.4430037,
-    "hash": "8d9aa3b7daad55321f499965c2378b4b"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\conftest.py": {
+    "mtime": 1779518424.0121195,
+    "hash": "b5e67a6be8b6483184128a35ba66b1f5"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_analyze_idempotent.py": {
-    "mtime": 1778734286.8900597,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_analyze_idempotent.py": {
+    "mtime": 1779495852.338638,
     "hash": "1ea6536c7e0755d2a35be97fe9fe0e1c"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_admin_memory.py": {
-    "mtime": 1778749005.4328356,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_api_admin_memory.py": {
+    "mtime": 1779495852.339663,
     "hash": "c9971d0438ba7acf88ee3352c68918e3"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_analysis.py": {
-    "mtime": 1778484650.4430037,
-    "hash": "f27a0d0389b9f5ee1a162c78ebd98ea7"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_api_analysis.py": {
+    "mtime": 1777637659.7323616,
+    "hash": "afd0111b1384d970b7c8be1c1b20e688"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_episodes.py": {
-    "mtime": 1778748733.222392,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_api_episodes.py": {
+    "mtime": 1779495852.3406482,
     "hash": "562e50781b1310bee4e14fa7c22cb119"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_feedback.py": {
-    "mtime": 1778746894.2884648,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_api_feedback.py": {
+    "mtime": 1779495852.3416483,
     "hash": "8259264e8b0b925f4884ff0268252115"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_knowledge.py": {
-    "mtime": 1778484650.444006,
-    "hash": "aa5b53cb019e81ecb94aff48072566fa"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_api_knowledge.py": {
+    "mtime": 1779797520.3011892,
+    "hash": "86869979e2578bfedfe6f8d0190e87b4"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_messages.py": {
-    "mtime": 1778734342.6162605,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_api_messages.py": {
+    "mtime": 1779495852.3429859,
     "hash": "87857efeb475010ea4026bec9dd47038"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_orgs.py": {
-    "mtime": 1778744794.860155,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_api_orgs.py": {
+    "mtime": 1779495852.3429859,
     "hash": "0eb71fbf5fd8bfb9a6eb048fa08c836c"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_api_topology.py": {
-    "mtime": 1778484650.444006,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_api_topology.py": {
+    "mtime": 1779495852.3444302,
     "hash": "7b7ce1aa7bd5dae0a86b1107cbfe3c6e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_bom_prices.py": {
-    "mtime": 1778730856.4680798,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_bom_prices.py": {
+    "mtime": 1779495852.3454392,
     "hash": "99f856e6848359581117624397383c60"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_chat_orchestrator.py": {
-    "mtime": 1778484650.4450064,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_chat_orchestrator.py": {
+    "mtime": 1779495852.3464394,
     "hash": "e2f770b73bff05cfe32b9bd05619c26e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_clarification_detector.py": {
-    "mtime": 1778732048.9116156,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_clarification_detector.py": {
+    "mtime": 1779495852.3474388,
     "hash": "5793cef11ac7cb4b7ca31ee8f5ec4a91"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_clarify_writeback.py": {
-    "mtime": 1778745274.0760694,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_clarify_writeback.py": {
+    "mtime": 1779495852.3474388,
     "hash": "9beaf6b337f1b87ea3da71eae366cbd3"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_commissioning_generator.py": {
-    "mtime": 1778731527.6192234,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_clustering.py": {
+    "mtime": 1779495852.3484373,
+    "hash": "d3e39e9336b2a2842e4e71a9ac07dce6"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_commissioning_generator.py": {
+    "mtime": 1779495852.3494377,
     "hash": "54b9f23ed904609f1f64d5dfe1bda089"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_component_normalizer.py": {
-    "mtime": 1778484650.4450064,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_component_normalizer.py": {
+    "mtime": 1779495852.3504372,
     "hash": "1a46e713517e6a1f68f7a20c68bcbf10"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_consolidation_service.py": {
-    "mtime": 1778748915.217404,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_consolidation_service.py": {
+    "mtime": 1779495852.3504372,
     "hash": "182136c95b69cba4426154d223f84ecb"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_conversation_enhancements.py": {
-    "mtime": 1778484650.4464269,
-    "hash": "48858cf24b553de42156f5c7ffe887f0"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_conversation_enhancements.py": {
+    "mtime": 1779495852.3514419,
+    "hash": "6146035b265008041e58e2d182041e2a"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_episode_extractor.py": {
-    "mtime": 1778748711.0258107,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_episode_extractor.py": {
+    "mtime": 1779495852.3529494,
     "hash": "cb4116fb84b8d5dff9cabd57356a1440"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_episode_retrieval.py": {
-    "mtime": 1778748893.351683,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_episode_retrieval.py": {
+    "mtime": 1779495852.3529494,
     "hash": "e3c2d3025cfee1d8816f4dfd4696d6cd"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_extractors.py": {
-    "mtime": 1778484650.447906,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_extractors.py": {
+    "mtime": 1779495852.3549666,
     "hash": "ec980f0cde2d5b5f58b78a881093695b"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_io_budget.py": {
-    "mtime": 1778731204.3221762,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_io_budget.py": {
+    "mtime": 1779495852.3549666,
     "hash": "fc9ffe18a3bb1fd191015c9771a38d82"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_memory_sources.py": {
-    "mtime": 1778746919.209568,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_llm_providers.py": {
+    "mtime": 1779495852.3559654,
+    "hash": "176be730e7e475a1057dff1b7ab13153"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_memory_sources.py": {
+    "mtime": 1779495852.3569646,
     "hash": "00dc6f7e33c92f324623fb8f1fde36d0"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_plc_catalog.py": {
-    "mtime": 1778730756.7663915,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_plc_catalog.py": {
+    "mtime": 1779495852.3569646,
     "hash": "6631ea9480c2591c2ce66bf4ca906a85"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_postgres_checkpointer.py": {
-    "mtime": 1778734348.0427883,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_postgres_checkpointer.py": {
+    "mtime": 1779495852.3579648,
     "hash": "d16eb0f73feb5acb9188754104d201e6"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_project_meta.py": {
-    "mtime": 1778730970.5647235,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_project_meta.py": {
+    "mtime": 1779495852.3589642,
     "hash": "6a0abea4b1c8f318c1ffb7eaac7d866b"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_rag_engine.py": {
-    "mtime": 1778484650.447906,
-    "hash": "10a8b6b5b7c5ae3dd29ccf3f7e745070"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_rag_engine.py": {
+    "mtime": 1777640823.0028114,
+    "hash": "d8865c144e6db5bce039515e9936e153"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_requirements_enrichment.py": {
-    "mtime": 1778744928.69998,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_requirements_enrichment.py": {
+    "mtime": 1779495852.3589642,
     "hash": "1f82f6f1b15eeb7ec246e045c3414d56"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_rule_engine.py": {
-    "mtime": 1778484650.447906,
-    "hash": "902eead7ddbefb074429b0e77c2c54d8"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_rule_engine.py": {
+    "mtime": 1777640826.803062,
+    "hash": "62e4cc9e183e4658fdfeaf4bc9838987"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_run_history_capture.py": {
-    "mtime": 1778747195.6835086,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_run_history_capture.py": {
+    "mtime": 1779495852.3589642,
     "hash": "047b7bb414e3590b93ad5c90d2558daa"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_schemas.py": {
-    "mtime": 1778484650.4493072,
-    "hash": "495bdcdbeb4ddd809c0e77dcfc38b7ce"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_schemas.py": {
+    "mtime": 1777633614.6285014,
+    "hash": "4cb6ef01bbbbfdc058e1a3d401a7dbf5"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_selection_weight_bias.py": {
-    "mtime": 1778747213.8283744,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_selection_weight_bias.py": {
+    "mtime": 1779495852.3602476,
     "hash": "a505b29dda80647107694ba820559035"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_topology_lint.py": {
-    "mtime": 1778484650.4493072,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_test_connectivity.py": {
+    "mtime": 1779495852.3602476,
+    "hash": "423977dfe6df59a4c1ad07dba740e40d"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_topology_lint.py": {
+    "mtime": 1779495852.362186,
     "hash": "5abecfcd915b78243ebed34ba56235a0"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_url_fetcher.py": {
-    "mtime": 1778484650.4503148,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_url_fetcher.py": {
+    "mtime": 1779495852.363194,
     "hash": "e444f82d1266401505f5e58940fca2a1"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\test_wiring_generator.py": {
-    "mtime": 1778731807.98548,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\test_wiring_generator.py": {
+    "mtime": 1779495852.3641937,
     "hash": "aa9387bd7c44fb78ce4997e17b8d12da"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\tests\\__init__.py": {
-    "mtime": 1778484650.442003,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\tests\\__init__.py": {
+    "mtime": 1777633612.729796,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\postcss.config.js": {
-    "mtime": 1778484650.4726136,
-    "hash": "6f0f791b93fbfb5e6dd0ab38596a8ed9"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\postcss.config.js": {
+    "mtime": 1777633901.5722997,
+    "hash": "4acb6a30c0858e1e9ceb649da060dca5"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\tailwind.config.js": {
-    "mtime": 1778484650.492663,
-    "hash": "bc0f9fd972b736047f7f823bf3f57d2f"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\tailwind.config.js": {
+    "mtime": 1777784816.9837718,
+    "hash": "cec7376baee136f431be81432e568700"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\vite.config.ts": {
-    "mtime": 1778484650.494663,
-    "hash": "c4f3e79b31784b175733b66735c5aab8"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\vite.config.ts": {
+    "mtime": 1777633896.448338,
+    "hash": "7eaf57297e16610056843d6a7bbb380d"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\vitest.config.ts": {
-    "mtime": 1778723884.1304243,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\vitest.config.ts": {
+    "mtime": 1779495852.506852,
     "hash": "0560c74ecea95852d82b416aa9c8e418"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\App.tsx": {
-    "mtime": 1778745243.0827518,
-    "hash": "4f76cb111edb0267dc5f5d67386752a6"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\App.tsx": {
+    "mtime": 1779518424.0372841,
+    "hash": "718036741334a6f776447f05218849f9"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\main.tsx": {
-    "mtime": 1778724095.9262052,
-    "hash": "83638a25a806fe6b284e53295d9d1091"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\main.tsx": {
+    "mtime": 1779522018.3422158,
+    "hash": "fd924c87e472d2142bf3883ce28ed6d5"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\hooks\\useChatHistory.ts": {
-    "mtime": 1778734703.308911,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\hooks\\useChatHistory.ts": {
+    "mtime": 1779495852.407492,
     "hash": "08b0ac9ffb59f67f66e6277f15c5fc14"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\models\\store.ts": {
-    "mtime": 1778745217.6214793,
-    "hash": "d56e912315af445c955c7ad77426f011"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\models\\store.ts": {
+    "mtime": 1779518424.0423787,
+    "hash": "d6369f4b57a97bb7886ee59742768d8d"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\models\\yjsStore.ts": {
-    "mtime": 1778484650.4786522,
-    "hash": "7cc1b0d0edf1a3b31662ff9c9a264d19"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\models\\yjsStore.ts": {
+    "mtime": 1779522027.926133,
+    "hash": "0ff73ec6e84682f15d8668a4e41b3989"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\api.ts": {
-    "mtime": 1778745112.2487257,
-    "hash": "2ffc58cca020977dfbbb3d4e94407f04"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\api.ts": {
+    "mtime": 1779518846.611606,
+    "hash": "e73fdceb809d53a504fc375888a4a4c6"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\budget.test.ts": {
-    "mtime": 1778726651.0148132,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\budget.test.ts": {
+    "mtime": 1779495852.4223793,
     "hash": "d17bc192383acc64ecfbae7845076826"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\budget.ts": {
-    "mtime": 1778726568.9425478,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\budget.ts": {
+    "mtime": 1779495852.4233692,
     "hash": "026d3b64f17f89c96ca3c8f995efcd51"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\cabinet.test.ts": {
-    "mtime": 1778726334.18965,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\cabinet.test.ts": {
+    "mtime": 1779495852.424369,
     "hash": "e232b53ea87d30931d1549f7f0307b66"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\cabinet.ts": {
-    "mtime": 1778726393.9916818,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\cabinet.ts": {
+    "mtime": 1779495852.4253776,
     "hash": "b08efc1a3179826345184b7201ff9856"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\conversations.ts": {
-    "mtime": 1778484650.4810133,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\conversations.ts": {
+    "mtime": 1779495852.4266033,
     "hash": "f640c102c4c432f35c216d32d7af47ae"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\feedback.test.ts": {
-    "mtime": 1778746809.0549498,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\exportPackage.ts": {
+    "mtime": 1779797427.0276206,
+    "hash": "fb6dd20bb2f8217e8fec2eb50cab04e6"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\feedback.test.ts": {
+    "mtime": 1779495852.4266033,
     "hash": "e012acea263ef8578e00771901f1f380"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\feedback.ts": {
-    "mtime": 1778746779.0035443,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\feedback.ts": {
+    "mtime": 1779495852.4276116,
     "hash": "bcb86fc756e80d135c3d1e5d23021131"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\i18n.ts": {
-    "mtime": 1778726475.3457458,
-    "hash": "f1a97dd06033493f365f45715b207432"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\i18n.ts": {
+    "mtime": 1779797773.7411008,
+    "hash": "b36c7df6008da9e08ea442108c0cc6e2"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\memory.test.ts": {
-    "mtime": 1778748587.8793619,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\llmProviders.test.ts": {
+    "mtime": 1779495852.429623,
+    "hash": "6aa84ea54dea9f86f6ad928c7e3172ba"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\llmProviders.ts": {
+    "mtime": 1779495852.4331582,
+    "hash": "b62d820de4fd81a075aec5f0a89556ae"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\memory.test.ts": {
+    "mtime": 1779495852.4351523,
     "hash": "a72c684004c5d1837808e713b56f33e0"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\memory.ts": {
-    "mtime": 1778748567.1440244,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\memory.ts": {
+    "mtime": 1779495852.4361486,
     "hash": "9cbcc05f22a19b794bbe20c30ecd442a"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\orgClient.test.ts": {
-    "mtime": 1778744943.4462843,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\orgClient.test.ts": {
+    "mtime": 1779495852.4361486,
     "hash": "e751393d970262dbceabcf44f98cdb4d"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\orgClient.ts": {
-    "mtime": 1778744888.2942102,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\orgClient.ts": {
+    "mtime": 1779495852.437151,
     "hash": "824ddcec6cd047b36f1b78c7a61f44cc"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\procurement.test.ts": {
-    "mtime": 1778726205.307521,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\procurement.test.ts": {
+    "mtime": 1779495852.4381506,
     "hash": "56317d3d071bc9082a1aa5a45cb1749f"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\procurement.ts": {
-    "mtime": 1778726120.3769863,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\procurement.ts": {
+    "mtime": 1779495852.4381506,
     "hash": "f15ecc3cf8dccab0275b472c7feb7c43"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\templates.test.ts": {
-    "mtime": 1778725844.4522939,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\spreadsheet.test.ts": {
+    "mtime": 1779797513.322809,
+    "hash": "3ffd2cf594f7687cf07d30d11fde1365"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\spreadsheet.ts": {
+    "mtime": 1779797421.526787,
+    "hash": "1feef68f99441c265678fac698aa86e5"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\templates.test.ts": {
+    "mtime": 1779495852.4391506,
     "hash": "d50f2fee2a37859c5af12ddd1dadca70"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\services\\templates.ts": {
-    "mtime": 1778725904.666205,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\services\\templates.ts": {
+    "mtime": 1779495852.4391506,
     "hash": "5515ff0ee517eb1e0375f4f0d660e1f2"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\test\\setup.ts": {
-    "mtime": 1778723884.1304243,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\test\\setup.ts": {
+    "mtime": 1779495852.4434242,
     "hash": "39529208dfc584ff87969cf460d5f8e5"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\test\\smoke.test.ts": {
-    "mtime": 1778723888.3982713,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\test\\smoke.test.ts": {
+    "mtime": 1779495852.4444246,
     "hash": "08b3700a22985ddc4edb66520cd35844"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\AppLayout.tsx": {
-    "mtime": 1778726495.1312864,
-    "hash": "9d3a7d6eda80d5b5bbce0ed0847d1208"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\theme\\md3.ts": {
+    "mtime": 1779495852.446423,
+    "hash": "5c28d002fabb565b1d11186e59484b80"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\BOMPanel.test.tsx": {
-    "mtime": 1778747124.2558396,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\theme\\mui-augment.d.ts": {
+    "mtime": 1779495852.447423,
+    "hash": "c29b5a068018ef9931fa1a97cde5056e"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\utils\\analysisRouting.test.ts": {
+    "mtime": 1779797510.9837303,
+    "hash": "2570bb0209bc7246244c026875de802a"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\utils\\analysisRouting.ts": {
+    "mtime": 1779797417.8749518,
+    "hash": "f7177ea3ebf4388cd31813efae137247"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\AppLayout.tsx": {
+    "mtime": 1779797774.4866729,
+    "hash": "853d86ba910ae998922b32b3bcf2db4b"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\BOMPanel.test.tsx": {
+    "mtime": 1779495852.4514272,
     "hash": "929f06056f896f1f6d9007360cee4102"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\BOMPanel.tsx": {
-    "mtime": 1778746931.5785048,
-    "hash": "5fff72427a1a526785250f05755d8540"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\BOMPanel.tsx": {
+    "mtime": 1779797468.4780307,
+    "hash": "15726ff50c388729ea6e269bb391b635"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\CabinetPanel.tsx": {
-    "mtime": 1778726457.136403,
-    "hash": "07fd52461490db6cde6edf0bee4a9be6"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\CabinetPanel.tsx": {
+    "mtime": 1779495852.4549482,
+    "hash": "a39498ca275652c209bc7b584c5fa359"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\CanvasContextMenu.tsx": {
-    "mtime": 1778484650.484682,
-    "hash": "ac29614e7df3917c0023bf647295693b"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\CanvasContextMenu.tsx": {
+    "mtime": 1779495852.4569533,
+    "hash": "4684d4842f656431b09ac16fe28d4ce0"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\ChatPanel.tsx": {
-    "mtime": 1778732144.6693985,
-    "hash": "87ea863a9e428b6a8d5611d0007eeedf"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\ChatPanel.tsx": {
+    "mtime": 1779797826.7428513,
+    "hash": "43455eca69f066faa6b048b1cb3c1089"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\ClarifyCard.test.tsx": {
-    "mtime": 1778725525.496376,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\ClarifyCard.test.tsx": {
+    "mtime": 1779495852.4603972,
     "hash": "a2097a1779dd8486db220a2bb956fe32"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\ClarifyCard.tsx": {
-    "mtime": 1778745548.1041448,
-    "hash": "c401f7ebed4f883a6f3e125f68d10ccd"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\ClarifyCard.tsx": {
+    "mtime": 1779495852.4616666,
+    "hash": "05afa39116fb9f4fca3fd3637bb69aca"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\ConversationSidebar.tsx": {
-    "mtime": 1778745479.1417773,
-    "hash": "64b09f240d6d5d9dd279f57a5633b4a9"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\ConversationSidebar.tsx": {
+    "mtime": 1779495852.4646776,
+    "hash": "d4575aca34f7069a73739967cf1a57a6"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\CustomNodes.tsx": {
-    "mtime": 1778484650.4876428,
-    "hash": "d5aa7790826c1bcf701f8758cc4275a0"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\CustomNodes.tsx": {
+    "mtime": 1779518443.0169837,
+    "hash": "8918a5633d538f736e63b68909c7354a"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\GuidePanel.test.tsx": {
-    "mtime": 1778725161.654542,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\GuidePanel.test.tsx": {
+    "mtime": 1779495852.4686792,
     "hash": "a0030146bedf0605d1ac23907988c665"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\GuidePanel.tsx": {
-    "mtime": 1778725285.6767206,
-    "hash": "29d122b56d38d54c1b48ef9ee400a6a6"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\GuidePanel.tsx": {
+    "mtime": 1779495852.4696763,
+    "hash": "a9d997e310d4b93b220694d4e798441b"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\Header.tsx": {
-    "mtime": 1778484650.4881473,
-    "hash": "650b77255fef003b70c49e10b9dee19e"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\Header.tsx": {
+    "mtime": 1779495852.4716866,
+    "hash": "96c20f9ccf036eb48fcca1986180aa6b"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\HeroLanding.test.tsx": {
-    "mtime": 1778724252.118328,
-    "hash": "00fba7611d820f811319694ce3a302e0"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\HeroLanding.test.tsx": {
+    "mtime": 1779495852.4731972,
+    "hash": "8217191286589572d323819c809baa9d"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\HeroLanding.tsx": {
-    "mtime": 1778724325.6556273,
-    "hash": "e8c965b859eaa6a0e14e5e5e49d9d2b4"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\HeroLanding.tsx": {
+    "mtime": 1779495852.4752107,
+    "hash": "a16b4daa7e54173c9e235a0b03d8ffdb"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\InfoPanel.test.tsx": {
-    "mtime": 1778724888.0816216,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\InfoPanel.test.tsx": {
+    "mtime": 1779495852.4762118,
     "hash": "2193d1089fb061d63af5a15194f23b8d"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\InfoPanel.tsx": {
-    "mtime": 1778724939.2444236,
-    "hash": "3786649ce8ccc0761096cc836bca5d99"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\InfoPanel.tsx": {
+    "mtime": 1779797483.0406504,
+    "hash": "3238e950f337b855f8fb75625a8f34cf"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\IOBudgetBar.tsx": {
-    "mtime": 1778726694.162528,
-    "hash": "ecfd95137d3a2fdfc50fa98a2639ed38"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\IOBudgetBar.tsx": {
+    "mtime": 1779495852.4762118,
+    "hash": "9815f9f0cf4a35aadff2d1f823eafb40"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\KnowledgePanel.tsx": {
-    "mtime": 1778484650.4891539,
-    "hash": "6993474874ad1370e2a8fa3a0742231e"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\KnowledgePanel.tsx": {
+    "mtime": 1779797502.8423395,
+    "hash": "c5a9fba940e87243bc2374a99444b20f"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\MemorySourcePopover.test.tsx": {
-    "mtime": 1778746867.1678855,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\MemorySourcePopover.test.tsx": {
+    "mtime": 1779495852.481719,
     "hash": "0c0d392658c6d23622773703ae1ce25d"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\MemorySourcePopover.tsx": {
-    "mtime": 1778746842.5277636,
-    "hash": "6e4346d1c5b9269b594c3540773c3da5"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\MemorySourcePopover.tsx": {
+    "mtime": 1779495852.4827309,
+    "hash": "1600907d1d6607c372f5b81f2c3a5331"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\MemoryTab.test.tsx": {
-    "mtime": 1778748680.307051,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\MemoryTab.test.tsx": {
+    "mtime": 1779495852.4837334,
     "hash": "209a957943206523add5329e12555152"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\MemoryTab.tsx": {
-    "mtime": 1778748649.5494094,
-    "hash": "0f1811e5013089c776cd2fa0894999c3"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\MemoryTab.tsx": {
+    "mtime": 1779495852.4847312,
+    "hash": "4253a04727e27e45c828410a0ff8878f"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\NodeInfoCard.tsx": {
-    "mtime": 1778484650.4901543,
-    "hash": "fde2d156f77b5ddc098632d0532335bf"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\NodeInfoCard.tsx": {
+    "mtime": 1779495852.4867344,
+    "hash": "be2180cff67a12780e103b7d4adbabaf"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\OrgSettingsPanel.test.tsx": {
-    "mtime": 1778745361.751707,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\OrgSettingsPanel.test.tsx": {
+    "mtime": 1779495852.4877336,
     "hash": "ffc3b80486f751f377fbee9a803b1650"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\OrgSettingsPanel.tsx": {
-    "mtime": 1778748809.5746908,
-    "hash": "f4e8ca114d516d058e5b7affa3a42504"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\OrgSettingsPanel.tsx": {
+    "mtime": 1779495852.4897442,
+    "hash": "c1ff7175a0df89b637c2eb9e8b59d73b"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\SCLPanel.tsx": {
-    "mtime": 1778484650.4901543,
-    "hash": "3a2cba0fca59307e9da8ed15265337ab"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\SCLPanel.tsx": {
+    "mtime": 1779797807.2229831,
+    "hash": "dd8d812c58e28b5dc08627327cd7ad1a"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\SettingsModal.tsx": {
-    "mtime": 1778484650.4911537,
-    "hash": "3cd04ea99d08e8bf350ee8436f05eca8"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\SettingsModal.tsx": {
+    "mtime": 1779495852.4947574,
+    "hash": "6c11317df0bf6214b59450817bed5846"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\ThemeToggle.tsx": {
-    "mtime": 1778724131.1396043,
-    "hash": "b90286dee6783c4725fe5ac1806d8cf0"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\ThemeToggle.tsx": {
+    "mtime": 1779495852.4987428,
+    "hash": "30eb10fff04d4b08713f93d0bbc21393"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\TopologyPanel.tsx": {
-    "mtime": 1778747009.4449925,
-    "hash": "a8bffa8d7b4c7bd8b2fb9bffc29fe78c"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\TopologyPanel.test.tsx": {
+    "mtime": 1779797515.1079817,
+    "hash": "857d666bb30057886276e101bb28d96e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\WiringPanel.test.tsx": {
-    "mtime": 1778725113.2045014,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\TopologyPanel.tsx": {
+    "mtime": 1779520749.1143198,
+    "hash": "a7b3063e5a43f846101ed655eeabfb21"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\WiringPanel.test.tsx": {
+    "mtime": 1779495852.502836,
     "hash": "14a909841d43cc7d1be02ec76ce2918a"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\src\\views\\components\\WiringPanel.tsx": {
-    "mtime": 1778746960.0189638,
-    "hash": "13efd26b20a834336b0ee54dbd9964e6"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\src\\views\\components\\WiringPanel.tsx": {
+    "mtime": 1779797473.4407494,
+    "hash": "2f0cdeeddc906ba5c054d3382f2da2ee"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\scripts\\backup_knowledge.ps1": {
-    "mtime": 1778484650.6054425,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\scripts\\backup_knowledge.ps1": {
+    "mtime": 1779495852.529908,
     "hash": "63a3919ae949964d66c6468c26a35b02"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\scripts\\restore_knowledge.ps1": {
-    "mtime": 1778484650.607442,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\scripts\\restore_knowledge.ps1": {
+    "mtime": 1779495852.5344355,
     "hash": "2350cf56b734902a43561f5e9009e8d3"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\CLAUDE.md": {
-    "mtime": 1778484650.4091413,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\AGENTS.md": {
+    "mtime": 1779369887.8501806,
+    "hash": "c07653c194e5c681fbfad469e942ad6b"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\CLAUDE.md": {
+    "mtime": 1779495852.2580855,
     "hash": "3f191c15e67628278f7564ab7db7c7ee"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docker-compose.yml": {
-    "mtime": 1778484650.4503148,
-    "hash": "b926cb6e22d6f765e3767b1614a19029"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docker-compose.yml": {
+    "mtime": 1779495852.3664167,
+    "hash": "4121660b30908779066dd72f5bd771bd"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\README.md": {
-    "mtime": 1778484650.4101465,
-    "hash": "c0f58e0cfdcd98bb117875f41afaf770"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\README.md": {
+    "mtime": 1779797820.3252082,
+    "hash": "800f170a7fe6059ad18eda68055bfc89"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\backend\\requirements.txt": {
-    "mtime": 1778735194.9926882,
-    "hash": "afaf21113740fc17aa5343fd6ac4cde4"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\backend\\requirements.txt": {
+    "mtime": 1779495852.3376389,
+    "hash": "0f5f8c060d607a7a759844a3d4df2a7a"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\knowledge-bundle.md": {
-    "mtime": 1778484650.4530132,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\DEMO.md": {
+    "mtime": 1779797825.6577559,
+    "hash": "b2f40d40cebdb5c66b06887940c531df"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\knowledge-bundle.md": {
+    "mtime": 1779495852.3704247,
     "hash": "e6955dd5b65e7017645a5eb6b93ec39c"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\PROJECT_SUMMARY_AND_TEST_OPTIMIZATION.md": {
-    "mtime": 1778484650.451627,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\llm-providers-and-industrial-recommendations.md": {
+    "mtime": 1779495852.3704247,
+    "hash": "55ee426b8de590a648de8303ca1a6c32"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\PROJECT_OVERVIEW.md": {
+    "mtime": 1779495852.3674252,
+    "hash": "24726df892847c03948b8ad6715cb6ab"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\PROJECT_SUMMARY_AND_TEST_OPTIMIZATION.md": {
+    "mtime": 1779495852.3684232,
     "hash": "a4ae4a36c344c8c92ecbf71e984fe4f2"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\topology-hardening-development-plan.md": {
-    "mtime": 1778484650.4681106,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\topology-hardening-development-plan.md": {
+    "mtime": 1779495852.3864303,
     "hash": "b51ab17c4f4407b25c8cc0c2eaf65c39"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-01-ee-assistant-plan.md": {
-    "mtime": 1778484650.4560206,
-    "hash": "278a67cc75c328d3be2a600c0f166130"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\plans\\2026-05-01-ee-assistant-plan.md": {
+    "mtime": 1777628452.0973551,
+    "hash": "b726afdd5f2333f3a990b9cd2b197c09"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-03-langgraph-multi-agent-plan.md": {
-    "mtime": 1778484650.4571059,
-    "hash": "409d391f8cbc8f2913e75f884295ab96"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\plans\\2026-05-03-langgraph-multi-agent-plan.md": {
+    "mtime": 1777782354.2955484,
+    "hash": "5d1dd83ec08a195bc4d02fb2f2ec89b2"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-03-reactflow-frontend-redesign.md": {
-    "mtime": 1778484650.4581113,
-    "hash": "ec162d9cda66af7eb369148153b7c7fb"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\plans\\2026-05-03-reactflow-frontend-redesign.md": {
+    "mtime": 1777813638.415014,
+    "hash": "e784edfe45e0ac2ea837f2cc4f62ee28"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-04-canvas-chat-interaction-plan.md": {
-    "mtime": 1778484650.4581113,
-    "hash": "f4cfbfc25ba2a6637626a0fd3d6e6f46"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\plans\\2026-05-04-canvas-chat-interaction-plan.md": {
+    "mtime": 1777907545.5227382,
+    "hash": "4ffcc24b9b7aebda372aaf0d4092657f"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-06-engineering-memory-flywheel-implementation-plan.md": {
-    "mtime": 1778484650.4591122,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\plans\\2026-05-05-chat-enhancements.md": {
+    "mtime": 1779495852.96563,
+    "hash": "925d77be3dbf6086c651389bebd78795"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\plans\\2026-05-06-engineering-memory-flywheel-implementation-plan.md": {
+    "mtime": 1779495852.3729036,
     "hash": "d1de69f138dbbd6ec67368c73fdf64a8"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-14-backend-ui-data-channels-plan.md": {
-    "mtime": 1778730590.7510583,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\plans\\2026-05-14-backend-ui-data-channels-plan.md": {
+    "mtime": 1779495852.3729036,
     "hash": "ab65d5ef4d59a78078708a38365b476e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-14-blueprint-ui-refresh-plan.md": {
-    "mtime": 1778723753.2996812,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\plans\\2026-05-14-blueprint-ui-refresh-plan.md": {
+    "mtime": 1779495852.373903,
     "hash": "33996918f96981a999a0a3d8eed025a5"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-14-memory-flywheel-m0-plan.md": {
-    "mtime": 1778733898.1991484,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\plans\\2026-05-14-memory-flywheel-m0-plan.md": {
+    "mtime": 1779495852.374906,
     "hash": "3d6289cd98e68a9be6d6cac08d3cc78a"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-14-memory-flywheel-m1-plan.md": {
-    "mtime": 1778744369.0448828,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\plans\\2026-05-14-memory-flywheel-m1-plan.md": {
+    "mtime": 1779495852.3759246,
     "hash": "c33aa0a20471db92b77f7b8aae031999"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-14-memory-flywheel-m2-plan.md": {
-    "mtime": 1778746447.0564365,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\plans\\2026-05-14-memory-flywheel-m2-plan.md": {
+    "mtime": 1779495852.3759246,
     "hash": "20da8c0477e64947dd878060e3649043"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\plans\\2026-05-14-memory-flywheel-m3-plan.md": {
-    "mtime": 1778748315.554497,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\plans\\2026-05-14-memory-flywheel-m3-plan.md": {
+    "mtime": 1779495852.3769045,
     "hash": "7fb5adacc11c8dfc76aa51ef040d1e8e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-01-ee-assistant-design.md": {
-    "mtime": 1778484650.4601116,
-    "hash": "38ddaaab447e7d84f3c23c413e34ba46"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-01-ee-assistant-design.md": {
+    "mtime": 1777627370.3170414,
+    "hash": "ab677f35dbff62e7d9887b4d0286c583"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-03-langgraph-multi-agent-design.md": {
-    "mtime": 1778484650.4611115,
-    "hash": "f6d223dd216d76ddd514f58f28f4d799"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-03-langgraph-multi-agent-design.md": {
+    "mtime": 1777781711.9757087,
+    "hash": "e67f77117fcc653f417915b76f1ede56"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-03-reactflow-frontend-redesign.md": {
-    "mtime": 1778484650.4621127,
-    "hash": "a79f6d07e5a76398e4bb54fb0badcfeb"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-03-reactflow-frontend-redesign.md": {
+    "mtime": 1777812896.389811,
+    "hash": "139d22e5b23a7f92e1f77d0d20898433"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-04-canvas-chat-interaction-design.md": {
-    "mtime": 1778484650.463113,
-    "hash": "a9e9d11f31c1ff04b160477ca732f293"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-04-canvas-chat-interaction-design.md": {
+    "mtime": 1777906984.4256246,
+    "hash": "ee075272102ab0382aea48be1c09e10b"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-04-knowledge-management-enhancement.md": {
-    "mtime": 1778484650.463113,
-    "hash": "bd5d09b9e10118490249d4e5469b9655"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-04-knowledge-management-enhancement.md": {
+    "mtime": 1777869049.0067086,
+    "hash": "189218e2f14cb6325f6819d9795cd711"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-06-volta-engineering-memory-flywheel-design.md": {
-    "mtime": 1778484650.4641123,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-05-chat-enhancements-design.md": {
+    "mtime": 1779495852.826149,
+    "hash": "588337ce7a0dc975c91710a59d72a1b6"
+  },
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-06-volta-engineering-memory-flywheel-design.md": {
+    "mtime": 1779495852.3779037,
     "hash": "e663d05fce496dbe02722729f1260eb8"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-09-favicon-and-topology-handles-design.md": {
-    "mtime": 1778484650.4651124,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-09-favicon-and-topology-handles-design.md": {
+    "mtime": 1779495852.3789046,
     "hash": "980ddf062c72682f650bb71a62479adc"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-09-knowledge-bundle-export-import-design.md": {
-    "mtime": 1778484650.4661124,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-09-knowledge-bundle-export-import-design.md": {
+    "mtime": 1779495852.3799067,
     "hash": "3973ed1f53d5be08871764360dbb96de"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-09-knowledge-multi-file-upload-design.md": {
-    "mtime": 1778484650.4661124,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-09-knowledge-multi-file-upload-design.md": {
+    "mtime": 1779495852.381417,
     "hash": "e5155b3320cbbc25c1d343dfe459722e"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-09-knowledge-multi-source-design.md": {
-    "mtime": 1778484650.4671135,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-09-knowledge-multi-source-design.md": {
+    "mtime": 1779495852.3834295,
     "hash": "f22fcd4928754797646801292efe351f"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-14-backend-ui-data-channels-design.md": {
-    "mtime": 1778730548.3379474,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-14-backend-ui-data-channels-design.md": {
+    "mtime": 1779495852.3834295,
     "hash": "b9aedfbe3acea4e580962626d375a1a6"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-14-blueprint-ui-refresh-design.md": {
-    "mtime": 1778723599.600182,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-14-blueprint-ui-refresh-design.md": {
+    "mtime": 1779495852.3844354,
     "hash": "5341014848ff2484e5b1d8352077c25c"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\docs\\superpowers\\specs\\2026-05-14-memory-flywheel-design.md": {
-    "mtime": 1778733194.2422383,
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\docs\\superpowers\\specs\\2026-05-14-memory-flywheel-design.md": {
+    "mtime": 1779495852.385434,
     "hash": "943a311ffcb93045302b088e49518c9a"
   },
-  "C:\\Users\\HUP2CGD4\\Desktop\\TMP\\2026\\EE\\ee-assistant\\frontend\\index.html": {
-    "mtime": 1778484650.46911,
-    "hash": "8afe9329988fed1c5abb7e5af0ce13b6"
+  "C:\\Users\\roarp\\Desktop\\TMP\\Code\\AICode\\Ele\\frontend\\index.html": {
+    "mtime": 1779797775.0482879,
+    "hash": "5e26270daebcb6fd2e30c2dd6a49e30a"
   }
 }

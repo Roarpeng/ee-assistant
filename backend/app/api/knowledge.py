@@ -225,6 +225,16 @@ async def retry_doc(doc_id: str, body: KnowledgeRetryInput, session: AsyncSessio
 
 @router.post("/search")
 async def search(body: KnowledgeSearch):
+    if body.embedding_config:
+        rag_engine.configure(
+            api_key=body.embedding_config.get("api_key", ""),
+            base_url=body.embedding_config.get("base_url", ""),
+            model=body.embedding_config.get("model", ""),
+            dimensions=body.embedding_config.get("dimension", 0) or body.embedding_config.get("dimensions", 0),
+        )
+        provider = body.embedding_config.get("provider")
+        if provider:
+            rag_engine.configure_provider(provider)
     results = await rag_engine.search(
         query=body.query,
         top_k=body.top_k,

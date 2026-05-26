@@ -86,7 +86,7 @@ export function AppLayout({ initialTab }: { initialTab?: 'chat' | 'knowledge' })
     ['topology', tr.header.topology],
     ['wiring', tr.header.wiring],
     ['bom', tr.header.bom],
-    ['code', language === 'zh' ? '电气原理图' : 'Schematics'],
+    ['code', tr.header.code],
     ['cabinet', tr.header.cabinet],
     ['guide', tr.header.guide],
   ];
@@ -504,9 +504,44 @@ export function AppLayout({ initialTab }: { initialTab?: 'chat' | 'knowledge' })
 function InfoPanelMount() {
   const project = useStore((s) => s.project);
   const nodes = useStore((s) => s.topology.nodes);
+  const edges = useStore((s) => s.topology.edges);
+  const bom = useStore((s) => s.bom);
+  const ioItems = useStore((s) => s.ioItems);
+  const sclCode = useStore((s) => s.sclCode);
+  const mermaidCode = useStore((s) => s.mermaidCode);
+  const commissioningSteps = useStore((s) => s.commissioningSteps);
   const bomCost = useStore((s) => s.bomCost);
   const safetyLevel = useStore((s) => s.safetyLevel);
+  const [exportBusy, setExportBusy] = useState(false);
   const components = nodes.map((n) => ({ id: n.id, label: n.label, type: n.type }));
+
+  const canExport =
+    bom.length > 0 ||
+    ioItems.length > 0 ||
+    Boolean(sclCode.trim()) ||
+    nodes.length > 0;
+
+  async function handleExportPackage() {
+    if (!canExport) return;
+    setExportBusy(true);
+    try {
+      const { downloadProjectZip } = await import('../../services/exportPackage');
+      await downloadProjectZip({
+        projectName: project?.name ?? 'volta-project',
+        bom,
+        ioItems,
+        sclCode,
+        mermaidCode,
+        topology: { nodes, edges },
+        commissioningSteps,
+        safetyLevel,
+        bomCost,
+      });
+    } finally {
+      setExportBusy(false);
+    }
+  }
+
   return (
     <InfoPanel
       projectName={project?.name ?? ''}
@@ -514,6 +549,9 @@ function InfoPanelMount() {
       bomCost={bomCost}
       components={components}
       nodes={nodes}
+      canExport={canExport}
+      exportBusy={exportBusy}
+      onExportPackage={handleExportPackage}
     />
   );
 }

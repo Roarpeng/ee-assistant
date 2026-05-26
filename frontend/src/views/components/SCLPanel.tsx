@@ -6,6 +6,9 @@ import Button from '@mui/material/Button';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Editor from '@monaco-editor/react';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
@@ -156,11 +159,13 @@ function deriveMermaidFromTopology(
 
 export function SCLPanel() {
   const mermaidCode = useStore((s) => s.mermaidCode);
-  const ioItems = useStore((s) => s.ioItems);
+  const sclCode = useStore((s) => s.sclCode);
+  const setSCLCode = useStore((s) => s.setSCLCode);
   const topology = useStore((s) => s.topology);
   const language = useStore((s) => s.language);
   const tr = t(language);
 
+  const [panelTab, setPanelTab] = useState<'schematic' | 'code'>('schematic');
   // 缩放控制 (1 = 100%)
   const [zoom, setZoom] = useState(1);
   const [svgHtml, setSvgHtml] = useState('');
@@ -232,6 +237,11 @@ export function SCLPanel() {
     URL.revokeObjectURL(url);
   };
 
+  const handleDownloadScl = () => {
+    if (!sclCode.trim()) return;
+    downloadFile(sclCode, `${projectName()}_program.scl`, 'text/plain');
+  };
+
   return (
     <Box
       sx={{
@@ -290,11 +300,31 @@ export function SCLPanel() {
             </Typography>
           </Box>
           <Typography sx={{ fontWeight: 800, fontSize: '1.75rem', color: 'text.primary', letterSpacing: '-0.02em' }}>
-            电气原理控制逻辑图
+            {panelTab === 'schematic' ? tr.scl.schematicTitle : tr.scl.title}
           </Typography>
+          <Tabs
+            value={panelTab}
+            onChange={(_, v) => setPanelTab(v)}
+            sx={{ mt: 1, minHeight: 36, '& .MuiTab-root': { minHeight: 36, fontSize: '0.75rem', fontWeight: 700 } }}
+          >
+            <Tab value="schematic" label={tr.scl.tabSchematic} />
+            <Tab value="code" label={tr.scl.tabCode} />
+          </Tabs>
         </Box>
 
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+          {panelTab === 'code' ? (
+            <Button
+              variant="contained"
+              startIcon={<FileDownloadIcon />}
+              disabled={!sclCode.trim()}
+              onClick={handleDownloadScl}
+              sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'none', height: 36 }}
+            >
+              {tr.scl.download}
+            </Button>
+          ) : (
+          <>
           {/* Zoom controls */}
           <Stack
             direction="row"
@@ -391,10 +421,48 @@ export function SCLPanel() {
               保存为 Mermaid 源码 (.mermaid)
             </MenuItem>
           </Menu>
+          </>
+          )}
         </Stack>
       </Box>
 
-      {/* Schematic drawing canvas */}
+      {panelTab === 'code' ? (
+        <Paper
+          variant="outlined"
+          sx={{
+            flex: 1,
+            overflow: 'hidden',
+            borderRadius: '12px',
+            borderColor: 'divider',
+            bgcolor: '#0a0a0a',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {sclCode.trim() ? (
+            <Editor
+              height="100%"
+              language="pascal"
+              theme="vs-dark"
+              value={sclCode}
+              onChange={(v) => setSCLCode(v ?? '')}
+              options={{
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: 13,
+                minimap: { enabled: true },
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+              }}
+            />
+          ) : (
+            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 4 }}>
+              <Typography sx={{ color: 'text.disabled', fontSize: '0.875rem', textAlign: 'center', fontFamily: '"JetBrains Mono", monospace' }}>
+                {tr.scl.emptyCode}
+              </Typography>
+            </Box>
+          )}
+        </Paper>
+      ) : (
       <Paper
         variant="outlined"
         sx={{
@@ -487,6 +555,7 @@ export function SCLPanel() {
           </Box>
         )}
       </Paper>
+      )}
     </Box>
   );
 }

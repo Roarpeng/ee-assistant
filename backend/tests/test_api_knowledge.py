@@ -1,6 +1,6 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 from app.main import app
 from app.db.models import KnowledgeDoc
 from sqlalchemy import select
@@ -101,6 +101,41 @@ async def test_delete_doc_keeps_graph_nodes():
         node_after = result.scalar()
         assert node_after is not None
         assert node_after.source_doc_id is None
+
+@pytest.mark.asyncio
+async def test_knowledge_semantic_search():
+    mock_hits = [
+        {
+            "id": "pt-1",
+            "content": "S7-1200 CPU specs",
+            "score": 0.92,
+            "metadata": {"doc_id": "d1", "filename": "cpu.pdf"},
+        }
+    ]
+    with patch("app.api.knowledge.rag_engine.configure") as mock_cfg, \
+         patch("app.api.knowledge.rag_engine.configure_provider") as mock_provider, \
+         patch("app.api.knowledge.rag_engine.search", new_callable=AsyncMock, return_value=mock_hits) as mock_search:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.post(
+                "/api/knowledge/search",
+                json={
+                    "query": "PLC CPU",
+                    "top_k": 3,
+                    "embedding_config": {
+                        "api_key": "sk-test",
+                        "base_url": "https://api.example.com/v1",
+                        "model": "text-embedding-3-small",
+                        "dimension": 1536,
+                        "provider": "openai",
+                    },
+                },
+            )
+        assert response.status_code == 200
+        assert response.json()["results"][0]["content"] == "S7-1200 CPU specs"
+        assert mock_cfg.called
+        assert mock_provider.called
+        mock_search.assert_awaited_once()
+
 
 @pytest.mark.asyncio
 async def test_batch_delete_docs_empty():
