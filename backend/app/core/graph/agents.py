@@ -230,7 +230,18 @@ def _normalize_topology(topology: dict | None) -> dict:
 
     node_pos: dict[str, tuple[float, float]] = {n["id"]: (n["x"], n["y"]) for n in nodes}
 
-    edges: list[dict] = []
+    # ── 协议优先级排名与边消重 ──
+    # 对于任意一对 {source, target} 节点，我们根据协议 category 优先级保留且仅保留一条边：
+    # network (优先级 3) > safety/feedback (优先级 2) > power (优先级 1)
+    category_priority = {
+        "network": 3,
+        "safety": 2,
+        "feedback": 2,
+        "power": 1,
+        "default": 0
+    }
+
+    best_edges = {}
     for i, e in enumerate(raw_edges):
         norm = _normalize_edge(e, i)
         if not norm or norm["source"] not in node_pos or norm["target"] not in node_pos:
@@ -240,7 +251,18 @@ def _normalize_topology(topology: dict | None) -> dict:
         norm["category"] = category
         norm["sourceHandle"] = sh
         norm["targetHandle"] = th
-        edges.append(norm)
+
+        node_pair = (min(norm["source"], norm["target"]), max(norm["source"], norm["target"]))
+        priority = category_priority.get(category, 0)
+
+        existing = best_edges.get(node_pair)
+        if not existing or priority > existing["priority"]:
+            best_edges[node_pair] = {
+                "edge": norm,
+                "priority": priority
+            }
+
+    edges = [item["edge"] for item in best_edges.values()]
 
     # ── 终极兜底连线防孤立机制 (Isolated Nodes Auto-Connector) ──
     connected_nodes = set()
