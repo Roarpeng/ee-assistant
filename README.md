@@ -1,129 +1,116 @@
-# Volta — 电气工程师助手 (LangGraph Multi-Agent)
+# Volta
 
-面向工业自动化领域的电气工程设计辅助工具。自然语言输入 → 需求拆解 → 元器件选型 → 原理图生成 → PLC ST 代码输出。
+**Topology-first electrical engineering AI** — from natural language to confirmed topology, BOM, schematics, and PLC ST code.
 
-## 核心功能
+Volta（伏特）是面向工业自动化的电气工程设计工作台：以**可编辑拓扑为单一真相源**，LangGraph 多智能体负责需求拆解、双路 RAG 选型、规则校验与派生产物生成。
 
-| 模块 | 说明 |
+[English](#english) · [中文](#中文) · [5-minute demo](docs/DEMO.md)
+
+---
+
+## 中文
+
+### 为什么选择 Volta
+
+| 能力 | 说明 |
 |------|------|
-| **需求分析** | 自然语言输入 → LangGraph 9-Agent DAG → 结构化需求（I/O清单、控制逻辑、安全等级） |
-| **元器件选型** | RAG 双路检索（Qdrant 语义 + 知识图谱 BFS）+ 规则引擎校验（5条硬约束） |
-| **原理图生成** | 基于选型BOM自动生成 Mermaid 框图，可导出 SVG |
-| **ST 代码生成** | 西门子 S7-1200/1500 TIA Portal 格式，安全逻辑完整实现 |
-| **知识库管理** | PDF 上传, 6阶段异步处理, WS实时进度, 批量删除, 失败重试(MinIO) |
-| **LLM 连通性测试** | 设置面板一键测试 Chat + Embedding 两组 API 连通性 |
+| **拓扑真相源** | ReactFlow 画布可编辑；BOM / 接线 / ST / 导出均派生自已确认拓扑 |
+| **LangGraph 工程流水线** | 12 节点 DAG：需求 → 并行分析 → 选型监督 → 规则校验 → 原理图 / 代码 / 接线 / 调试 |
+| **双路知识检索** | Qdrant 语义搜索 + PostgreSQL 元件图谱 BFS |
+| **知识库可迁移** | `scripts/backup_knowledge.*` 打包向量库 + 图谱 + MinIO，一键还原 |
+| **工程交付** | 概览页导出 ZIP（BOM xlsx、接线表、SCL、Mermaid、拓扑 JSON） |
 
-## 架构
+### 5 分钟体验
 
-```
-浏览器 :80 → nginx ──────────────────────→ 静态文件 (React SPA)
-                 │
-                 ├── /api/* → FastAPI:8000
-                 │     ├── LangGraph 9-Agent DAG
-                 │     ├── Qdrant 向量检索 + PG 知识图谱 BFS
-                 │     ├── 规则引擎 (5条硬约束)
-                 │     └── LLM 调用 (Chat + Embedding 双组独立)
-                 │
-                 └── /ws/* → WebSocket (分析进度 + 知识库处理进度)
+1. `docker compose up -d --build` → 打开 http://localhost  
+2. 右上角 **设置** → 配置 Chat + Embedding API → **测试连通性** → 保存  
+3. 对话区点击 **完整工程生成**（或输入输送线/电机控制需求）  
+4. 在 **拓扑图** 调整节点 → **概览** 导出工程包  
 
-数据层: PostgreSQL 16 · Qdrant · MinIO (PDF存储)
-```
+详见 [docs/DEMO.md](docs/DEMO.md)。
 
-## 技术栈
-
-| 层 | 选型 |
-|---|------|
-| 前端 | React 18 · TypeScript · Tailwind CSS 3 · Zustand · Monaco Editor · Mermaid |
-| 后端 | FastAPI · WebSocket · SQLAlchemy 2 (async) · Pydantic v2 |
-| LLM | OpenAI-compatible (DeepSeek / Claude / GPT 均可) + 前端可配 Chat & Embedding 两组 API |
-| Agent | LangGraph StateGraph + MemorySaver (9 节点, 3 路 fan-out) |
-| 检索 | Qdrant 向量搜索 + PostgreSQL 知识图谱 BFS 双路 |
-| 存储 | PostgreSQL 16 · Qdrant · MinIO (S3) |
-| 部署 | Docker Compose 5 服务 (nginx/frontend/backend/postgres/qdrant/minio) |
-
-## 快速开始
-
-### 全 Docker 一键部署
+### 快速开始
 
 ```bash
+# 全 Docker（推荐）
+cp .env.example .env   # 可选：后端默认 LLM 兜底
 docker compose up -d --build
 docker exec ele-backend-1 alembic upgrade head
-# → http://localhost
+# → http://localhost  (compose 映射 8090 时见 docker-compose.yml)
 ```
-
-### 本地开发
 
 ```bash
+# 本地开发
 docker compose up -d postgres qdrant minio
 cd backend && pip install -r requirements.txt && PYTHONPATH=. alembic upgrade head
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload   # → :8000
-cd frontend && npm install && npm run dev                    # → :5173
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+cd frontend && npm install && npm run dev   # → http://localhost:5173
 ```
 
-### 配置
+### 技术栈
 
-打开前端 → 右上角齿轮 → 填入 Chat 和 Embedding 两组 API Key/Base URL/Model → 点 ⚡ 测试 → 保存
+| 层 | 选型 |
+|---|---|
+| 前端 | React 18 · TypeScript · MUI 6 · Zustand · ReactFlow · Monaco · Mermaid |
+| 后端 | FastAPI · SQLAlchemy 2 (async) · Alembic |
+| Agent | LangGraph · AsyncPostgresSaver |
+| 检索 | Qdrant + PostgreSQL 元件图 · NetworkX / Louvain |
+| 存储 | PostgreSQL 16 · Qdrant · MinIO |
+| 部署 | Docker Compose（frontend / backend / postgres / qdrant / minio） |
 
 ### 测试
 
 ```bash
-cd backend && python -m pytest tests/ -v
-cd frontend && npx tsc --noEmit && npx vite build
+cd backend && PYTHONPATH=. python -m pytest tests/ -q
+cd frontend && npm ci && npm run test && npm run build
 ```
 
-## API 端点
+CI：GitHub Actions（`.github/workflows/ci.yml`）。
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/health` | 健康检查 |
-| POST | `/api/test-connectivity` | Chat + Embedding 连通性测试 |
-| GET/POST | `/api/projects` | 项目列表/创建 |
-| GET/DELETE | `/api/projects/{id}` | 项目详情/删除 |
-| POST | `/api/projects/{id}/analyze` | v1 需求分析 (串行) |
-| POST | `/api/projects/{id}/analyze-v2` | v2 LangGraph 全流程 |
-| POST | `/api/projects/{id}/schematic` | 原理图生成 |
-| POST | `/api/projects/{id}/codegen` | ST 代码生成 |
-| GET/POST | `/api/knowledge/docs` | 知识库列表/上传 |
-| DELETE | `/api/knowledge/docs` | 批量删除 |
-| POST | `/api/knowledge/docs/{id}/retry` | 重试失败文档 |
-| POST | `/api/knowledge/search` | 知识库搜索 |
-| WS | `/ws/projects/{id}` | 分析进度推送 |
-| WS | `/ws/knowledge/docs/{id}` | 文档处理进度推送 |
+### 文档
 
-## 项目结构
+- [项目总览](docs/PROJECT_OVERVIEW.md) — 架构、API、记忆飞轮  
+- [知识库 Bundle](docs/knowledge-bundle.md) — 跨环境迁移  
+- [LLM 厂商建议](docs/llm-providers-and-industrial-recommendations.md)  
 
+### 知识图谱（开发）
+
+```bash
+python -m graphify update .    # AST 增量更新 graphify-out/（勿用 npm graphify）
 ```
-ele/
-├── backend/app/
-│   ├── main.py                 # FastAPI 入口, lifespan, CORS, WS
-│   ├── config.py               # 配置 (Chat/Embedding 双组)
-│   ├── api/                    # REST 端点
-│   │   ├── projects.py         #   项目 CRUD
-│   │   ├── analysis.py         #   /analyze + /analyze-v2
-│   │   ├── knowledge.py        #   知识库: 上传/批量删除/重试/WS
-│   │   ├── selection.py        #   选型 (v1)
-│   │   ├── schematic.py        #   原理图
-│   │   └── codegen.py          #   ST 代码
-│   ├── core/
-│   │   ├── graph/              # LangGraph 9-Agent DAG
-│   │   ├── llm_service.py      # LLM 封装 (JSON容错+重试)
-│   │   ├── rag_engine.py       # Qdrant 向量检索 + 双路
-│   │   ├── knowledge_graph.py  # 元件知识图谱
-│   │   ├── rule_engine.py      # 5条硬约束校验
-│   │   └── orchestrator.py     # WS管理 + graph启动
-│   └── db/                     # ORM 模型 (11表) + 仓库
-├── frontend/src/
-│   ├── models/store.ts         # Zustand 全局状态
-│   ├── services/api.ts         # API 客户端 + WS
-│   ├── services/i18n.ts        # 中英文国际化
-│   └── views/components/       # UI 组件
-│       ├── AppLayout.tsx       # 主布局 (可拖拽分栏)
-│       ├── ChatPanel.tsx       # 对话框 (SSE/JSON双模式)
-│       ├── KnowledgePanel.tsx  # 知识库 (状态徽章/选择模式/重试)
-│       ├── SettingsModal.tsx   # 设置 (连通性测试)
-│       ├── CanvasPanel.tsx     # 画布容器
-│       ├── BOMTable.tsx        # BOM 表
-│       └── STCodeView.tsx      # Monaco 代码编辑器
-├── docker-compose.yml          # 5服务编排
-└── docs/                       # 设计文档
+
+---
+
+## English
+
+### Why Volta
+
+Volta is an open-source electrical design copilot for industrial automation. Unlike generic chat+BOM tools, it treats **editable topology as the source of truth** and runs a **LangGraph multi-agent pipeline** for requirements, selection, validation, and deliverables.
+
+### Highlights
+
+- **12-node LangGraph DAG** with Postgres checkpointing  
+- **Hybrid RAG**: vector search (Qdrant) + component graph BFS (PostgreSQL)  
+- **5 hard constraint rules** (breaker rating, SIL redundancy, protocol, voltage, motor starter)  
+- **Knowledge bundle** scripts to share expensive embedding/graph corpora across deployments  
+- **Export package**: ZIP with BOM, wiring, SCL, Mermaid, topology JSON  
+
+### Quick start
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+docker exec ele-backend-1 alembic upgrade head
 ```
+
+Configure Chat + Embedding keys in the UI (Settings → connectivity test → Save), then click **Full engineering run** in the chat panel.
+
+See [docs/DEMO.md](docs/DEMO.md) for a guided walkthrough.
+
+### License
+
+See repository license file. Contributions welcome via issues and PRs.
+
+---
+
+<p align="center"><strong>Volta</strong> — 电气工程智能设计平台 · Electrical Engineering AI Design Platform</p>
