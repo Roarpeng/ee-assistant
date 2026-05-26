@@ -261,33 +261,37 @@ export function TopologyPanel() {
 
       useStore.getState().syncTopologyFromYjs();
 
-      // ─── 自动重力规整检测 ───
+      // ─── 自动重力规整检测 (5层工业对齐) ───
       if (draggingIds.size === 0 && snapshot.nodes.length > 0) {
         const nodeLayers = snapshot.nodes.map((n) => {
           const type = String(n.type ?? '').toLowerCase();
-          const label = String(n.label ?? '').toLowerCase();
-          let layer = 3;
-          if (
-            type.includes('plc') || type.includes('ipc') ||
-            label.includes('plc') || label.includes('控制器') || label.includes('s7-') || label.includes('1200')
-          ) {
+          let layer = 3; // 默认 Layer 3 Execution
+
+          if (type === 'power' || type === 'transformer') {
             layer = 0;
           } else if (
-            type.includes('power') || type.includes('switch') ||
-            label.includes('电源') || label.includes('开关') || label.includes('交换机') || label.includes('qf')
+            type === 'circuit_breaker' || type === 'fuse' || type === 'disconnect' ||
+            type === 'estop' || type === 'safety_relay'
           ) {
             layer = 1;
           } else if (
-            type.includes('vfd') || type.includes('servo') || type.includes('contactor') || type.includes('relay') || type.includes('breaker') ||
-            label.includes('继电器') || label.includes('接触器') || label.includes('断路器') || label.includes('驱动器') || label.includes('变频器') || label.includes('km')
+            type === 'plc' || type === 'safety_plc' || type === 'ipc' ||
+            type === 'switch' || type === 'hmi'
           ) {
             layer = 2;
+          } else if (
+            type === 'vfd' || type === 'servo' || type === 'contactor' ||
+            type === 'relay' || type === 'io'
+          ) {
+            layer = 3;
+          } else if (type === 'sensor') {
+            layer = 4;
           }
           return { node: n, layer };
         });
 
-        const layerYMap = [60, 240, 420, 600];
-        const nodesByLayer: NodeData[][] = [[], [], [], []];
+        const layerYMap = [60, 160, 300, 460, 600];
+        const nodesByLayer: NodeData[][] = [[], [], [], [], []];
         nodeLayers.forEach((item) => {
           nodesByLayer[item.layer].push(item.node);
         });
@@ -298,7 +302,7 @@ export function TopologyPanel() {
         let needsLayout = false;
         const minSpacing = 240;
         
-        for (let layerIdx = 0; layerIdx < 4; layerIdx++) {
+        for (let layerIdx = 0; layerIdx < 5; layerIdx++) {
           const arr = nodesByLayer[layerIdx];
           const N = arr.length;
           if (N === 0) continue;
@@ -568,30 +572,33 @@ export function TopologyPanel() {
 
       const nodeLayers: { node: NodeData; layer: number }[] = snap.nodes.map((n) => {
         const type = String(n.type ?? '').toLowerCase();
-        const label = String(n.label ?? '').toLowerCase();
-        let layer = 3;
+        let layer = 3; // 默认 Layer 3 Execution
 
-        if (
-          type.includes('plc') || type.includes('ipc') ||
-          label.includes('plc') || label.includes('控制器') || label.includes('s7-') || label.includes('1200')
-        ) {
+        if (type === 'power' || type === 'transformer') {
           layer = 0;
         } else if (
-          type.includes('power') || type.includes('switch') ||
-          label.includes('电源') || label.includes('开关') || label.includes('交换机') || label.includes('qf')
+          type === 'circuit_breaker' || type === 'fuse' || type === 'disconnect' ||
+          type === 'estop' || type === 'safety_relay'
         ) {
           layer = 1;
         } else if (
-          type.includes('vfd') || type.includes('servo') || type.includes('contactor') || type.includes('relay') || type.includes('breaker') ||
-          label.includes('继电器') || label.includes('接触器') || label.includes('断路器') || label.includes('驱动器') || label.includes('变频器') || label.includes('km')
+          type === 'plc' || type === 'safety_plc' || type === 'ipc' ||
+          type === 'switch' || type === 'hmi'
         ) {
           layer = 2;
+        } else if (
+          type === 'vfd' || type === 'servo' || type === 'contactor' ||
+          type === 'relay' || type === 'io'
+        ) {
+          layer = 3;
+        } else if (type === 'sensor') {
+          layer = 4;
         }
         return { node: n, layer };
       });
 
-      const layerYMap = [60, 240, 420, 600];
-      const nodesByLayer: NodeData[][] = [[], [], [], []];
+      const layerYMap = [60, 160, 300, 460, 600];
+      const nodesByLayer: NodeData[][] = [[], [], [], [], []];
       
       nodeLayers.forEach((item) => {
         nodesByLayer[item.layer].push(item.node);

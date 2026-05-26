@@ -242,11 +242,94 @@ def _normalize_topology(topology: dict | None) -> dict:
         norm["targetHandle"] = th
         edges.append(norm)
 
+    # ── 终极兜底连线防孤立机制 (Isolated Nodes Auto-Connector) ──
+    connected_nodes = set()
+    for e in edges:
+        connected_nodes.add(e["source"])
+        connected_nodes.add(e["target"])
+
+    all_node_ids = {n["id"] for n in nodes}
+    isolated_nodes = all_node_ids - connected_nodes
+
+    if isolated_nodes:
+        edge_idx = len(edges) + 100
+        # 寻找系统中起核心主导作用的节点作为连接锚点
+        plc_node = next((n for n in nodes if n["type"] in ("plc", "safety_plc", "ipc")), None)
+        if not plc_node:
+            plc_node = next((n for n in nodes if n["type"] == "io"), None)
+        power_node = next((n for n in nodes if n["type"] in ("power", "transformer")), None)
+
+        def add_dynamic_edge(src_id: str, tgt_id: str, proto: str):
+            nonlocal edge_idx
+            eid = f"e_dyn_{edge_idx}"
+            edge_idx += 1
+            category = _classify_protocol(proto)
+            sh, th = _pick_handles(category, node_pos[src_id], node_pos[tgt_id])
+            edges.append({
+                "id": eid,
+                "source": src_id,
+                "target": tgt_id,
+                "protocol": proto,
+                "category": category,
+                "sourceHandle": sh,
+                "targetHandle": th
+            })
+            connected_nodes.add(src_id)
+            connected_nodes.add(tgt_id)
+
+        # 按电气逻辑动态为孤立节点生成边，阻止孤立
+        for nid in isolated_nodes:
+            node = next(n for n in nodes if n["id"] == nid)
+            ntype = node["type"]
+
+            if ntype in ("power", "transformer"):
+                target_breaker = next((n for n in nodes if n["type"] in ("circuit_breaker", "fuse", "disconnect")), None)
+                if target_breaker:
+                    add_dynamic_edge(nid, target_breaker["id"], "POWER_220V")
+                elif plc_node:
+                    add_dynamic_edge(nid, plc_node["id"], "POWER_24V")
+
+            elif ntype in ("circuit_breaker", "fuse", "disconnect", "estop", "safety_relay"):
+                if ntype == "estop":
+                    sr_node = next((n for n in nodes if n["type"] == "safety_relay"), None)
+                    if sr_node:
+                        add_dynamic_edge(nid, sr_node["id"], "SAFETY_CIRCUIT")
+                    elif plc_node:
+                        add_dynamic_edge(nid, plc_node["id"], "SAFETY_CIRCUIT")
+                elif ntype == "safety_relay":
+                    sp_node = next((n for n in nodes if n["type"] == "safety_plc"), plc_node)
+                    if sp_node:
+                        add_dynamic_edge(nid, sp_node["id"], "SAFETY_CIRCUIT")
+                else:
+                    if power_node:
+                        add_dynamic_edge(power_node["id"], nid, "POWER_220V")
+                    elif plc_node:
+                        add_dynamic_edge(nid, plc_node["id"], "POWER_24V")
+
+            elif ntype in ("plc", "safety_plc", "ipc", "switch", "hmi"):
+                if ntype == "hmi" and plc_node:
+                    add_dynamic_edge(plc_node["id"], nid, "ETHERNET")
+                elif ntype == "switch" and plc_node:
+                    add_dynamic_edge(plc_node["id"], nid, "ETHERNET")
+                elif plc_node and plc_node["id"] != nid:
+                    add_dynamic_edge(plc_node["id"], nid, "ETHERNET")
+
+            elif ntype in ("vfd", "servo", "contactor", "relay", "io"):
+                if plc_node:
+                    proto = "ETHERCAT" if ntype == "servo" else "PROFINET"
+                    add_dynamic_edge(plc_node["id"], nid, proto)
+
+            elif ntype == "sensor":
+                io_node = next((n for n in nodes if n["type"] == "io"), plc_node)
+                if io_node:
+                    add_dynamic_edge(nid, io_node["id"], "SIGNAL")
+
     normalized = {"nodes": nodes, "edges": edges}
     violations = lint_topology(normalized)
     if violations:
         normalized["lint"] = violations
     return normalized
+
 
 
 async def requirements_agent(state: AnalysisState) -> dict:
@@ -746,21 +829,31 @@ def _build_fallback_topology(bom_list: list[dict]) -> dict:
     for ctrl in controllers:
         if ctrl["type"] in ("plc", "safety_plc", "ipc"):
             for exe in executors:
-                if exe["type"] in ("vfd", "servo", "io"):
+                if exe["type"] in ("vfd", "servo", "io", "contactor", "relay"):
                     add_edge(ctrl["id"], exe["id"], field_proto)
 
-    # Control → HMI (Ethernet)
+    # Control → HMI & Switch (Ethernet)
     for ctrl in controllers:
-        if ctrl["type"] == "plc":
-            hmi_nodes = [n for n in level_groups[2] if n["type"] == "hmi"]
-            for hmi in hmi_nodes:
-                add_edge(ctrl["id"], hmi["id"], "ETHERNET")
+        if ctrl["type"] in ("plc", "safety_plc", "ipc"):
+            hmi_and_switch = [n for n in level_groups[2] if n["type"] in ("hmi", "switch")]
+            for target in hmi_and_switch:
+                add_edge(ctrl["id"], target["id"], "ETHERNET")
 
-    # L3→L4: Execution → Feedback (sensor signals back to IO/PLC)
-    for exe in executors:
-        for fb in level_groups[4]:
-            if exe["type"] in ("vfd", "servo"):
-                add_edge(fb["id"], exe["id"], "SIGNAL")
+    # L3→L4: Execution/Control → Feedback (sensor signals back to IO module or PLC)
+    io_modules = [n for n in executors if n["type"] == "io"]
+    for fb in level_groups[4]:
+        if io_modules:
+            for io_mod in io_modules:
+                add_edge(fb["id"], io_mod["id"], "SIGNAL")
+        else:
+            # Fallback to PLC if no IO module present
+            plcs = [n for n in controllers if n["type"] in ("plc", "safety_plc", "ipc")]
+            if plcs:
+                add_edge(fb["id"], plcs[0]["id"], "SIGNAL")
+            else:
+                for exe in executors:
+                    if exe["type"] in ("vfd", "servo"):
+                        add_edge(fb["id"], exe["id"], "SIGNAL")
 
     # Limit to reasonable edge count
     return {"nodes": nodes, "edges": edges[:25]}
