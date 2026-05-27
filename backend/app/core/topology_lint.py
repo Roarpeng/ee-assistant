@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.component_normalizer import normalize_component_type
+from app.core.component_normalizer import normalize_topology_type
 
 
 def lint_topology(snapshot: dict) -> list[dict]:
@@ -29,10 +29,10 @@ def lint_topology(snapshot: dict) -> list[dict]:
         if not str(e.get("protocol", "")).strip():
             violations.append({"severity": "error", "rule": "protocol_missing", "message": f"Edge {e.get('id','')} missing protocol"})
 
-    norm_types = {normalize_component_type(n.get("type")) for n in nodes}
-    if "power_supply" not in norm_types:
-        violations.append({"severity": "warning", "rule": "power_chain", "message": "No power_supply node found"})
-    if "plc_cpu" not in norm_types:
-        violations.append({"severity": "warning", "rule": "power_chain", "message": "No plc_cpu node found"})
+    norm_types = {normalize_topology_type(n.get("type")) for n in nodes}
+    if "power" not in norm_types:
+        violations.append({"severity": "warning", "rule": "power_chain", "message": "No power node found"})
+    if "plc" not in norm_types:
+        violations.append({"severity": "warning", "rule": "power_chain", "message": "No plc node found"})
 
     return violations

@@ -1150,3 +1150,106 @@ export function DisconnectNode({ data, selected }: { data: any; selected?: boole
     </Box>
   );
 }
+
+// ────────────────────────────────────────────────────────────────────
+// Safety Door
+// ────────────────────────────────────────────────────────────────────
+export function SafetyDoorNode({ data, selected }: { data: any; selected?: boolean }) {
+  return (
+    <Box sx={nodeContainerSx(110)}>
+      <NodeHandles selected={selected} />
+      <Box
+        sx={{
+          height: 90,
+          width: 75,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(239,68,68,0.5)',
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 0.5,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
+      >
+        {/* Door panel */}
+        <Box
+          sx={{
+            width: 44,
+            height: 50,
+            bgcolor: '#404040',
+            border: 1.5,
+            borderColor: '#ef4444',
+            borderRadius: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 0.5,
+          }}
+        >
+          {/* Lock indicator */}
+          <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#ef4444', boxShadow: '0 0 6px #ef4444' }} />
+          {/* Door handle */}
+          <Box sx={{ width: 16, height: 3, bgcolor: '#737373', borderRadius: 1 }} />
+        </Box>
+        {/* Safety stripes */}
+        <Box sx={{ display: 'flex', gap: '2px' }}>
+          <Box sx={{ width: 6, height: 3, bgcolor: '#eab308' }} />
+          <Box sx={{ width: 6, height: 3, bgcolor: '#171717' }} />
+          <Box sx={{ width: 6, height: 3, bgcolor: '#eab308' }} />
+          <Box sx={{ width: 6, height: 3, bgcolor: '#171717' }} />
+          <Box sx={{ width: 6, height: 3, bgcolor: '#eab308' }} />
+        </Box>
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#ef4444' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Signal Light (Tower Light / Beacon)
+// ────────────────────────────────────────────────────────────────────
+export function SignalLightNode({ data, selected }: { data: any; selected?: boolean }) {
+  return (
+    <Box sx={nodeContainerSx(100)}>
+      <NodeHandles selected={selected} />
+      <Box
+        sx={{
+          height: 100,
+          width: 55,
+          bgcolor: '#262626',
+          border: 2,
+          borderColor: selected ? 'primary.main' : 'rgba(245,158,11,0.5)',
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 0.5,
+          transition: 'all 200ms',
+          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
+      >
+        {/* Tower light stack */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          {/* Red */}
+          <Box sx={{ width: 26, height: 14, bgcolor: '#ef4444', borderRadius: '6px 6px 2px 2px', boxShadow: '0 0 8px rgba(239,68,68,0.5)' }} />
+          {/* Yellow */}
+          <Box sx={{ width: 26, height: 14, bgcolor: '#eab308', borderRadius: 2, boxShadow: '0 0 6px rgba(234,179,8,0.3)' }} />
+          {/* Green */}
+          <Box sx={{ width: 26, height: 14, bgcolor: '#10b981', borderRadius: '2px 2px 6px 6px', boxShadow: '0 0 6px rgba(16,185,129,0.3)' }} />
+        </Box>
+        {/* Pole */}
+        <Box sx={{ width: 6, height: 10, bgcolor: '#525252' }} />
+        {/* Base */}
+        <Box sx={{ width: 20, height: 4, bgcolor: '#737373', borderRadius: 1 }} />
+      </Box>
+      <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#f59e0b' : 'text.secondary' }}>{data.label}</Typography>
+    </Box>
+  );
+}
+

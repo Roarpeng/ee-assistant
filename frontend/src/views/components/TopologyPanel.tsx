@@ -36,6 +36,8 @@ import {
   TransformerNode,
   FuseNode,
   DisconnectNode,
+  SafetyDoorNode,
+  SignalLightNode,
 } from './CustomNodes';
 import { CanvasContextMenu } from './CanvasContextMenu';
 import { NodeInfoCard } from './NodeInfoCard';
@@ -121,6 +123,9 @@ const nodeTypes = {
   transformer: TransformerNode,
   fuse: FuseNode,
   disconnect: DisconnectNode,
+  safety_door: SafetyDoorNode,
+  signal_light: SignalLightNode,
+  indicator_light: SignalLightNode,
 };
 
 const NODE_TYPE_TO_BOM: Record<string, string> = {
@@ -142,6 +147,9 @@ const NODE_TYPE_TO_BOM: Record<string, string> = {
   transformer: '变压器',
   fuse: '熔断器',
   sensor: '传感器',
+  safety_door: '安全门',
+  signal_light: '信号灯',
+  indicator_light: '指示灯',
 };
 
 export function TopologyPanel() {
@@ -271,7 +279,7 @@ export function TopologyPanel() {
             layer = 0;
           } else if (
             type === 'circuit_breaker' || type === 'fuse' || type === 'disconnect' ||
-            type === 'estop' || type === 'safety_relay'
+            type === 'estop' || type === 'safety_relay' || type === 'safety_door'
           ) {
             layer = 1;
           } else if (
@@ -281,7 +289,8 @@ export function TopologyPanel() {
             layer = 2;
           } else if (
             type === 'vfd' || type === 'servo' || type === 'contactor' ||
-            type === 'relay' || type === 'io'
+            type === 'relay' || type === 'io' || type === 'signal_light' ||
+            type === 'indicator_light'
           ) {
             layer = 3;
           } else if (type === 'sensor') {
@@ -578,7 +587,7 @@ export function TopologyPanel() {
           layer = 0;
         } else if (
           type === 'circuit_breaker' || type === 'fuse' || type === 'disconnect' ||
-          type === 'estop' || type === 'safety_relay'
+          type === 'estop' || type === 'safety_relay' || type === 'safety_door'
         ) {
           layer = 1;
         } else if (
@@ -588,7 +597,8 @@ export function TopologyPanel() {
           layer = 2;
         } else if (
           type === 'vfd' || type === 'servo' || type === 'contactor' ||
-          type === 'relay' || type === 'io'
+          type === 'relay' || type === 'io' || type === 'signal_light' ||
+          type === 'indicator_light'
         ) {
           layer = 3;
         } else if (type === 'sensor') {

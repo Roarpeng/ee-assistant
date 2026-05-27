@@ -61,7 +61,7 @@ ele/
 │   ├── core/                      # 核心引擎
 │   │   ├── graph/                 #   ★ LangGraph 多 Agent 系统 ★
 │   │   │   ├── state.py           #     AnalysisState (Annotated reducers for fan-out)
-│   │   │   ├── agents.py          #     9 个 Agent 节点 (RAG 搜索 fault-tolerant)
+│   │   │   ├── agents.py          #     9 个 Agent 节点 (RAG 搜索 fault-tolerant, ★拓扑生成+自动连线★)
 │   │   │   └── builder.py         #     StateGraph 构建 + compile(MemorySaver)
 │   │   ├── orchestrator.py        #   WS 管理 + graph 启动 + rag_engine 配置传递
 │   │   ├── llm_service.py         #   OpenAI-compatible 封装, JSON 容错+重试+RateLimit backoff
@@ -72,6 +72,9 @@ ele/
 │   │   ├── entity_extractor.py    #   LLM 从 PDF 提取电气元件实体 + 关系
 │   │   ├── community_detector.py  #   NetworkX Louvain 社区检测
 │   │   ├── rule_engine.py         #   5 条硬约束选型校验规则
+│   │   ├── component_taxonomy.py  #   ★ 元器件类型+协议规范集合 (KG/拓扑双体系)
+│   │   ├── component_normalizer.py #  ★ 类型/协议归一化 (KG canonical + topology-native 双通道)
+│   │   ├── topology_lint.py       #   拓扑图有效性校验 (节点ID/悬空边/电源链路)
 │   │   └── schemas.py             #   Pydantic 数据模型 (BatchDeleteInput, ConnectivityTestInput 等)
 │   └── db/
 │       ├── models.py              #   11 个 ORM 模型 (KnowledgeDoc.status, FK ondelete SET NULL)
@@ -97,6 +100,11 @@ ele/
 │       │   ├── GlobalToast.tsx    #   ★ 全局 API 错误 Toast (自动消失)
 │       │   ├── ConfirmDialog.tsx  #   ★ 可复用确认对话框 (severity 色彩)
 │       │   ├── KeyboardShortcuts.tsx # ★ 键盘快捷键帮助 (? 键触发)
+│       │   ├── TopologyPanel.tsx  #   ★ 拓扑画布: ReactFlow + Yjs CRDT, 21种节点类型, 5层重力对齐
+│       │   ├── CustomNodes.tsx    #   ★ 拓扑节点组件: PLC/HMI/IO/VFD/SafetyDoor/SignalLight等
+│       │   ├── NodeInfoCard.tsx   #   拓扑节点信息卡片
+│       │   ├── CanvasContextMenu.tsx # 画布右键菜单
+│       │   ├── IOBudgetBar.tsx    #   IO 预算进度条
 │       │   └── ProgressStepper.tsx #   流程步骤指示器
 │       └── services/              # S: API 客户端 (batch delete, retry, connectivity test)
 ├── docker-compose.yml             # 5 服务: frontend/backend/postgres/qdrant/minio

@@ -8,7 +8,7 @@ from langgraph.types import interrupt
 from app.core.graph.state import AnalysisState
 from app.core.llm_service import llm_service
 from app.core.rule_engine import validate_all
-from app.core.component_normalizer import normalize_component_type, normalize_protocol
+from app.core.component_normalizer import normalize_topology_type, normalize_topology_protocol
 from app.core.topology_lint import lint_topology
 
 
@@ -85,7 +85,7 @@ def _normalize_node(raw: dict, fallback_idx: int) -> dict | None:
     if not node_id:
         return None
 
-    node_type = normalize_component_type(str(raw.get("type") or "io"))
+    node_type = normalize_topology_type(str(raw.get("type") or "io"))
 
     # label may live at top level OR inside `data`
     data = raw.get("data") if isinstance(raw.get("data"), dict) else {}
@@ -215,7 +215,7 @@ def _normalize_edge(raw: dict, fallback_idx: int) -> dict | None:
         "id": edge_id,
         "source": src,
         "target": tgt,
-        "protocol": normalize_protocol(str(protocol)[:32]),
+        "protocol": normalize_topology_protocol(str(protocol)[:32]),
     }
 
 
@@ -256,7 +256,7 @@ def _normalize_topology(topology: dict | None) -> dict:
         norm["sourceHandle"] = sh
         norm["targetHandle"] = th
 
-        node_pair = (min(norm["source"], norm["target"]), max(norm["source"], norm["target"]))
+        node_pair = (min(norm["source"], norm["target"]), max(norm["source"], norm["target"]), category)
         priority = category_priority.get(category, 0)
 
         existing = best_edges.get(node_pair)
@@ -349,6 +349,29 @@ def _normalize_topology(topology: dict | None) -> dict:
                 io_node = next((n for n in nodes if n["type"] == "io"), plc_node)
                 if io_node:
                     add_dynamic_edge(nid, io_node["id"], "SIGNAL")
+
+            elif ntype == "safety_door":
+                sr_node = next((n for n in nodes if n["type"] == "safety_relay"), None)
+                sp_node = next((n for n in nodes if n["type"] == "safety_plc"), None)
+                if sr_node:
+                    add_dynamic_edge(nid, sr_node["id"], "SAFETY_CIRCUIT")
+                elif sp_node:
+                    add_dynamic_edge(nid, sp_node["id"], "SAFETY_CIRCUIT")
+                elif plc_node:
+                    add_dynamic_edge(nid, plc_node["id"], "SAFETY_CIRCUIT")
+
+            elif ntype in ("signal_light", "indicator_light"):
+                if plc_node:
+                    add_dynamic_edge(plc_node["id"], nid, "SIGNAL")
+                else:
+                    io_node = next((n for n in nodes if n["type"] == "io"), None)
+                    if io_node:
+                        add_dynamic_edge(io_node["id"], nid, "SIGNAL")
+
+            else:
+                # Catch-all: connect unknown types to PLC to prevent isolation
+                if plc_node and plc_node["id"] != nid:
+                    add_dynamic_edge(plc_node["id"], nid, "PROFINET")
 
     normalized = {"nodes": nodes, "edges": edges}
     violations = lint_topology(normalized)
@@ -510,6 +533,24 @@ def _derive_categories_from_requirement(req: dict) -> list[str]:
         # IPC
         ("ipc", "IPC"),
         ("工控机", "IPC"),
+        # Safety Door
+        ("安全门", "Safety_Door"),
+        ("safety door", "Safety_Door"),
+        ("门开关", "Safety_Door"),
+        ("门锁", "Safety_Door"),
+        # Signal Light
+        ("信号灯", "Signal_Light"),
+        ("signal light", "Signal_Light"),
+        ("塔灯", "Signal_Light"),
+        ("三色灯", "Signal_Light"),
+        ("beacon", "Signal_Light"),
+        ("指示灯", "Indicator_Light"),
+        ("indicator light", "Indicator_Light"),
+        # Safety PLC
+        ("安全plc", "Safety_PLC"),
+        ("safety plc", "Safety_PLC"),
+        ("pilz", "Safety_PLC"),
+        ("安全控制器", "Safety_PLC"),
     ]:
         if keyword in combined_text:
             cats.add(category)
@@ -766,16 +807,19 @@ def _build_fallback_topology(bom_list: list[dict]) -> dict:
         "Transformer": "transformer", "Fuse": "fuse",
         "Sensor": "sensor", "Disconnect": "disconnect",
         "Communication_Module": "switch", "Terminal_Block": "io",
+        "Safety_Door": "safety_door", "Signal_Light": "signal_light",
+        "Indicator_Light": "indicator_light",
     }
 
     # Hierarchical level assignment
     level_map: dict[str, int] = {
         "power": 0, "transformer": 0,                      # L0: Power
         "circuit_breaker": 1, "fuse": 1, "disconnect": 1,   # L1: Protection
-        "estop": 1, "safety_relay": 1,
+        "estop": 1, "safety_relay": 1, "safety_door": 1,
         "plc": 2, "safety_plc": 2, "ipc": 2, "switch": 2,   # L2: Control
         "hmi": 2, "contactor": 3, "relay": 3,                # L3: Execution
         "vfd": 3, "servo": 3, "io": 3,
+        "signal_light": 3, "indicator_light": 3,
         "sensor": 4,                                          # L4: Feedback
     }
     y_positions = [60, 160, 300, 460, 600]
@@ -831,7 +875,7 @@ def _build_fallback_topology(bom_list: list[dict]) -> dict:
     # L1→L2: Protection → Control (24VDC power bus)
     for n1 in level_groups[1]:
         for n2 in level_groups[2]:
-            if n1["type"] not in ("estop",):  # E-stop doesn't power PLC directly
+            if n1["type"] not in ("estop", "safety_door"):  # E-stop/safety_door don't power PLC directly
                 add_edge(n1["id"], n2["id"], "POWER_24V")
 
     # Safety wiring: E-Stop ↔ Safety Relay ↔ Safety PLC
@@ -844,6 +888,15 @@ def _build_fallback_topology(bom_list: list[dict]) -> dict:
     for sr in safety_relays:
         for sp in safety_plcs:
             add_edge(sr["id"], sp["id"], "SAFETY_CIRCUIT")
+
+    # Safety door wiring: Safety Door → Safety Relay → Safety PLC
+    safety_doors = [n for n in level_groups[1] if n["type"] == "safety_door"]
+    for sd in safety_doors:
+        for sr in safety_relays:
+            add_edge(sd["id"], sr["id"], "SAFETY_CIRCUIT")
+        if not safety_relays:
+            for sp in safety_plcs:
+                add_edge(sd["id"], sp["id"], "SAFETY_CIRCUIT")
 
     # L2→L3: Control → Execution (PROFINET/EtherCAT bus)
     controllers = level_groups[2]
@@ -881,8 +934,15 @@ def _build_fallback_topology(bom_list: list[dict]) -> dict:
                     if exe["type"] in ("vfd", "servo"):
                         add_edge(fb["id"], exe["id"], "SIGNAL")
 
+    # Signal light wiring: PLC → Signal Light (status indication)
+    signal_lights = [n for n in level_groups[3] if n["type"] in ("signal_light", "indicator_light")]
+    plcs = [n for n in controllers if n["type"] == "plc"]
+    for sl in signal_lights:
+        if plcs:
+            add_edge(plcs[0]["id"], sl["id"], "SIGNAL")
+
     # Limit to reasonable edge count
-    return {"nodes": nodes, "edges": edges[:25]}
+    return {"nodes": nodes, "edges": edges[:50]}
 
 
 def _fallback_mermaid(bom_list: list[dict]) -> str:

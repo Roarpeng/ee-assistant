@@ -21,6 +21,22 @@ COMPONENT_TYPES = {
     "io_module",
     "servo_drive",
     "other",
+    # Topology-specific types (used by topology generator / auto-connector)
+    "plc",
+    "safety_plc",
+    "estop",
+    "fuse",
+    "disconnect",
+    "transformer",
+    "ipc",
+    "switch",
+    "relay",
+    "power",
+    "io",
+    "servo",
+    "safety_door",
+    "signal_light",
+    "indicator_light",
 }
 
 PROTOCOL_TYPES = {
@@ -32,8 +48,11 @@ PROTOCOL_TYPES = {
     "CANOPEN",
     "IO_LINK",
     "SAFETY",
+    "SAFETY_CIRCUIT",
     "POWER_24VDC",
+    "POWER_24V",
     "POWER_AC",
+    "POWER_220V",
     "SIGNAL",
     "UNKNOWN",
 }

@@ -297,8 +297,9 @@ Output valid JSON only, no markdown wrapping."""
 
     async def map_categories(self, io_items: list, logic_rules: list) -> list[str]:
         system = """Map the given IO list and control logic to required component categories.
-Categories: PLC_CPU, Power_Supply, Circuit_Breaker, Contactor, Thermal_Overload,
-VFD, Safety_Relay, Terminal_Block, Sensor, Actuator, Communication_Module.
+Categories: PLC_CPU, Safety_PLC, Power_Supply, Circuit_Breaker, Contactor, Thermal_Overload,
+VFD, Safety_Relay, Safety_Door, Terminal_Block, Sensor, Actuator, Communication_Module,
+Signal_Light, Indicator_Light, HMI, IPC, Servo_Drive, IO_Module, Fuse, Disconnect, Transformer.
 Return JSON array of strings. Output valid JSON only, no markdown wrapping."""
 
         user = f"IO: {io_items}\nLogic: {logic_rules}"
@@ -333,20 +334,22 @@ Convert a Bill of Materials (BOM) into a 5-level industrial hierarchy.
 
 INDUSTRIAL HIERARCHY (Mandatory):
   L0 (y=60):  Power — power, transformer
-  L1 (y=160): Protection — circuit_breaker, fuse, disconnect, estop, safety_relay
+  L1 (y=160): Protection — circuit_breaker, fuse, disconnect, estop, safety_relay, safety_door
   L2 (y=300): Control — plc, safety_plc, ipc, hmi, switch
-  L3 (y=460): Execution — vfd, servo, contactor, relay, io
+  L3 (y=460): Execution — vfd, servo, contactor, relay, io, signal_light, indicator_light
   L4 (y=600): Feedback — sensor
 
 NODE TYPES (lowercase, exact): plc, safety_plc, hmi, ipc, io, vfd, servo,
   power, switch, circuit_breaker, contactor, relay, estop, sensor,
-  safety_relay, fuse, disconnect, transformer
+  safety_relay, fuse, disconnect, transformer, safety_door, signal_light, indicator_light
 
 PROTOCOLS: PROFINET, ETHERCAT, POWER_24V, POWER_220V, SAFETY_CIRCUIT, ETHERNET, SIGNAL
 
 EDGE RULES (avoid duplicates):
 - L0→L1 POWER_220V; L1→L2 POWER_24V; L2→L3 PROFINET (or ETHERCAT if servo present)
 - Safety: estop → safety_relay → safety_plc via SAFETY_CIRCUIT
+- Safety door: safety_door → safety_relay (or safety_plc) via SAFETY_CIRCUIT
+- Signal light: plc → signal_light/indicator_light via SIGNAL
 - hmi ↔ plc only via ETHERNET
 - L4 sensors feed L3 via SIGNAL
 - ≤ 1 edge between any pair
