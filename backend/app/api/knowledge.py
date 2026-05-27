@@ -1,10 +1,12 @@
 import asyncio
 import io
 import json as json_module
+import logging
 from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException, WebSocket
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
+from app.core.task_tracker import task_tracker
 from app.core.schemas import (
     BatchDeleteInput,
     KnowledgeDocOut,
@@ -34,6 +36,8 @@ from app.core.extractors import (
 )
 from app.core.url_fetcher import URLFetchError, fetch_url
 
+log = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/knowledge", tags=["knowledge"])
 
 
@@ -55,6 +59,7 @@ class KnowledgeProgressManager:
             try:
                 await ws.send_text(event.model_dump_json())
             except Exception:
+                log.debug("WS send failed, unregistering %s", doc_id)
                 self.unregister(doc_id)
 
 
@@ -97,7 +102,7 @@ async def upload_doc(
 
     content = await file.read()
     _store_in_minio(doc.id, content, filename)
-    asyncio.create_task(_process_document(content, doc.id, filename, manufacturer, tags, llm_cfg, embed_cfg))
+    task_tracker.track(_process_document(content, doc.id, filename, manufacturer, tags, llm_cfg, embed_cfg), label=f"upload:{filename}")
 
     return doc
 
@@ -144,7 +149,7 @@ async def ingest_url(
     await session.refresh(doc)
 
     _store_in_minio(doc.id, content, derived_name)
-    asyncio.create_task(
+    task_tracker.track(
         _process_document(
             content,
             doc.id,
@@ -153,7 +158,8 @@ async def ingest_url(
             body.category_tags,
             body.llm_config,
             body.embedding_config,
-        )
+        ),
+        label=f"url:{derived_name}",
     )
 
     return doc
@@ -187,7 +193,7 @@ async def batch_delete_docs(body: BatchDeleteInput, session: AsyncSession = Depe
             await _delete_single_doc(doc_id, session)
             deleted += 1
         except Exception:
-            pass
+            log.warning("batch_delete: failed to delete doc %s", doc_id, exc_info=True)
     if deleted == 0:
         raise HTTPException(status_code=500, detail="Failed to delete all specified documents")
     return {"deleted": deleted}
@@ -221,8 +227,8 @@ async def retry_doc(doc_id: str, body: KnowledgeRetryInput, session: AsyncSessio
     await session.commit()
     await session.refresh(doc)
 
-    asyncio.create_task(_process_document(content, doc.id, doc.filename, doc.manufacturer, doc.category_tags,
-                                          body.llm_config, body.embedding_config))
+    task_tracker.track(_process_document(content, doc.id, doc.filename, doc.manufacturer, doc.category_tags,
+                                          body.llm_config, body.embedding_config), label=f"retry:{doc.filename}")
 
     return doc
 
@@ -478,7 +484,7 @@ async def _process_document(content: bytes, doc_id: str, filename: str, manufact
             ))
         except Exception as e:
             error_detail = f"{str(e)}\n{traceback.format_exc()}"
-            print(f"Error processing doc {doc_id}: {error_detail}")
+            log.error("Error processing doc %s: %s", doc_id, error_detail)
             await _update_status(session, doc_id, "error")
             await knowledge_progress.push(doc_id, ProgressEvent(
                 stage="error", message=f"处理失败: {str(e)}"
@@ -535,7 +541,7 @@ async def _extract_graph_knowledge(text: str, doc_id: str, session: AsyncSession
 
         await session.commit()
     except Exception:
-        pass
+        log.warning("graph extraction failed for doc %s", doc_id, exc_info=True)
 
 
 def _store_in_minio(doc_id: str, content: bytes, filename: str):
@@ -558,7 +564,7 @@ def _store_in_minio(doc_id: str, content: bytes, filename: str):
             client.make_bucket(bucket)
         client.put_object(bucket, f"pdfs/{doc_id}/{filename}", io.BytesIO(content), len(content))
     except Exception:
-        pass
+        log.debug("MinIO store failed for %s", doc_id, exc_info=True)
 
 
 def _fetch_from_minio(doc_id: str) -> bytes | None:
@@ -578,6 +584,7 @@ def _fetch_from_minio(doc_id: str) -> bytes | None:
         resp = client.get_object(bucket, objects[0].object_name)
         return resp.read()
     except Exception:
+        log.debug("MinIO fetch failed for %s", doc_id, exc_info=True)
         return None
 
 

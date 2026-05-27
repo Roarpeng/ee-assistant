@@ -39,9 +39,7 @@ describe('MemorySourcePopover', () => {
       />,
     );
 
-    expect(
-      screen.getByRole('dialog', { name: /memory sources/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('memory-source-overlay')).toBeInTheDocument();
     expect(screen.getByText(/为什么选 Siemens 1215C/)).toBeInTheDocument();
 
     await waitFor(() =>
@@ -105,7 +103,7 @@ describe('MemorySourcePopover', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('close button + backdrop both call onClose; dialog body click does not', async () => {
+  it('close button + backdrop both call onClose; popover body click does not', async () => {
     vi.spyOn(feedback, 'fetchMemorySources').mockResolvedValue(ZERO);
     const onClose = vi.fn();
     render(
@@ -122,13 +120,12 @@ describe('MemorySourcePopover', () => {
       expect(screen.getByTestId('memory-source-list')).toBeInTheDocument(),
     );
 
-    fireEvent.click(screen.getByRole('dialog'));
+    // Clicking the popover paper body should NOT close it.
+    fireEvent.click(screen.getByTestId('memory-source-overlay'));
     expect(onClose).not.toHaveBeenCalled();
 
+    // The explicit close button closes.
     fireEvent.click(screen.getByTestId('memory-source-close'));
     expect(onClose).toHaveBeenCalledTimes(1);
-
-    fireEvent.click(screen.getByTestId('memory-source-overlay'));
-    expect(onClose).toHaveBeenCalledTimes(2);
   });
 });

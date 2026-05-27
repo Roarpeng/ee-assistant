@@ -12,7 +12,11 @@ break a running graph. ``start_run`` swallows exceptions and returns
 """
 from __future__ import annotations
 
-from datetime import datetime
+import logging
+
+log = logging.getLogger(__name__)
+
+from datetime import datetime, timezone
 
 from sqlalchemy import update
 
@@ -24,12 +28,13 @@ async def start_run(project_id: str) -> str | None:
     """Insert a new ``run_history`` row, return its id (or None on error)."""
     try:
         async with async_session() as session:
-            row = RunHistory(project_id=project_id, started_at=datetime.utcnow())
+            row = RunHistory(project_id=project_id, started_at=datetime.now(timezone.utc))
             session.add(row)
             await session.commit()
             await session.refresh(row)
             return row.id
     except Exception:
+        log.debug("start_run failed", exc_info=True)
         return None
 
 
@@ -52,7 +57,7 @@ async def finish_run(
                 update(RunHistory)
                 .where(RunHistory.id == run_id)
                 .values(
-                    finished_at=datetime.utcnow(),
+                    finished_at=datetime.now(timezone.utc),
                     nodes_executed=nodes_executed or {},
                     errors=errors or [],
                     final_stage=final_stage,

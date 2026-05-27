@@ -1,6 +1,6 @@
 """Decision capture + weight-bump helpers shared by the feedback API
 and the orchestrator's interrupt-resume path."""
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -71,7 +71,7 @@ async def bump_weight(
         session.add(row)
     else:
         row.weight += amount
-        row.last_selected_at = datetime.utcnow()
+        row.last_selected_at = datetime.now(timezone.utc)
     await session.commit()
     await session.refresh(row)
     return row

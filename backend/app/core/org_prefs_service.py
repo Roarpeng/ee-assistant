@@ -15,6 +15,10 @@
 """
 from __future__ import annotations
 
+import logging
+
+log = logging.getLogger(__name__)
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -113,6 +117,7 @@ async def apply_preferences(
         try:
             v = extractor(pref.value)
         except Exception:
+            log.debug("pref value JSON parse failed", exc_info=True)
             v = None
         if v:
             enriched[req_field] = v

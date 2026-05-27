@@ -61,7 +61,7 @@ describe('BOMPanel — memory-flywheel hooks', () => {
     fireEvent.click(screen.getByTestId('bom-info-1'));
 
     expect(
-      await screen.findByRole('dialog', { name: /memory sources/i }),
+      await screen.findByTestId('memory-source-overlay'),
     ).toBeInTheDocument();
     expect(screen.getByText(/为什么选 Siemens 6ES7215-1AG40-0XB0/)).toBeInTheDocument();
     expect(fetchSpy).toHaveBeenCalledWith(

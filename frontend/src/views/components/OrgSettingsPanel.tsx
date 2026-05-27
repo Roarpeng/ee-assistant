@@ -553,6 +553,7 @@ function PreferencesTabBody({
             <FormControl size="small" fullWidth>
               <Select
                 aria-label="偏好键"
+                data-testid="pref-key-select"
                 value={draft.key}
                 disabled={draft.isEdit}
                 onChange={(e) =>
@@ -593,12 +594,14 @@ function PreferencesTabBody({
             </Typography>
             <TextField
               aria-label="偏好值 JSON"
+              data-testid="pref-value-json"
               multiline
               rows={4}
               value={draft.valueJson}
               onChange={(e) =>
                 setDraft({ ...draft, valueJson: e.target.value, error: null })
               }
+              inputProps={{ 'aria-label': '偏好值 JSON' }}
               placeholder='{"family": "S7-1200"}'
               fullWidth
               size="small"

@@ -40,7 +40,8 @@ def _project_eager_options():
 
 @router.post("", response_model=ProjectOut, status_code=201)
 async def create_project(name: str = "Untitled", session: AsyncSession = Depends(get_session)):
-    project = Project(name=name)
+    sanitized = name.strip()[:200] or "Untitled"
+    project = Project(name=sanitized)
     session.add(project)
     await session.commit()
     result = await session.execute(

@@ -15,6 +15,7 @@ import TranslateIcon from '@mui/icons-material/Translate';
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { ChatPanel } from './ChatPanel';
+import { useKeyboardShortcuts, KeyboardShortcutsDialog } from './KeyboardShortcuts';
 import { TopologyPanel } from './TopologyPanel';
 import { BOMPanel } from './BOMPanel';
 import { SCLPanel } from './SCLPanel';
@@ -41,6 +42,7 @@ export function AppLayout({ initialTab }: { initialTab?: 'chat' | 'knowledge' })
   const resetUnread = useStore((s) => s.resetUnread);
 
   const [centerTab, setCenterTab] = useState<'chat' | 'knowledge'>(initialTab || 'chat');
+  const shortcuts = useKeyboardShortcuts();
   const [chatWidth, setChatWidth] = useState(() => {
     try {
       const saved = localStorage.getItem('volta-chat-width');
@@ -268,6 +270,7 @@ export function AppLayout({ initialTab }: { initialTab?: 'chat' | 'knowledge' })
           <Tabs
             value={centerTab}
             onChange={handleCenterTabChange}
+            aria-label="Main navigation"
             sx={{
               px: 3,
               pt: 0.75,
@@ -528,6 +531,7 @@ export function AppLayout({ initialTab }: { initialTab?: 'chat' | 'knowledge' })
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <ReportExporter open={isReportOpen} onClose={() => setIsReportOpen(false)} />
+      <KeyboardShortcutsDialog open={shortcuts.open} onClose={() => shortcuts.setOpen(false)} />
     </Box>
   );
 }

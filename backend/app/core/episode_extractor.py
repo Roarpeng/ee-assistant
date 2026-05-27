@@ -14,6 +14,10 @@ graph.
 """
 from __future__ import annotations
 
+import logging
+
+log = logging.getLogger(__name__)
+
 from sqlalchemy import select
 
 from app.db.models import Decision, EpisodicMemory
@@ -148,4 +152,5 @@ async def extract_and_store_episode(
             await session.refresh(ep)
             return ep.id
     except Exception:
+        log.debug("episode extraction failed", exc_info=True)
         return None

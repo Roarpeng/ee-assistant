@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { AppLayout } from './views/components/AppLayout';
+import { ErrorBoundary } from './views/components/ErrorBoundary';
+import { GlobalToast } from './views/components/GlobalToast';
 import { useStore } from './models/store';
 import { lightTheme, darkTheme } from './theme/md3';
 import Box from '@mui/material/Box';
@@ -34,29 +36,23 @@ export default function App() {
     void init();
   }, [loadChatHistory, newProject]);
 
-  // Direct entry to knowledge base — no project required
-  if (forceKnowledge) {
-    return (
-      <ThemeProvider theme={themeMode === 'dark' || themeMode === 'engineering' ? darkTheme : lightTheme}>
-        <AppLayout initialTab="knowledge" />
-      </ThemeProvider>
-    );
-  }
-
-  if (isInitializing) {
-    return (
-      <ThemeProvider theme={themeMode === 'dark' || themeMode === 'engineering' ? darkTheme : lightTheme}>
-        <Box sx={{ display: 'flex', width: '100vw', height: '100vh', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
-          <CircularProgress color="primary" />
-        </Box>
-      </ThemeProvider>
-    );
-  }
+  const theme = themeMode === 'dark' || themeMode === 'engineering' ? darkTheme : lightTheme;
 
   return (
-    <ThemeProvider theme={themeMode === 'dark' || themeMode === 'engineering' ? darkTheme : lightTheme}>
-      <AppLayout />
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        {forceKnowledge ? (
+          <AppLayout initialTab="knowledge" />
+        ) : isInitializing ? (
+          <Box sx={{ display: 'flex', width: '100vw', height: '100vh', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
+            <CircularProgress color="primary" />
+          </Box>
+        ) : (
+          <AppLayout />
+        )}
+        <GlobalToast />
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -9,6 +9,9 @@ import os
 import uuid
 import pytest
 
+# Requires langgraph-checkpoint-postgres; skip gracefully when absent.
+pytest.importorskip("langgraph.checkpoint.postgres")
+
 pytestmark = pytest.mark.asyncio
 
 

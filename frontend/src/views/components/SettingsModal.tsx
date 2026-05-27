@@ -153,20 +153,23 @@ export function SettingsModal({ isOpen, onClose }: Props) {
   };
 
   const handleSave = () => {
+    const clampTemp = Math.max(0, Math.min(2, Number(chatTemperature) || 0));
+    const clampTokens = Math.max(1, Math.floor(Number(chatMaxTokens) || 4096));
+    const clampDim = Math.max(1, Math.floor(Number(embDimension) || 1536));
     const next: AppSettings = {
       chat: {
-        apiKey: chatApiKey,
-        baseUrl: chatBaseUrl,
-        model: chatModel,
-        maxTokens: chatMaxTokens,
-        temperature: chatTemperature,
+        apiKey: chatApiKey.trim(),
+        baseUrl: chatBaseUrl.trim().replace(/\/+$/, ''),
+        model: chatModel.trim(),
+        maxTokens: clampTokens,
+        temperature: clampTemp,
         provider: chatProvider,
       },
       embedding: {
-        apiKey: embApiKey,
-        baseUrl: embBaseUrl,
-        model: embModel,
-        dimension: embDimension,
+        apiKey: embApiKey.trim(),
+        baseUrl: embBaseUrl.trim().replace(/\/+$/, ''),
+        model: embModel.trim(),
+        dimension: clampDim,
         provider: embProvider,
       },
     };

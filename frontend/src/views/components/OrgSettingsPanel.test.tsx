@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import { OrgSettingsPanel } from './OrgSettingsPanel';
 import { useStore } from '../../models/store';
 import * as orgClient from '../../services/orgClient';
@@ -9,6 +9,19 @@ function seedStore(overrides: Partial<{ org: any; preferences: any[] }>) {
     org: overrides.org ?? { id: 'org-1', name: 'Acme', code: 'acme-xyz' },
     preferences: overrides.preferences ?? [],
   });
+}
+
+/** MUI v6 renders the backdrop with this class; clicking it triggers Dialog.onClose. */
+function clickBackdrop() {
+  const backdrop = document.querySelector('.MuiBackdrop-root');
+  if (!backdrop) throw new Error('MUI backdrop not found in DOM');
+  fireEvent.click(backdrop);
+}
+
+/** MUI Select is not a native <select>; open it via mouseDown on role="combobox". */
+function openMuiSelect(testId: string) {
+  const selectRoot = screen.getByTestId(testId);
+  fireEvent.mouseDown(within(selectRoot).getByRole('combobox'));
 }
 
 describe('OrgSettingsPanel', () => {
@@ -67,25 +80,30 @@ describe('OrgSettingsPanel', () => {
   it('clicking the backdrop calls onClose', () => {
     const onClose = vi.fn();
     render(<OrgSettingsPanel open onClose={onClose} />);
-    fireEvent.click(screen.getByTestId('org-settings-overlay'));
+    clickBackdrop();
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('clicking the ✕ button calls onClose but clicking the dialog body does not', () => {
     const onClose = vi.fn();
     render(<OrgSettingsPanel open onClose={onClose} />);
+    // Clicking the dialog paper should NOT close it.
     fireEvent.click(screen.getByRole('dialog'));
     expect(onClose).not.toHaveBeenCalled();
+    // The explicit close button closes.
     fireEvent.click(screen.getByLabelText('关闭'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('"添加偏好" opens the inline editor with key dropdown', () => {
+  it('"添加偏好" opens the inline editor with key dropdown', async () => {
     render(<OrgSettingsPanel open onClose={() => {}} />);
     fireEvent.click(screen.getByText('+ 添加偏好'));
     expect(screen.getByTestId('pref-draft-form')).toBeInTheDocument();
-    const select = screen.getByLabelText('偏好键') as HTMLSelectElement;
-    const options = Array.from(select.options).map((o) => o.value);
+
+    // Open the MUI Select and verify it contains the expected keys.
+    openMuiSelect('pref-key-select');
+    const listbox = await screen.findByRole('listbox');
+    const options = within(listbox).getAllByRole('option').map((o) => o.textContent);
     expect(options).toContain('preferred_plc_family');
     expect(options).toContain('default_safety_level');
     expect(options).toContain('voltage_standard');
@@ -105,12 +123,17 @@ describe('OrgSettingsPanel', () => {
 
     render(<OrgSettingsPanel open onClose={() => {}} />);
     fireEvent.click(screen.getByText('+ 添加偏好'));
-    fireEvent.change(screen.getByLabelText('偏好键'), {
-      target: { value: 'preferred_plc_family' },
-    });
-    fireEvent.change(screen.getByLabelText('偏好值 JSON'), {
+
+    // Select key via MUI Select mouseDown + MenuItem click.
+    openMuiSelect('pref-key-select');
+    const listbox = await screen.findByRole('listbox');
+    fireEvent.click(within(listbox).getByText('preferred_plc_family'));
+
+    // Type JSON value into the textarea.
+    fireEvent.change(screen.getByRole('textbox', { name: '偏好值 JSON' }), {
       target: { value: '{"family": "S7-1200"}' },
     });
+
     await act(async () => {
       fireEvent.click(screen.getByText('保存'));
     });
@@ -130,12 +153,17 @@ describe('OrgSettingsPanel', () => {
     const upsertSpy = vi.spyOn(orgClient.orgApi, 'upsertPreference');
     render(<OrgSettingsPanel open onClose={() => {}} />);
     fireEvent.click(screen.getByText('+ 添加偏好'));
-    fireEvent.change(screen.getByLabelText('偏好键'), {
-      target: { value: 'preferred_plc_family' },
-    });
-    fireEvent.change(screen.getByLabelText('偏好值 JSON'), {
+
+    // Select key via MUI Select.
+    openMuiSelect('pref-key-select');
+    const listbox = await screen.findByRole('listbox');
+    fireEvent.click(within(listbox).getByText('preferred_plc_family'));
+
+    // Type invalid JSON.
+    fireEvent.change(screen.getByRole('textbox', { name: '偏好值 JSON' }), {
       target: { value: 'not-json' },
     });
+
     await act(async () => {
       fireEvent.click(screen.getByText('保存'));
     });
@@ -183,10 +211,16 @@ describe('OrgSettingsPanel', () => {
     });
     render(<OrgSettingsPanel open onClose={() => {}} />);
     fireEvent.click(screen.getByLabelText('编辑 default_safety_level'));
-    const select = screen.getByLabelText('偏好键') as HTMLSelectElement;
-    expect(select.value).toBe('default_safety_level');
-    expect(select.disabled).toBe(true);
-    const textarea = screen.getByLabelText('偏好值 JSON') as HTMLTextAreaElement;
+
+    // MUI Select: disabled state and displayed value.
+    const selectRoot = screen.getByTestId('pref-key-select');
+    const selectButton = within(selectRoot).getByRole('combobox');
+    expect(selectButton.getAttribute('aria-disabled')).toBe('true');
+    const displayValue = within(selectRoot).getByText('default_safety_level');
+    expect(displayValue).toBeInTheDocument();
+
+    // TextField should contain the JSON representation.
+    const textarea = screen.getByRole('textbox', { name: '偏好值 JSON' }) as HTMLTextAreaElement;
     expect(textarea.value).toContain('"level"');
     expect(textarea.value).toContain('SIL2');
   });

@@ -7,7 +7,7 @@ doesn't see a login wall. All other endpoints require a valid
 """
 import secrets
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy import delete, select
@@ -84,7 +84,7 @@ async def upsert_pref(
             existing.confidence = body.confidence
         if body.source is not None:
             existing.source = body.source
-        existing.updated_at = datetime.utcnow()
+        existing.updated_at = datetime.now(timezone.utc)
         row = existing
     else:
         row = OrgPreference(

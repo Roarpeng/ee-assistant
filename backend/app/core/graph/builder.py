@@ -9,7 +9,6 @@ import asyncio
 import os
 
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from app.core.graph.state import AnalysisState
 
 _compiled_graph = None
@@ -60,6 +59,7 @@ async def build_graph():
                 _checkpointer = MemorySaver()
                 _setup_done = True
             else:
+                from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
                 _checkpointer_ctx = AsyncPostgresSaver.from_conn_string(_pg_conn_str())
                 _checkpointer = await _checkpointer_ctx.__aenter__()
         if not _setup_done:

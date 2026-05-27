@@ -1,4 +1,5 @@
 import { authedFetch } from './orgClient';
+import { toast } from '../models/toastStore';
 
 const BASE = '/api';
 
@@ -14,13 +15,21 @@ function getSettings() {
 }
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await authedFetch(`${BASE}${url}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    ...options,
-  });
+  let res: Response;
+  try {
+    res = await authedFetch(`${BASE}${url}`, {
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      ...options,
+    });
+  } catch (networkErr) {
+    toast.error('Network error — please check your connection');
+    throw networkErr;
+  }
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`API ${res.status}: ${err}`);
+    const msg = `API ${res.status}: ${err}`;
+    if (res.status >= 500) toast.error(msg);
+    throw new Error(msg);
   }
   if (res.status === 204) return undefined as T;
   return res.json();

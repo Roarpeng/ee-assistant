@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useDebounce } from '../../hooks/useDebounce';
 import {
   FileDownload as FileDownloadIcon,
   Search as SearchIcon,
@@ -22,6 +23,7 @@ import {
   Button,
   TextField,
   InputAdornment,
+  Skeleton,
   alpha,
 } from '@mui/material';
 import { useStore } from '../../models/store';
@@ -58,11 +60,12 @@ export function BOMPanel() {
   } | null>(null);
   const [negativeBusyId, setNegativeBusyId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 200);
   const [activeOnly, setActiveOnly] = useState(false);
 
   const projectId = project?.id ?? null;
 
-  const q = search.trim().toLowerCase();
+  const q = debouncedSearch.trim().toLowerCase();
   const visibleBom = bomData.filter((item) => {
     if (activeOnly && item.active === false) return false;
     if (!q) return true;
@@ -456,6 +459,15 @@ export function BOMPanel() {
                   </TableRow>
                 );
               })}
+              {project && visibleBom.length === 0 && (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <TableRow key={`skel-${i}`}>
+                    {Array.from({ length: 7 }).map((_, j) => (
+                      <TableCell key={j}><Skeleton variant="text" width={j === 5 ? 160 : 80} /></TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>

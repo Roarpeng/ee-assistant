@@ -1,3 +1,6 @@
+import logging
+
+log = logging.getLogger(__name__)
 """LangGraph agent node functions — each node receives state, returns partial state update."""
 import asyncio
 import re
@@ -51,6 +54,7 @@ async def _apply_org_bias(
     except Exception:
         # Bias is a "nice-to-have" signal — never block selection on a
         # weights-table read error.
+        log.debug("selection weight bias lookup failed", exc_info=True)
         return candidates
 
     indexed = sorted(
@@ -944,13 +948,13 @@ async def schematic_generator(state: AnalysisState) -> dict:
 
     if isinstance(mermaid_result, Exception) or not (mermaid_result and str(mermaid_result).strip()):
         if isinstance(mermaid_result, Exception):
-            print(f"[schematic_generator] mermaid call failed, using fallback: {mermaid_result!r}", flush=True)
+            log.warning("[schematic_generator] mermaid call failed, using fallback: %r", mermaid_result)
         mermaid = _fallback_mermaid(bom_list)
     else:
         mermaid = str(mermaid_result)
 
     if isinstance(topology_result, Exception):
-        print(f"[schematic_generator] topology call failed, using fallback: {topology_result!r}", flush=True)
+        log.warning("[schematic_generator] topology call failed, using fallback: %r", topology_result)
         topology = _build_fallback_topology(bom_list)
     else:
         topology = _normalize_topology(topology_result)
@@ -980,7 +984,7 @@ async def code_generator(state: AnalysisState) -> dict:
     try:
         modules = await llm_service.generate_st_code(req_data, bom_list)
     except Exception as e:
-        print(f"[code_generator] ST code LLM call failed, emitting stub: {e!r}", flush=True)
+        log.warning("[code_generator] ST code LLM call failed, emitting stub: %r", e)
         modules = [{
             "name": "Main_OB1",
             "module_type": "OB",

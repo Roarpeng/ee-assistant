@@ -354,7 +354,7 @@ export function MemoryTab() {
                 const revCount = (rep.revisions || []).length;
                 const gapCount = (rep.gaps || []).length;
                 return (
-                  <ListItem key={rep.id} disablePadding sx={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                  <ListItem key={rep.id} disablePadding sx={{ flexDirection: 'column', alignItems: 'stretch' }} data-testid={`memory-report-row-${rep.id}`}>
                     <Button
                       type="button"
                       onClick={() => toggleExpanded(rep.id)}

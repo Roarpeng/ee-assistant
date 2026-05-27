@@ -64,8 +64,10 @@ ele/
 │   │   │   ├── agents.py          #     9 个 Agent 节点 (RAG 搜索 fault-tolerant)
 │   │   │   └── builder.py         #     StateGraph 构建 + compile(MemorySaver)
 │   │   ├── orchestrator.py        #   WS 管理 + graph 启动 + rag_engine 配置传递
-│   │   ├── llm_service.py         #   OpenAI-compatible 封装, JSON 容错+重试
-│   │   ├── rag_engine.py          #   Qdrant 向量索引 + 双路检索, 运行时 embed 配置
+│   │   ├── llm_service.py         #   OpenAI-compatible 封装, JSON 容错+重试+RateLimit backoff
+│   │   ├── rag_engine.py          #   Qdrant 向量索引 + 双路检索, min_score 过滤
+│   │   ├── task_tracker.py        #   ★ 后台任务注册表 (运行/完成/失败跟踪)
+│   │   ├── logging_config.py      #   ★ 结构化日志配置 (替换 print)
 │   │   ├── knowledge_graph.py     #   ★ 元件知识图 CRUD + BFS 遍历 ★
 │   │   ├── entity_extractor.py    #   LLM 从 PDF 提取电气元件实体 + 关系
 │   │   ├── community_detector.py  #   NetworkX Louvain 社区检测
@@ -73,20 +75,28 @@ ele/
 │   │   └── schemas.py             #   Pydantic 数据模型 (BatchDeleteInput, ConnectivityTestInput 等)
 │   └── db/
 │       ├── models.py              #   11 个 ORM 模型 (KnowledgeDoc.status, FK ondelete SET NULL)
-│       └── repository.py          #   AsyncEngine + session factory
+│       └── repository.py          #   AsyncEngine + 连接池配置 (pool_size/pre_ping/recycle)
 ├── frontend/
 │   ├── nginx.conf                 #   nginx 反向代理 (300s API超时, 100MB上传, WS代理)
 │   └── src/
-│       ├── models/                # M: 类型定义 + Zustand store (KnowledgeDoc, 选择模式)
+│       ├── hooks/                 # 自定义 React Hooks
+│       │   ├── useDebounce.ts     #   搜索防抖 (延迟触发)
+│       │   └── useReconnectingWS.ts #   WebSocket 自动重连 (指数退避) + sessionStorage 缓存
+│       ├── models/                # M: 类型定义 + Zustand store (KnowledgeDoc, 选择模式, Toast)
 │       ├── views/components/      # V: UI 组件
-│       │   ├── AppLayout.tsx      #   主布局: 可拖拽分栏 + 主题 + 标签切换
-│       │   ├── ChatPanel.tsx      #   对话框 (SSE/JSON 双模式, HTTP 错误处理)
+│       │   ├── AppLayout.tsx      #   主布局: 可拖拽分栏 + 主题 + 标签切换 + 键盘快捷键
+│       │   ├── ChatPanel.tsx      #   对话框 (SSE/JSON 双模式, 心跳监测, HTTP 错误处理)
 │       │   ├── CanvasPanel.tsx    #   右侧画布容器 (VS Code 风格标签栏)
 │       │   ├── FrameworkDiagram.tsx #   Mermaid 框图渲染
-│       │   ├── BOMTable.tsx       #   选型 BOM 表 (置信度彩色标签)
+│       │   ├── BOMTable.tsx       #   选型 BOM 表 (置信度彩色标签, 搜索防抖, 骨架屏)
 │       │   ├── STCodeView.tsx     #   Monaco Editor ST 代码
-│       │   ├── KnowledgePanel.tsx #   知识库: 真实数据, 状态徽章(6色), 选择模式, 批量删除, WS进度, 重试
-│       │   ├── SettingsModal.tsx  #   设置: Chat+Embedding 双组配置, 连通性测试按钮
+│       │   ├── KnowledgePanel.tsx #   知识库: 状态徽章(6色), 选择模式, 批量删除确认, WS进度+重连, 搜索防抖, 骨架屏
+│       │   ├── ConversationSidebar.tsx # 会话列表: 搜索防抖, 删除确认对话框
+│       │   ├── SettingsModal.tsx  #   设置: Chat+Embedding 双组配置, 连通性测试, 输入校验
+│       │   ├── ErrorBoundary.tsx  #   ★ React 错误边界 + 降级 UI
+│       │   ├── GlobalToast.tsx    #   ★ 全局 API 错误 Toast (自动消失)
+│       │   ├── ConfirmDialog.tsx  #   ★ 可复用确认对话框 (severity 色彩)
+│       │   ├── KeyboardShortcuts.tsx # ★ 键盘快捷键帮助 (? 键触发)
 │       │   └── ProgressStepper.tsx #   流程步骤指示器
 │       └── services/              # S: API 客户端 (batch delete, retry, connectivity test)
 ├── docker-compose.yml             # 5 服务: frontend/backend/postgres/qdrant/minio
@@ -248,6 +258,7 @@ FK 级联: `component_nodes.source_doc_id` / `component_edges.source_doc_id` →
 | DELETE | `/api/knowledge/docs/{id}` | 删除单个文档 |
 | POST | `/api/knowledge/docs/{id}/retry` | **重试失败文档** |
 | POST | `/api/knowledge/search` | 知识库搜索 |
+| GET | `/api/tasks` | 后台任务状态 (运行中/最近完成/失败) |
 | WS | `/ws/projects/{id}` | 项目分析实时进度 |
 | WS | `/ws/knowledge/docs/{id}` | **知识库文档处理进度** |
 

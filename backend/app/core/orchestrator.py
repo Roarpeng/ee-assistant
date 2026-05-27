@@ -1,3 +1,6 @@
+import logging
+
+log = logging.getLogger(__name__)
 import time
 
 from fastapi import WebSocket
@@ -44,6 +47,7 @@ class Orchestrator:
             try:
                 await ws.send_text(event.model_dump_json())
             except Exception:
+                log.debug("WS send failed, unregistering %s", project_id)
                 self.unregister_ws(project_id)
 
     async def run_analysis(self, project_id: str, user_input: str, session) -> dict:
@@ -299,7 +303,7 @@ class Orchestrator:
                     from app.core.episode_extractor import extract_and_store_episode
                     await extract_and_store_episode(pid, org_id, final_state)
         except Exception:
-            pass
+            log.debug("best-effort operation failed", exc_info=True)
 
         yield {"done": True, "payload": final_state}
 
@@ -371,7 +375,7 @@ class Orchestrator:
                 if interrupt_value is not None:
                     break
         except Exception:
-            pass
+            log.debug("best-effort operation failed", exc_info=True)
 
         await self._capture_manual_selections(
             project_id=project_id,
@@ -439,7 +443,7 @@ class Orchestrator:
                         except Exception:
                             pass
         except Exception:
-            pass
+            log.debug("best-effort operation failed", exc_info=True)
 
     async def run_graph_analysis(self, project_id: str, user_input: str,
                                   llm_config: dict | None = None,

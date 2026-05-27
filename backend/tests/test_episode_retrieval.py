@@ -7,7 +7,7 @@ helpers so we exercise them directly against the test SQLite DB.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -68,7 +68,7 @@ async def _seed_episode(
                 key_decisions=[],
                 summary=summary,
                 score=score,
-                created_at=datetime.utcnow()
+                created_at=datetime.now(timezone.utc)
                 + timedelta(seconds=created_offset_seconds),
             )
         )

@@ -19,7 +19,7 @@ keeping the core logic standalone makes it directly unit-testable.
 from __future__ import annotations
 
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,7 +42,7 @@ async def consolidate(
     across every org — useful for a future global "house style" pass,
     today only invoked by tests.
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     period_start = now - timedelta(days=days)
 
     q = select(Decision).where(Decision.created_at >= period_start)

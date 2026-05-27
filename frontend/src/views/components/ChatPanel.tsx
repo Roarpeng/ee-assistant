@@ -26,7 +26,9 @@ export function ChatPanel() {
   const tr = t(language);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [streamStale, setStreamStale] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const heartbeatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useChatHistory();
 
@@ -329,6 +331,19 @@ export function ChatPanel() {
     return shouldRunFullAnalysis(message, { hasCanvas, userTurns });
   };
 
+  // Heartbeat monitoring: server sends keepalive every 15s. If nothing arrives
+  // for 45s, mark stream as potentially stale for visual feedback.
+  const resetHeartbeatTimer = () => {
+    if (heartbeatTimerRef.current) clearTimeout(heartbeatTimerRef.current);
+    setStreamStale(false);
+    heartbeatTimerRef.current = setTimeout(() => setStreamStale(true), 45_000);
+  };
+  const clearHeartbeatTimer = () => {
+    if (heartbeatTimerRef.current) { clearTimeout(heartbeatTimerRef.current); heartbeatTimerRef.current = null; }
+    setStreamStale(false);
+  };
+  useEffect(() => { return () => clearHeartbeatTimer(); }, []);
+
   const readStream = async (
     response: Response,
     mode: 'chat' | 'analysis' | 'resume',
@@ -356,9 +371,14 @@ export function ChatPanel() {
     let fullText = '';
     let buffer = '';
 
+    resetHeartbeatTimer();
+
+    try {
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
+
+      resetHeartbeatTimer();
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
@@ -414,6 +434,9 @@ export function ChatPanel() {
           throw e;
         }
       }
+    }
+    } finally {
+      clearHeartbeatTimer();
     }
   };
 
@@ -853,9 +876,17 @@ export function ChatPanel() {
           }}
         />
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid', borderColor: 'divider', pt: 1.5, mt: 1, px: 0.5, gap: 1 }}>
-          <Typography sx={{ fontSize: '0.625rem', color: 'text.disabled', flex: 1 }}>
-            Enter 发送 · Shift+Enter 换行
-          </Typography>
+          {isProcessing && streamStale ? (
+            <Chip
+              size="small"
+              label="Stream idle 45s..."
+              sx={{ fontSize: '0.625rem', height: 20, bgcolor: 'rgba(245,158,11,0.15)', color: '#FBBF24', borderColor: 'rgba(245,158,11,0.3)', '& .MuiChip-label': { px: 1 } }}
+            />
+          ) : (
+            <Typography sx={{ fontSize: '0.625rem', color: 'text.disabled', flex: 1 }}>
+              Enter 发送 · Shift+Enter 换行
+            </Typography>
+          )}
           <Tooltip title={tr.chat.fullAnalysisHint}>
             <span>
               <Button

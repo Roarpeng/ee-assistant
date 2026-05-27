@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
+import { useDebounce } from '../../hooks/useDebounce';
 import { useStore, type KnowledgeDoc, type KnowledgeDocStatus, type KnowledgeSourceType } from '../../models/store';
 import { t } from '../../services/i18n';
 import { api } from '../../services/api';
@@ -6,6 +7,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import LinearProgress from '@mui/material/LinearProgress';
+import Skeleton from '@mui/material/Skeleton';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
@@ -22,6 +24,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import SearchIcon from '@mui/icons-material/Search';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import { ConfirmDialog } from './ConfirmDialog';
 
 const STATUS_STYLE: Record<KnowledgeDocStatus, { bg: string; color: string }> = {
   uploading: { bg: 'rgba(107,114,128,0.2)', color: '#9CA3AF' },
@@ -124,6 +127,7 @@ export function KnowledgePanel() {
   const setLoading = useStore((s) => s.setKnowledgeLoading);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedQuery = useDebounce(searchQuery, 250);
   const [searchMode, setSearchMode] = useState<'docs' | 'semantic'>('docs');
   const [semanticHits, setSemanticHits] = useState<
     Array<{ id: string; content: string; score: number; metadata?: Record<string, unknown> }>
@@ -131,6 +135,7 @@ export function KnowledgePanel() {
   const [semanticLoading, setSemanticLoading] = useState(false);
   const [semanticError, setSemanticError] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [queueState, setQueueState] = useState<UploadQueueState | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -144,9 +149,15 @@ export function KnowledgePanel() {
 
   // Track live WS connections for active docs
   const activeSockets = useRef<Map<string, WebSocket>>(new Map());
+  const reconnectTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
     fetchDocs();
+    return () => {
+      // Clean up reconnect timers on unmount
+      reconnectTimers.current.forEach((t) => clearTimeout(t));
+      reconnectTimers.current.clear();
+    };
   }, []);
 
   // Subscribe to WS for docs in non-terminal status
@@ -159,6 +170,10 @@ export function KnowledgePanel() {
   }, [docs]);
 
   function connectProgress(docId: string) {
+    // Clear any pending reconnect for this doc
+    const existingTimer = reconnectTimers.current.get(docId);
+    if (existingTimer) { clearTimeout(existingTimer); reconnectTimers.current.delete(docId); }
+
     if (activeSockets.current.has(docId)) {
       activeSockets.current.get(docId)?.close();
       activeSockets.current.delete(docId);
@@ -181,9 +196,15 @@ export function KnowledgePanel() {
     };
     ws.onclose = () => {
       activeSockets.current.delete(docId);
+      // Auto-reconnect if doc is still in a non-terminal state
+      const currentDoc = useStore.getState().knowledgeDocs.find((d) => d.id === docId);
+      if (currentDoc && !isTerminal(currentDoc.status)) {
+        const timer = setTimeout(() => connectProgress(docId), 3000);
+        reconnectTimers.current.set(docId, timer);
+      }
     };
     ws.onerror = () => {
-      activeSockets.current.delete(docId);
+      ws.close();
     };
     activeSockets.current.set(docId, ws);
   }
@@ -314,7 +335,13 @@ export function KnowledgePanel() {
     }
   }
 
-  async function handleBatchDelete() {
+  function handleBatchDelete() {
+    if (selectedIds.size === 0) return;
+    setShowDeleteConfirm(true);
+  }
+
+  async function confirmBatchDelete() {
+    setShowDeleteConfirm(false);
     if (selectedIds.size === 0) return;
     setDeleting(true);
     try {
@@ -349,12 +376,12 @@ export function KnowledgePanel() {
   const filteredDocs =
     searchMode === 'semantic'
       ? docs
-      : searchQuery
+      : debouncedQuery
         ? docs.filter(
             (d) =>
-              d.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              d.manufacturer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              d.category_tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())),
+              d.filename.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+              d.manufacturer.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+              d.category_tags.some((t) => t.toLowerCase().includes(debouncedQuery.toLowerCase())),
           )
         : docs;
 
@@ -536,9 +563,13 @@ export function KnowledgePanel() {
       {/* Document list */}
       <List sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2, display: 'flex', flexDirection: 'column', gap: 0, '&::-webkit-scrollbar': { width: 6 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 3 } }}>
         {loading && (
-          <Typography sx={{ fontSize: '0.75rem', color: 'text.disabled', textAlign: 'center', py: 4 }}>
-            Loading...
-          </Typography>
+          Array.from({ length: 4 }).map((_, i) => (
+            <Box key={i} sx={{ mb: 1.5, p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+              <Skeleton variant="text" width="60%" height={20} />
+              <Skeleton variant="text" width="40%" height={16} sx={{ mt: 0.5 }} />
+              <Skeleton variant="text" width="80%" height={14} sx={{ mt: 1 }} />
+            </Box>
+          ))
         )}
 
         {!loading && filteredDocs.length === 0 && (
@@ -553,7 +584,7 @@ export function KnowledgePanel() {
             <ListItem
               key={doc.id}
               disablePadding
-              sx={{ display: 'block', mb: 1.5 }}
+              sx={{ display: 'block', mb: 1.5, contentVisibility: 'auto', containIntrinsicSize: 'auto 120px' }}
             >
               <Paper
                 variant="outlined"
@@ -961,6 +992,16 @@ export function KnowledgePanel() {
       </Box>
     </Box>
       )}
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title={`Delete ${selectedIds.size} document(s)?`}
+        message="This will permanently remove the selected documents and their vector data. This action cannot be undone."
+        confirmLabel="Delete All"
+        severity="error"
+        onConfirm={confirmBatchDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </Box>
   );
 }

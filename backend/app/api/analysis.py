@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import traceback
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -13,7 +14,20 @@ from app.core.schemas import ChatInput, RequirementInput, ProjectOut, ResumeRequ
 from app.core.chat_orchestrator import chat_orchestrator
 from app.core.orchestrator import orchestrator
 
+log = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/projects", tags=["analysis"])
+
+# Per-project serialization lock — prevents two concurrent analyze-v2 calls
+# from racing on delete-then-insert in save_to_db. Keyed by project_id.
+_project_locks: dict[str, asyncio.Lock] = {}
+
+
+def _get_project_lock(project_id: str) -> asyncio.Lock:
+    """Return a per-project asyncio.Lock, creating one lazily if needed."""
+    if project_id not in _project_locks:
+        _project_locks[project_id] = asyncio.Lock()
+    return _project_locks[project_id]
 
 
 async def save_to_db(
@@ -232,21 +246,23 @@ async def analyze_project_v2(project_id: str, body: RequirementInput, session: A
                     final_state = event.get("payload")
                 yield f"data: {json_module.dumps(event)}\n\n"
         except Exception as e:
-            print(f"[analyze-v2] stream error for project {project_id}: {e!r}", flush=True)
-            traceback.print_exc()
+            log.error("[analyze-v2] stream error for project %s: %r", project_id, e)
+            log.debug(traceback.format_exc())
             yield f"data: {json_module.dumps({'error': str(e) or type(e).__name__})}\n\n"
             return
 
         # DB save runs AFTER SSE stream ends — must not crash the connection
         if final_state:
-            try:
-                from app.db.repository import async_session
-                async with async_session() as db:
-                    await save_to_db(db, project_id, final_state, raw_text=body.text)
-            except Exception as e:
-                # DB save failed but SSE already completed — log only, don't break connection
-                print(f"DB save error (non-fatal, SSE already sent): {e!r}", flush=True)
-                traceback.print_exc()
+            lock = _get_project_lock(project_id)
+            async with lock:
+                try:
+                    from app.db.repository import async_session
+                    async with async_session() as db:
+                        await save_to_db(db, project_id, final_state, raw_text=body.text)
+                except Exception as e:
+                    # DB save failed but SSE already completed — log only, don't break connection
+                    log.warning("DB save error (non-fatal, SSE already sent): %r", e)
+                    log.debug(traceback.format_exc())
 
     return StreamingResponse(
         _sse_with_heartbeat(event_generator()),
@@ -275,8 +291,8 @@ async def chat_with_project(project_id: str, body: ChatInput, session: AsyncSess
             ):
                 yield f"data: {json_module.dumps(event, ensure_ascii=False)}\n\n"
         except Exception as e:
-            print(f"[chat] stream error for project {project_id}: {e!r}", flush=True)
-            traceback.print_exc()
+            log.error("[chat] stream error for project %s: %r", project_id, e)
+            log.debug(traceback.format_exc())
             yield f"data: {json_module.dumps({'error': str(e) or type(e).__name__}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(
@@ -311,24 +327,26 @@ async def resume_project_analysis(project_id: str, body: ResumeRequest, session:
                     final_state = event.get("payload")
                 yield f"data: {json_module.dumps(event)}\n\n"
         except Exception as e:
-            print(f"[resume] stream error for project {project_id}: {e!r}", flush=True)
-            traceback.print_exc()
+            log.error("[resume] stream error for project %s: %r", project_id, e)
+            log.debug(traceback.format_exc())
             yield f"data: {json_module.dumps({'error': str(e) or type(e).__name__})}\n\n"
             return
 
         if final_state:
-            try:
-                from app.db.repository import async_session
-                async with async_session() as db:
-                    await save_to_db(
-                        db,
-                        project_id,
-                        final_state,
-                        raw_text="[Resumed with human selection]",
-                    )
-            except Exception as e:
-                print(f"DB save error in resume (non-fatal, SSE already sent): {e!r}", flush=True)
-                traceback.print_exc()
+            lock = _get_project_lock(project_id)
+            async with lock:
+                try:
+                    from app.db.repository import async_session
+                    async with async_session() as db:
+                        await save_to_db(
+                            db,
+                            project_id,
+                            final_state,
+                            raw_text="[Resumed with human selection]",
+                        )
+                except Exception as e:
+                    log.warning("DB save error in resume (non-fatal, SSE already sent): %r", e)
+                    log.debug(traceback.format_exc())
 
     return StreamingResponse(
         _sse_with_heartbeat(event_generator()),

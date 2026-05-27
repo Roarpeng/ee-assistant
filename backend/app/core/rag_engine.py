@@ -1,3 +1,6 @@
+import logging
+
+log = logging.getLogger(__name__)
 import asyncio
 import uuid
 import httpx
@@ -93,7 +96,7 @@ class RAGEngine:
                 info = await self.qdrant.get_collection(collection_name=self.collection)
                 existing_size = info.config.params.vectors.size
                 if existing_size != self._embed_dim:
-                    print(f"Dimension mismatch in Qdrant (Existing: {existing_size}, Config: {self._embed_dim}). Re-creating collection.")
+                    log.warning("Dimension mismatch in Qdrant (Existing: %s, Config: %s). Re-creating collection.", existing_size, self._embed_dim)
                     await self.qdrant.delete_collection(collection_name=self.collection)
                     names.remove(self.collection)
 
@@ -103,7 +106,7 @@ class RAGEngine:
                     vectors_config=VectorParams(size=self._embed_dim, distance=Distance.COSINE),
                 )
         except Exception as e:
-            print(f"Warning: Failed to connect to Qdrant or initialize collection: {e}. RAG engine vector path will be disabled.")
+            log.warning("Failed to connect to Qdrant or initialize collection: %s. RAG engine vector path will be disabled.", e)
 
 
     async def embed(self, texts: list[str], batch_size: int = 20) -> list[list[float]]:
@@ -146,7 +149,7 @@ class RAGEngine:
                     all_embeddings.extend([d.embedding for d in response.data])
                     break
                 except Exception as e:
-                    print(f"Embedding attempt {attempt+1} failed: {e}")
+                    log.warning("Embedding attempt %d failed: %s", attempt+1, e)
                     if attempt == 2:
                         raise e
                     await asyncio.sleep(1 * (attempt + 1))
@@ -213,7 +216,7 @@ class RAGEngine:
                 all_embeddings.append(emb)
                 break
             except Exception as e:
-                print(f"Multimodal embedding attempt {attempt+1} failed: {e}")
+                log.warning("Multimodal embedding attempt %d failed: %s", attempt+1, e)
                 if attempt == 2:
                     raise e
                 await asyncio.sleep(1 * (attempt + 1))
@@ -301,7 +304,7 @@ class RAGEngine:
             batch_points = points[i : i + qdrant_batch_size]
             await self.qdrant.upsert(collection_name=self.collection, points=batch_points)
 
-    async def search(self, query: str, top_k: int = 5, category_filter: list[str] | None = None, manufacturer_filter: str | None = None) -> list[dict]:
+    async def search(self, query: str, top_k: int = 5, category_filter: list[str] | None = None, manufacturer_filter: str | None = None, min_score: float = 0.35) -> list[dict]:
         query_vec = (await self.embed([query]))[0]
         qdrant_filter = None
         must_conditions = []
@@ -317,10 +320,14 @@ class RAGEngine:
             query_vector=query_vec,
             limit=top_k,
             query_filter=qdrant_filter,
+            score_threshold=min_score,
         )
+        filtered = [r for r in results if r.score >= min_score]
+        if len(filtered) < len(results):
+            log.debug("RAG search: filtered %d low-score results (threshold=%.2f)", len(results) - len(filtered), min_score)
         return [
             {"id": r.id, "content": r.payload["content"], "score": r.score, "metadata": r.payload}
-            for r in results
+            for r in filtered
         ]
 
     async def delete_doc_chunks(self, doc_id: str):

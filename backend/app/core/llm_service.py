@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import random
 import traceback
 import httpx
 from openai import AsyncOpenAI, APIConnectionError, APITimeoutError, RateLimitError, InternalServerError
@@ -35,6 +37,9 @@ _RETRIABLE_EXC = (
     httpx.ConnectError,
     httpx.ReadError,
 )
+
+
+log = logging.getLogger(__name__)
 
 
 class LLMService:
@@ -112,7 +117,7 @@ class LLMService:
             try:
                 await close()
             except Exception:
-                pass
+                log.debug("close client failed", exc_info=True)
 
     async def _openai_stream_chat(
         self,
@@ -178,22 +183,26 @@ class LLMService:
             except _RETRIABLE_EXC as e:
                 last_err = e
                 if attempt >= self._max_retries:
-                    print(
-                        f"[llm_service.chat] all {self._max_retries} attempts failed: {e!r}",
-                        flush=True,
-                    )
+                    log.error("[llm_service.chat] all %d attempts failed: %r", self._max_retries, e)
                     break
-                wait_s = min(2 ** (attempt - 1), 8)
-                print(
-                    f"[llm_service.chat] attempt {attempt}/{self._max_retries} "
-                    f"failed ({type(e).__name__}: {e}); retrying in {wait_s}s",
-                    flush=True,
-                )
+                # Rate-limit: honour Retry-After header, fall back to longer backoff
+                if isinstance(e, RateLimitError):
+                    retry_after = getattr(e, 'response', None) and e.response.headers.get('retry-after')
+                    if retry_after:
+                        try:
+                            wait_s = min(float(retry_after), 60) + random.uniform(0, 1)
+                        except (ValueError, TypeError):
+                            wait_s = min(2 ** attempt, 30) + random.uniform(0, 1)
+                    else:
+                        wait_s = min(2 ** attempt, 30) + random.uniform(0, 1)
+                else:
+                    wait_s = min(2 ** (attempt - 1), 8) + random.uniform(0, 0.5)
+                log.warning("[llm_service.chat] attempt %d/%d failed (%s: %s); retrying in %.1fs", attempt, self._max_retries, type(e).__name__, e, wait_s)
                 await asyncio.sleep(wait_s)
             except Exception as e:
                 # 非可重试异常 (鉴权失败 / 模型不存在 / JSON 解析等) — 立即抛出
-                print(f"[llm_service.chat] non-retriable error: {e!r}", flush=True)
-                traceback.print_exc()
+                log.error("[llm_service.chat] non-retriable error: %r", e)
+                log.debug(traceback.format_exc())
                 raise
             finally:
                 await self._close_client_quietly(client)
@@ -283,7 +292,7 @@ Output valid JSON only, no markdown wrapping."""
                 text = await self.chat(system, prompt, max_tokens=4096)
                 return self._parse_json(text)
             except Exception as e:
-                print(f"analyze_requirements attempt {attempt+1} failed: {e}")
+                log.warning("analyze_requirements attempt %d failed: %s", attempt+1, e)
         return {"machine_type": None, "safety_level": None, "environment": None, "plc_family": None, "io_list": [], "control_logic": []}
 
     async def map_categories(self, io_items: list, logic_rules: list) -> list[str]:
@@ -298,7 +307,7 @@ Return JSON array of strings. Output valid JSON only, no markdown wrapping."""
                 text = await self.chat(system, user + ("\n\nOutput ONLY a JSON array of strings." if attempt > 0 else ""), max_tokens=1024)
                 return self._parse_json(text)
             except Exception as e:
-                print(f"map_categories attempt {attempt+1} failed: {e}")
+                log.warning("map_categories attempt %d failed: %s", attempt+1, e)
         return []  # graceful degradation — downstream nodes will handle empty categories
 
     async def generate_schematic_mermaid(self, bom: list, requirement: dict) -> str:
@@ -363,7 +372,7 @@ Do NOT wrap in {position} or {data}; put x/y/label/protocol directly at top leve
         try:
             return self._parse_json(text)
         except Exception as e:
-            print(f"Topology JSON Parse Error: {e}\nRaw Text: {text[:500]}")
+            log.warning("Topology JSON Parse Error: %s\nRaw Text: %s", e, text[:500])
             return {"nodes": [], "edges": []}
 
     async def generate_st_code(self, requirement: dict, bom: list) -> list[dict]:
@@ -405,7 +414,7 @@ Output valid JSON only, no markdown wrapping: {"title": "...", "topic_tags": [".
             text = await self.chat(system, user_input, max_tokens=256)
             return self._parse_json(text)
         except Exception as e:
-            print(f"generate_title_and_tags failed: {e}")
+            log.warning("generate_title_and_tags failed: %s", e)
             return {"title": None, "topic_tags": None}
 
     async def recommend_components(self, categories: list[str], machine_type: str = "") -> list[dict]:

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useDebounce } from '../../hooks/useDebounce';
 import { useStore } from '../../models/store';
 import {
   deleteConversationHistory,
@@ -10,6 +11,7 @@ import {
 } from '../../services/conversations';
 import { listTemplates, type Template } from '../../services/templates';
 import { OrgSettingsPanel } from './OrgSettingsPanel';
+import { ConfirmDialog } from './ConfirmDialog';
 import {
   Box,
   Typography,
@@ -52,6 +54,7 @@ export function ConversationSidebar() {
   const [conversations, setConversations] = useState<ConversationMeta[]>(loadConversationMetas);
   const [collapsed, setCollapsed] = useState(false);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 200);
   const [showNewMenu, setShowNewMenu] = useState(false);
   const [showOrgSettings, setShowOrgSettings] = useState(false);
   const newButtonRef = useRef<HTMLButtonElement>(null);
@@ -78,12 +81,12 @@ export function ConversationSidebar() {
   }, [messages.length, project?.id, project?.name]);
 
   const filteredConversations = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+    const keyword = debouncedSearch.trim().toLowerCase();
     if (!keyword) return conversations;
     return conversations.filter((conv) =>
       [conv.name, conv.lastMessage].some((value) => value.toLowerCase().includes(keyword))
     );
-  }, [conversations, search]);
+  }, [conversations, debouncedSearch]);
 
   const handleNewConversation = useCallback(async (preserveCanvas: boolean) => {
     setShowNewMenu(false);
@@ -110,15 +113,23 @@ export function ConversationSidebar() {
     await useStore.getState().loadChatHistory(conv.id);
   }, [setProject]);
 
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
   const handleDelete = useCallback((e: React.MouseEvent, id: string) => {
     e.stopPropagation();
+    setPendingDeleteId(id);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (!pendingDeleteId) return;
     setConversations((prev) => {
-      const next = prev.filter((c) => c.id !== id);
+      const next = prev.filter((c) => c.id !== pendingDeleteId);
       saveConversationMetas(next);
       return next;
     });
-    deleteConversationHistory(id);
-  }, []);
+    deleteConversationHistory(pendingDeleteId);
+    setPendingDeleteId(null);
+  }, [pendingDeleteId]);
 
   if (collapsed) {
     return (
@@ -533,6 +544,16 @@ export function ConversationSidebar() {
       <OrgSettingsPanel
         open={showOrgSettings}
         onClose={() => setShowOrgSettings(false)}
+      />
+
+      <ConfirmDialog
+        open={!!pendingDeleteId}
+        title="Delete conversation?"
+        message="This will permanently delete the conversation history. This action cannot be undone."
+        confirmLabel="Delete"
+        severity="error"
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
       />
     </Box>
   );

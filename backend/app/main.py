@@ -1,9 +1,12 @@
+import logging
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from openai import AsyncOpenAI
+from sqlalchemy import text
 
 from app.config import settings
+from app.logging_config import setup_logging
 from app.db.models import Base
 from app.db.repository import engine
 from app.core.schemas import ConnectivityTestInput
@@ -30,8 +33,13 @@ from app.api.admin_memory import router as admin_memory_router
 from app.middleware.org_auth import org_auth_middleware
 
 
+log = logging.getLogger(__name__)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    setup_logging()
+    log.info("EE Assistant backend starting up")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     from app.core.rag_engine import rag_engine
@@ -69,7 +77,15 @@ app.include_router(admin_memory_router)
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok"}
+    db_ok = True
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+    except Exception as e:
+        log.warning("Health check DB probe failed: %s", e)
+        db_ok = False
+    status = "ok" if db_ok else "degraded"
+    return {"status": status, "database": "ok" if db_ok else "unreachable"}
 
 
 def _resolve_preset(explicit_provider: str | None, base_url: str | None):
@@ -243,6 +259,17 @@ class DebugLogInput(BaseModel):
 
 @app.post("/api/debug/log")
 async def receive_debug_log(body: DebugLogInput):
-    print(f"\n\n[FRONTEND ERROR] {body.error}\nSTACK:\n{body.stack}\n\n", flush=True)
+    log.error("[FRONTEND ERROR] %s\nSTACK:\n%s", body.error, body.stack)
     return {"status": "logged"}
+
+
+@app.get("/api/tasks")
+async def list_background_tasks():
+    """Return running and recently finished background tasks."""
+    from app.core.task_tracker import task_tracker
+    return {
+        "summary": task_tracker.summary(),
+        "active": task_tracker.list_active(),
+        "recent": task_tracker.list_recent(limit=20),
+    }
 
