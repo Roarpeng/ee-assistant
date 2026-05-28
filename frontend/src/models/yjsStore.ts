@@ -316,37 +316,14 @@ export function applyGravityLayoutToYjs(): void {
     let targetHandle: string | undefined;
 
     if (category === 'power') {
-      if (sourcePos.y <= targetPos.y) {
-        sourceHandle = 'pwr-bottom';
-        targetHandle = 'pwr-top';
-      } else {
-        sourceHandle = 'pwr-top';
-        targetHandle = 'pwr-bottom';
-      }
-    } else if (category === 'feedback') {
-      if (sourcePos.y >= targetPos.y) {
-        sourceHandle = 'fb-top';
-        targetHandle = 'fb-bottom';
-      } else {
-        sourceHandle = 'fb-bottom';
-        targetHandle = 'fb-top';
-      }
-    } else if (category === 'safety') {
-      if (sourcePos.x <= targetPos.x) {
-        sourceHandle = 'safe-right';
-        targetHandle = 'safe-left';
-      } else {
-        sourceHandle = 'safe-left';
-        targetHandle = 'safe-right';
-      }
+      sourceHandle = 'pwr-bottom';
+      targetHandle = 'pwr-top';
+    } else if (category === 'network') {
+      sourceHandle = 'net-right';
+      targetHandle = 'net-left';
     } else {
-      if (sourcePos.x <= targetPos.x) {
-        sourceHandle = 'net-right';
-        targetHandle = 'net-left';
-      } else {
-        sourceHandle = 'net-left';
-        targetHandle = 'net-right';
-      }
+      sourceHandle = 'wired-right';
+      targetHandle = 'wired-left';
     }
 
     const yEdge = yEdges.get(idx);

@@ -41,27 +41,31 @@ async def generate_code(project_id: str, body: CodegenInput, session: AsyncSessi
     }
     bom_list = [{"category": i.category, "manufacturer": i.manufacturer, "model": i.model} for i in project.bom_items]
 
-    modules = await llm_service.generate_st_code(req_data, bom_list)
+    # Get latest topology for detailed wiring mapping
+    from app.api.topology import _get_latest_topology
+    latest_topo = await _get_latest_topology(project_id, session)
+    topology = latest_topo.snapshot if latest_topo else {}
+
+    xml_content = await llm_service.generate_eplan_xml(req_data, bom_list, topology)
 
     for old in project.code_modules:
         await session.delete(old)
 
-    for i, mod in enumerate(modules):
-        session.add(STModule(
-            project_id=project_id,
-            name=mod["name"],
-            module_type=mod["module_type"],
-            code=mod["code"],
-            sort_order=mod.get("sort_order", i),
-        ))
+    session.add(STModule(
+        project_id=project_id,
+        name="EPlan_Wiring.xml",
+        module_type="XML",
+        code=xml_content,
+        sort_order=0,
+    ))
 
     project.status = "done"
     await session.commit()
 
     await orchestrator.push(project_id, ProgressEvent(
         stage="done",
-        message=f"Generated {len(modules)} ST code modules.",
-        data={"module_count": len(modules)},
+        message="Generated EPlan XML schematic file.",
+        data={"module_count": 1},
     ))
 
     await session.refresh(project)

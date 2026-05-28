@@ -239,7 +239,7 @@ export function SCLPanel() {
 
   const handleDownloadScl = () => {
     if (!sclCode.trim()) return;
-    downloadFile(sclCode, `${projectName()}_program.scl`, 'text/plain');
+    downloadFile(sclCode, `${projectName()}_EPlan_Wiring.xml`, 'text/xml');
   };
 
   return (
@@ -300,7 +300,7 @@ export function SCLPanel() {
             </Typography>
           </Box>
           <Typography sx={{ fontWeight: 800, fontSize: '1.75rem', color: 'text.primary', letterSpacing: '-0.02em' }}>
-            {panelTab === 'schematic' ? tr.scl.schematicTitle : tr.scl.title}
+            {panelTab === 'schematic' ? tr.scl.schematicTitle : "EPlan 物理接线 XML"}
           </Typography>
           <Tabs
             value={panelTab}
@@ -308,7 +308,7 @@ export function SCLPanel() {
             sx={{ mt: 1, minHeight: 36, '& .MuiTab-root': { minHeight: 36, fontSize: '0.75rem', fontWeight: 700 } }}
           >
             <Tab value="schematic" label={tr.scl.tabSchematic} />
-            <Tab value="code" label={tr.scl.tabCode} />
+            <Tab value="code" label="EPlan XML" />
           </Tabs>
         </Box>
 
@@ -442,7 +442,7 @@ export function SCLPanel() {
           {sclCode.trim() ? (
             <Editor
               height="100%"
-              language="pascal"
+              language="xml"
               theme="vs-dark"
               value={sclCode}
               onChange={(v) => setSCLCode(v ?? '')}
@@ -457,7 +457,7 @@ export function SCLPanel() {
           ) : (
             <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 4 }}>
               <Typography sx={{ color: 'text.disabled', fontSize: '0.875rem', textAlign: 'center', fontFamily: '"JetBrains Mono", monospace' }}>
-                {tr.scl.emptyCode}
+                尚未生成 EPlan XML 物理接线。请在左侧对话框中描述需求并启动工程分析。
               </Typography>
             </Box>
           )}

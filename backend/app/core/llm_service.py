@@ -378,31 +378,31 @@ Do NOT wrap in {position} or {data}; put x/y/label/protocol directly at top leve
             log.warning("Topology JSON Parse Error: %s\nRaw Text: %s", e, text[:500])
             return {"nodes": [], "edges": []}
 
-    async def generate_st_code(self, requirement: dict, bom: list) -> list[dict]:
+    async def generate_eplan_xml(self, requirement: dict, bom: list, topology: dict) -> str:
         import json
-        # Output is intentionally lean: a Main_OB1 + Safety_FC + IO_DB is enough to
-        # bootstrap a TIA Portal project. 4096 tokens cuts code_generator wall-time
-        # by ~50% vs 8192 while still producing complete safety FC code.
-        system = """You are a Siemens TIA Portal ST (Structured Text) programmer.
-Given requirements and BOM, generate 3-5 ST code modules.
-Output a JSON array of {name, module_type:OB/FC/FB/DB, code, sort_order}.
-For safety logic (E-Stop, safety door, interlocks): write COMPLETE code.
-For regular control logic: write a compact framework with TODO comments — keep
-each module under ~60 lines.
-IO addresses: %I0.x DI, %Q0.x DO, %IW64 AI, %QW64 AO.
-Output valid JSON only, no markdown wrapping."""
+        system = """You are an electrical CAD and EPlan engineering expert.
+Given an electrical requirement, BOM, and physical topology, generate a standardized EPlan XML file that describes:
+1. <Parts>: The parts list matching the BOM items, providing their Device Tag (DT, e.g. =PANEL+SB1), type, manufacturer, and order number.
+2. <Connections>: The wire connection list matching the topology edges. Map specific terminals (e.g. 11/12/13/14 for E-Stops, A1/A2 for contactors/safety relays, I0.x/Q0.x for PLC IO, L/N for power supply). Include WireCrossSection and WireColor.
 
-        user = f"Requirements: {json.dumps(requirement, ensure_ascii=False)}\nBOM: {json.dumps(bom, ensure_ascii=False)}"
+Provide standard EPlan XML format:
+<?xml version="1.0" encoding="utf-8"?>
+<EplanToXmlSchema>
+  <Project Name="EE_Assistant_Project">
+    <Parts>
+      <Part ID="string" Type="string" Manufacturer="string" OrderNumber="string" DT="string"/>
+    </Parts>
+    <Connections>
+      <Connection SourcePartID="string" SourceTerminal="string" TargetPartID="string" TargetTerminal="string" Protocol="string" WireCrossSection="string" WireColor="string"/>
+    </Connections>
+  </Project>
+</EplanToXmlSchema>
+
+Output ONLY the valid XML file, no markdown fences, no explanations. Write precise terminal numbers based on standard industrial electrical design."""
+
+        user = f"Requirements: {json.dumps(requirement, ensure_ascii=False)}\nBOM: {json.dumps(bom, ensure_ascii=False)}\nTopology: {json.dumps(topology, ensure_ascii=False)}"
         text = await self.chat(system, user, max_tokens=4096)
-        try:
-            return self._parse_json(text)
-        except ValueError:
-            text = await self.chat(
-                system,
-                user + "\n\nOutput ONLY a valid JSON array. Close all brackets.",
-                max_tokens=4096,
-            )
-            return self._parse_json(text)
+        return text.strip().removeprefix("```xml").removesuffix("```").strip()
 
     async def generate_title_and_tags(self, user_input: str) -> dict:
         """根据用户自然语言输入生成 2-6 字中文标题和 2-4 个话题标签。"""

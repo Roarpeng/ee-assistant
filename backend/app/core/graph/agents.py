@@ -188,10 +188,8 @@ def _pick_handles(
     """
     if category == "power":
         return ("pwr-bottom", "pwr-top")
-    if category == "feedback":
-        return ("fb-top", "fb-bottom")
-    if category == "safety":
-        return ("safe-right", "safe-left")
+    if category in ("feedback", "safety", "hardwired"):
+        return ("wired-right", "wired-left")
     return ("net-right", "net-left")
 
 
@@ -1030,42 +1028,45 @@ async def schematic_generator(state: AnalysisState) -> dict:
 
 
 async def code_generator(state: AnalysisState) -> dict:
-    """Generate Siemens ST code modules. On LLM failure, emit a stub module so
-    the workflow continues and the user gets a clear placeholder to retry.
+    """Generate EPlan XML wiring schematic from BOM and topology.
+    On LLM failure, emit a fallback XML placeholder to ensure workflow continues.
     """
     existing = state.get("st_modules")
     if existing and len(existing) > 0:
         return {}
     bom = state.get("bom_items", [])
     req = state.get("requirement", {})
-    req_data = {
-        "machine_type": req.get("machine_type"),
-        "safety_level": req.get("safety_level"),
-        "plc_family": req.get("plc_family"),
-        "io_list": req.get("io_list", []),
-        "control_logic": req.get("control_logic", []),
-    }
-    bom_list = [{"category": i["category"], "manufacturer": i["manufacturer"], "model": i["model"]} for i in bom]
+    topology = state.get("topology", {})
     try:
-        modules = await llm_service.generate_st_code(req_data, bom_list)
+        xml_content = await llm_service.generate_eplan_xml(req, bom, topology)
+        st_modules = [
+            {
+                "name": "EPlan_Wiring.xml",
+                "module_type": "XML",
+                "code": xml_content,
+                "sort_order": 0,
+            }
+        ]
     except Exception as e:
-        log.warning("[code_generator] ST code LLM call failed, emitting stub: %r", e)
-        modules = [{
-            "name": "Main_OB1",
-            "module_type": "OB",
-            "code": (
-                "PROGRAM Main_OB1\n"
-                "VAR\n"
-                "    // ST code generation failed due to a transient LLM/network error.\n"
-                "    // 请在『代码』面板点击重试,或检查后端日志中 [code_generator] 的报错。\n"
-                "END_VAR\n"
-                "BEGIN\n"
-                "    ;\n"
-                "END_PROGRAM\n"
-            ),
-            "sort_order": 0,
-        }]
-    return {"st_modules": modules}
+        log.warning("[code_generator] EPlan XML code LLM call failed, emitting fallback: %r", e)
+        fallback_xml = (
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            "<EplanToXmlSchema>\n"
+            "  <Project Name=\"EE_Assistant_Project\">\n"
+            "    <!-- EPlan XML generation failed due to a transient LLM/network error. -->\n"
+            "    <!-- Please click Retry or check backend logs. -->\n"
+            "  </Project>\n"
+            "</EplanToXmlSchema>\n"
+        )
+        st_modules = [
+            {
+                "name": "EPlan_Wiring.xml",
+                "module_type": "XML",
+                "code": fallback_xml,
+                "sort_order": 0,
+            }
+        ]
+    return {"st_modules": st_modules}
 
 
 async def final_review_agent(state: AnalysisState) -> dict:

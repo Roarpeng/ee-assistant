@@ -40,21 +40,15 @@ function handleStyle(category: HandleCategory, selected?: boolean): CSSPropertie
 export function NodeHandles({ selected }: { selected?: boolean }) {
   return (
     <>
-      {/* Top edge — power in (target) + feedback out (source) */}
+      {/* Top edge — power in (target) */}
       <Handle
         type="target"
         position={Position.Top}
         id="pwr-top"
-        style={{ ...handleStyle('power', selected), left: '30%' }}
-      />
-      <Handle
-        type="source"
-        position={Position.Top}
-        id="fb-top"
-        style={{ ...handleStyle('feedback', selected), left: '70%' }}
+        style={{ ...handleStyle('power', selected), left: '50%' }}
       />
 
-      {/* Right edge — network out (source) + safety out (source) */}
+      {/* Right edge — network out (source) + wired out (source) */}
       <Handle
         type="source"
         position={Position.Right}
@@ -64,25 +58,19 @@ export function NodeHandles({ selected }: { selected?: boolean }) {
       <Handle
         type="source"
         position={Position.Right}
-        id="safe-right"
-        style={{ ...handleStyle('safety', selected), top: '70%' }}
+        id="wired-right"
+        style={{ ...handleStyle('feedback', selected), top: '65%' }}
       />
 
-      {/* Bottom edge — power out (source) + feedback in (target) */}
+      {/* Bottom edge — power out (source) */}
       <Handle
         type="source"
         position={Position.Bottom}
         id="pwr-bottom"
-        style={{ ...handleStyle('power', selected), left: '30%' }}
-      />
-      <Handle
-        type="target"
-        position={Position.Bottom}
-        id="fb-bottom"
-        style={{ ...handleStyle('feedback', selected), left: '70%' }}
+        style={{ ...handleStyle('power', selected), left: '50%' }}
       />
 
-      {/* Left edge — network in (target) + safety in (target) */}
+      {/* Left edge — network in (target) + wired in (target) */}
       <Handle
         type="target"
         position={Position.Left}
@@ -92,8 +80,8 @@ export function NodeHandles({ selected }: { selected?: boolean }) {
       <Handle
         type="target"
         position={Position.Left}
-        id="safe-left"
-        style={{ ...handleStyle('safety', selected), top: '70%' }}
+        id="wired-left"
+        style={{ ...handleStyle('feedback', selected), top: '65%' }}
       />
     </>
   );
