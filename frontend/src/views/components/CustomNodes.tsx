@@ -40,48 +40,46 @@ function handleStyle(category: HandleCategory, selected?: boolean): CSSPropertie
 export function NodeHandles({ selected }: { selected?: boolean }) {
   return (
     <>
-      {/* Top edge — power in (target) */}
+      {/* Top edge — Power connection (merged src/tgt) */}
       <Handle
         type="target"
         position={Position.Top}
-        id="pwr-top"
+        id="pwr-tgt"
+        style={{ ...handleStyle('power', selected), left: '50%' }}
+      />
+      <Handle
+        type="source"
+        position={Position.Top}
+        id="pwr-src"
         style={{ ...handleStyle('power', selected), left: '50%' }}
       />
 
-      {/* Right edge — network out (source) + wired out (source) */}
+      {/* Right edge — Bus/Network connection (merged src/tgt) */}
+      <Handle
+        type="target"
+        position={Position.Right}
+        id="net-tgt"
+        style={{ ...handleStyle('network', selected), top: '50%' }}
+      />
       <Handle
         type="source"
         position={Position.Right}
-        id="net-right"
-        style={{ ...handleStyle('network', selected), top: '35%' }}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="wired-right"
-        style={{ ...handleStyle('feedback', selected), top: '65%' }}
+        id="net-src"
+        style={{ ...handleStyle('network', selected), top: '50%' }}
       />
 
-      {/* Bottom edge — power out (source) */}
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="pwr-bottom"
-        style={{ ...handleStyle('power', selected), left: '50%' }}
-      />
-
-      {/* Left edge — network in (target) + wired in (target) */}
+      {/* Left edge — Hardwired/Safety/Feedback connection (merged src/tgt) */}
       <Handle
         type="target"
         position={Position.Left}
-        id="net-left"
-        style={{ ...handleStyle('network', selected), top: '35%' }}
+        id="wired-tgt"
+        style={{ ...handleStyle('feedback', selected), top: '50%' }}
       />
       <Handle
-        type="target"
+        type="source"
         position={Position.Left}
-        id="wired-left"
-        style={{ ...handleStyle('feedback', selected), top: '65%' }}
+        id="wired-src"
+        style={{ ...handleStyle('feedback', selected), top: '50%' }}
       />
     </>
   );
@@ -121,41 +119,28 @@ export function PLCNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
     <Box sx={nodeContainerSx(180)}>
       <NodeHandles selected={selected} />
-      <Box
-        sx={{
-          height: 120,
-          width: 150,
-          bgcolor: '#262626',
-          border: 2,
-          borderColor: selected ? 'primary.main' : 'rgba(99,102,241,0.5)',
-          borderRadius: 4,
-          display: 'flex',
-          overflow: 'hidden',
-          transition: 'all 200ms',
-          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
-        }}
-      >
-        {/* Left panel - LEDs */}
-        <Box sx={{ width: '33%', height: '100%', borderRight: 1, borderColor: '#404040', bgcolor: '#171717', p: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <Box sx={{ display: 'flex', gap: 0.5 }}>
-            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#10b981', boxShadow: '0 0 8px #10b981' }} />
-          </Box>
-          <Box sx={{ display: 'flex', gap: 0.5 }}>
-            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#f43f5e' }} />
-          </Box>
-        </Box>
-        {/* IO strips */}
-        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', bgcolor: '#404040', px: 0.5, py: 0.5 }}>
-          {[...Array(8)].map((_, i) => (
-            <Box key={i} sx={{ flex: 1, bgcolor: '#262626', borderRadius: '2px' }} />
-          ))}
-        </Box>
-        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', bgcolor: '#404040', px: 0.5, py: 0.5, borderLeft: 1, borderColor: '#525252' }}>
-          {[...Array(8)].map((_, i) => (
-            <Box key={i} sx={{ flex: 1, bgcolor: '#262626', borderRadius: '2px' }} />
-          ))}
-        </Box>
-      </Box>
+      <svg width="150" height="120" viewBox="0 0 150 120" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))' }}>
+        {/* Main Body */}
+        <rect x="2" y="2" width="146" height="116" rx="6" fill="#1e1e1e" stroke={selected ? '#818cf8' : '#334155'} strokeWidth="3" />
+        {/* CPU Logo Area */}
+        <rect x="10" y="10" width="40" height="100" rx="3" fill="#111827" stroke="#4b5563" strokeWidth="1" />
+        <text x="30" y="30" textAnchor="middle" fill="#818cf8" fontSize="8" fontWeight="bold">CPU</text>
+        {/* CPU Status LED */}
+        <circle cx="30" cy="50" r="3" fill="#10b981" />
+        <circle cx="30" cy="62" r="3" fill="#ef4444" />
+        {/* IO Channels Grid */}
+        <rect x="60" y="10" width="36" height="100" rx="2" fill="#2d3748" />
+        <rect x="104" y="10" width="36" height="100" rx="2" fill="#2d3748" />
+        {/* Terminal Block Simulator Lines */}
+        {Array.from({ length: 8 }).map((_, i) => (
+          <g key={i}>
+            <line x1="64" y1={18 + i * 12} x2="92" y2={18 + i * 12} stroke="#4a5568" strokeWidth="2" />
+            <line x1="108" y1={18 + i * 12} x2="136" y2={18 + i * 12} stroke="#4a5568" strokeWidth="2" />
+            {/* Active channel indicator */}
+            {i % 3 === 0 && <circle cx="86" cy={18 + i * 12} r="2" fill="#10b981" />}
+          </g>
+        ))}
+      </svg>
       <Typography sx={nodeLabelSx(selected)}>{data.label}</Typography>
     </Box>
   );
@@ -168,48 +153,19 @@ export function HMINode({ data, selected }: { data: any; selected?: boolean }) {
   return (
     <Box sx={nodeContainerSx(180)}>
       <NodeHandles selected={selected} />
-      <Box
-        sx={{
-          height: 120,
-          width: 160,
-          bgcolor: '#0a0a0a',
-          border: 4,
-          borderColor: selected ? 'primary.main' : '#404040',
-          borderRadius: '1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          p: 1,
-          transition: 'all 200ms',
-          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
-        }}
-      >
-        <Box
-          sx={{
-            width: '100%',
-            height: '100%',
-            bgcolor: 'rgba(38,38,38,0.8)',
-            border: 1,
-            borderColor: selected ? 'rgba(99,102,241,0.5)' : '#404040',
-            borderRadius: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Box
-            component="svg"
-            width={32}
-            height={32}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke={selected ? '#a5b4fc' : '#818cf8'}
-            strokeWidth="2"
-          >
-            <path d="M11 11V7a2 2 0 012-2v0a2 2 0 012 2v2M15 11v-1a2 2 0 012-2v0a2 2 0 012 2v4a6 6 0 01-6 6h-2a6 6 0 01-6-6v-5a2 2 0 012-2h0a2 2 0 012 2v3" />
-          </Box>
-        </Box>
-      </Box>
+      <svg width="160" height="120" viewBox="0 0 160 120" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))' }}>
+        <rect x="2" y="2" width="156" height="116" rx="12" fill="#0f172a" stroke={selected ? '#818cf8' : '#334155'} strokeWidth="4" />
+        {/* Screen area */}
+        <rect x="12" y="12" width="136" height="96" rx="4" fill="#1e293b" stroke="#475569" strokeWidth="2" />
+        {/* Graphic content */}
+        <path d="M30 70 L60 40 L90 55 L130 30" fill="none" stroke="#60a5fa" strokeWidth="2.5" />
+        <circle cx="30" cy="70" r="3.5" fill="#3b82f6" />
+        <circle cx="60" cy="40" r="3.5" fill="#3b82f6" />
+        <circle cx="90" cy="55" r="3.5" fill="#3b82f6" />
+        <circle cx="130" cy="30" r="3.5" fill="#3b82f6" />
+        {/* Bottom brand logo line */}
+        <line x1="60" y1="112" x2="100" y2="112" stroke="#475569" strokeWidth="3" strokeLinecap="round" />
+      </svg>
       <Typography sx={nodeLabelSx(selected)}>{data.label}</Typography>
     </Box>
   );
@@ -222,82 +178,26 @@ export function IONode({ data, selected }: { data: any; selected?: boolean }) {
   return (
     <Box sx={nodeContainerSx(180)}>
       <NodeHandles selected={selected} />
-      <Box
-        sx={{
-          height: 120,
-          width: 140,
-          bgcolor: '#262626',
-          border: 2,
-          borderColor: selected ? 'primary.main' : '#404040',
-          borderRadius: 4,
-          display: 'flex',
-          overflow: 'hidden',
-          transition: 'all 200ms',
-          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
-        }}
-      >
-        {/* Side indicator strip */}
-        <Box
-          sx={{
-            width: 32,
-            height: '100%',
-            bgcolor: 'rgba(245,158,11,0.9)',
-            borderRight: 1,
-            borderColor: selected ? 'primary.main' : '#404040',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 0.5,
-            alignItems: 'center',
-            py: 1.5,
-          }}
-        >
-          <Box
-            sx={{
-              width: 16,
-              height: 16,
-              bgcolor: '#171717',
-              borderRadius: '50%',
-              border: 2,
-              borderColor: selected ? 'primary.main' : 'rgba(252,211,77,0.5)',
-            }}
-          />
-        </Box>
-        {/* IO channel grid */}
-        <Box
-          sx={{
-            flex: 1,
-            height: '100%',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '2px',
-            p: 0.5,
-            bgcolor: '#404040',
-          }}
-        >
-          {[...Array(32)].map((_, i) => (
-            <Box
-              key={i}
-              sx={{
-                width: '100%',
-                height: '100%',
-                borderRadius: '2px',
-                bgcolor:
-                  i % 5 === 0
-                    ? 'rgba(16,185,129,0.8)'
-                    : i % 7 === 0
-                      ? 'rgba(244,63,94,0.8)'
-                      : '#262626',
-                boxShadow:
-                  i % 5 === 0
-                    ? '0 0 4px #10b981'
-                    : i % 7 === 0
-                      ? '0 0 4px #f43f5e'
-                      : 'none',
-              }}
-            />
-          ))}
-        </Box>
-      </Box>
+      <svg width="140" height="120" viewBox="0 0 140 120" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))' }}>
+        <rect x="2" y="2" width="136" height="116" rx="4" fill="#1e1e1e" stroke={selected ? '#818cf8' : '#334155'} strokeWidth="2" />
+        {/* Active side indicator */}
+        <rect x="2" y="2" width="30" height="116" rx="2" fill="#fb923c" />
+        <circle cx="17" cy="18" r="4" fill="#0f172a" />
+        <circle cx="17" cy="18" r="2" fill="#fb923c" />
+        {/* Grid points */}
+        {Array.from({ length: 16 }).map((_, i) => {
+          const x = 44 + (i % 4) * 22;
+          const y = 20 + Math.floor(i / 4) * 26;
+          const isGreen = i % 5 === 0;
+          const isRed = i % 7 === 0 && !isGreen;
+          return (
+            <g key={i}>
+              <rect x={x} y={y} width="16" height="16" rx="2" fill="#2d3748" />
+              <circle cx={x + 8} cy={y + 8} r="3" fill={isGreen ? '#10b981' : isRed ? '#f43f5e' : '#1a202c'} />
+            </g>
+          );
+        })}
+      </svg>
       <Typography sx={nodeLabelSx(selected)}>{data.label}</Typography>
     </Box>
   );
@@ -310,47 +210,21 @@ export function VFDNode({ data, selected }: { data: any; selected?: boolean }) {
   return (
     <Box sx={nodeContainerSx(120)}>
       <NodeHandles selected={selected} />
-      <Box
-        sx={{
-          height: 130,
-          width: 80,
-          bgcolor: '#262626',
-          border: 2,
-          borderColor: selected ? 'primary.main' : '#404040',
-          borderRadius: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          p: 1,
-          transition: 'all 200ms',
-          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
-        }}
-      >
-        <Box sx={{ width: '100%', height: 24, bgcolor: '#0a0a0a', borderTopLeftRadius: 8, borderTopRightRadius: 8, mb: 1 }} />
-        <Box
-          sx={{
-            width: '100%',
-            height: 32,
-            bgcolor: 'rgba(5,46,22,0.5)',
-            border: 1,
-            borderColor: 'rgba(16,185,129,0.3)',
-            mb: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 10,
-            color: '#34d399',
-            fontFamily: '"JetBrains Mono", monospace',
-            borderRadius: '2px',
-          }}
-        >
-          50.0Hz
-        </Box>
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, width: '100%', px: 1 }}>
-          <Box sx={{ height: 12, bgcolor: 'rgba(244,63,94,0.8)', borderRadius: 999 }} />
-          <Box sx={{ height: 12, bgcolor: 'rgba(16,185,129,0.8)', borderRadius: 999 }} />
-        </Box>
-      </Box>
+      <svg width="90" height="130" viewBox="0 0 90 130" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))' }}>
+        <rect x="2" y="2" width="86" height="126" rx="6" fill="#171717" stroke={selected ? '#818cf8' : '#404040'} strokeWidth="2.5" />
+        {/* Heat sink top block */}
+        <rect x="10" y="10" width="70" height="20" rx="3" fill="#0a0a0a" />
+        {/* LED Segment Display Area */}
+        <rect x="10" y="38" width="70" height="34" rx="2" fill="#052e16" stroke="#16a34a" strokeWidth="1" />
+        <text x="45" y="60" textAnchor="middle" fill="#34d399" fontSize="12" fontWeight="bold" fontFamily="monospace">50.0</text>
+        <text x="72" y="48" fill="#34d399" fontSize="6">Hz</text>
+        {/* Knobs & Buttons */}
+        <circle cx="26" cy="94" r="8" fill="#262626" stroke="#404040" strokeWidth="1.5" />
+        <circle cx="26" cy="94" r="2" fill="#f43f5e" />
+        {/* Start/Stop Button */}
+        <rect x="50" y="86" width="28" height="10" rx="1" fill="#10b981" />
+        <rect x="50" y="102" width="28" height="10" rx="1" fill="#ef4444" />
+      </svg>
       <Typography sx={nodeLabelSx(selected)}>{data.label}</Typography>
     </Box>
   );
@@ -363,99 +237,19 @@ export function ServoNode({ data, selected }: { data: any; selected?: boolean })
   return (
     <Box sx={nodeContainerSx(160)}>
       <NodeHandles selected={selected} />
-      <Box
-        sx={{
-          height: 110,
-          width: 140,
-          bgcolor: '#262626',
-          border: 2,
-          borderColor: selected ? 'primary.main' : 'rgba(6,182,212,0.5)',
-          borderRadius: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 0.5,
-          p: 1.5,
-          transition: 'all 200ms',
-          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
-        }}
-      >
-        <Box
-          sx={{
-            width: '100%',
-            height: 28,
-            bgcolor: '#0a0a0a',
-            borderRadius: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 10,
-            color: '#22d3ee',
-            fontFamily: '"JetBrains Mono", monospace',
-            letterSpacing: '0.05em',
-          }}
-        >
-          SERVO
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
-          <Box
-            sx={{
-              flex: 1,
-              height: 40,
-              bgcolor: '#171717',
-              borderRadius: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '2px',
-            }}
-          >
-            <Box sx={{ width: 32, height: 4, bgcolor: 'rgba(6,182,212,0.6)', borderRadius: 999 }} />
-            <Box sx={{ width: 32, height: 4, bgcolor: 'rgba(6,182,212,0.4)', borderRadius: 999 }} />
-            <Box sx={{ width: 32, height: 4, bgcolor: 'rgba(6,182,212,0.2)', borderRadius: 999 }} />
-          </Box>
-          <Box
-            sx={{
-              width: 32,
-              height: 40,
-              bgcolor: '#171717',
-              borderRadius: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Box
-              sx={{
-                width: 20,
-                height: 20,
-                borderRadius: '50%',
-                border: 2,
-                borderColor: 'rgba(6,182,212,0.6)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  bgcolor: '#06b6d4',
-                  animation: 'servo-pulse 2s infinite',
-                  '@keyframes servo-pulse': {
-                    '0%, 100%': { opacity: 1 },
-                    '50%': { opacity: 0.4 },
-                  },
-                }}
-              />
-            </Box>
-          </Box>
-        </Box>
-      </Box>
+      <svg width="140" height="110" viewBox="0 0 140 110" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))' }}>
+        <rect x="2" y="2" width="136" height="106" rx="4" fill="#262626" stroke={selected ? '#818cf8' : '#06b6d4'} strokeWidth="2.5" />
+        <rect x="10" y="10" width="120" height="28" rx="2" fill="#0a0a0a" />
+        <text x="70" y="28" textAnchor="middle" fill="#22d3ee" fontSize="10" fontWeight="bold" fontFamily="monospace" letterSpacing="2">SERVO</text>
+        {/* Encoder Connector and Motor Drive Shaft Symbol */}
+        <rect x="15" y="48" width="60" height="46" rx="2" fill="#171717" />
+        {Array.from({ length: 3 }).map((_, i) => (
+          <line key={i} x1="25" y1={58 + i * 10} x2="65" y2={58 + i * 10} stroke="#22d3ee" strokeWidth="3" opacity={0.8 - i * 0.2} />
+        ))}
+        {/* Pulsing indicator */}
+        <circle cx="105" cy="71" r="14" fill="#171717" stroke="#0891b2" strokeWidth="1.5" />
+        <circle cx="105" cy="71" r="5" fill="#06b6d4" />
+      </svg>
       <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#22d3ee' : 'text.secondary' }}>{data.label}</Typography>
     </Box>
   );
@@ -468,47 +262,18 @@ export function PowerNode({ data, selected }: { data: any; selected?: boolean })
   return (
     <Box sx={nodeContainerSx(140)}>
       <NodeHandles selected={selected} />
-      <Box
-        sx={{
-          height: 90,
-          width: 120,
-          bgcolor: '#262626',
-          border: 2,
-          borderColor: selected ? 'primary.main' : 'rgba(245,158,11,0.5)',
-          borderRadius: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          gap: 0.75,
-          p: 1,
-          transition: 'all 200ms',
-          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 0.5 }}>
-          <Typography sx={{ fontSize: 9, fontWeight: 700, color: '#fbbf24', fontFamily: '"JetBrains Mono", monospace' }}>
-            24V
-          </Typography>
-          <Typography sx={{ fontSize: 9, fontWeight: 700, color: '#fbbf24', fontFamily: '"JetBrains Mono", monospace' }}>
-            10A
-          </Typography>
-        </Box>
-        <Box sx={{ flex: 1, bgcolor: '#171717', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Box sx={{ width: 48, height: 8, bgcolor: 'rgba(245,158,11,0.4)', borderRadius: 999, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography sx={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', fontSize: 8, color: 'rgba(251,191,36,0.6)', fontFamily: '"JetBrains Mono", monospace' }}>
-              ~
-            </Typography>
-          </Box>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-          <Box sx={{ width: 16, height: 16, borderRadius: '50%', bgcolor: 'rgba(245,158,11,0.2)', border: 1, borderColor: 'rgba(245,158,11,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#f59e0b' }} />
-          </Box>
-          <Box sx={{ width: 16, height: 16, borderRadius: '50%', bgcolor: 'rgba(16,185,129,0.2)', border: 1, borderColor: 'rgba(16,185,129,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10b981' }} />
-          </Box>
-        </Box>
-      </Box>
+      <svg width="120" height="90" viewBox="0 0 120 90" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))' }}>
+        <rect x="2" y="2" width="116" height="86" rx="3" fill="#1e1e1e" stroke={selected ? '#818cf8' : '#fb923c'} strokeWidth="2" />
+        {/* Output label */}
+        <text x="14" y="20" fill="#f59e0b" fontSize="8" fontWeight="bold" fontFamily="monospace">24V</text>
+        <text x="106" y="20" textAnchor="end" fill="#f59e0b" fontSize="8" fontWeight="bold" fontFamily="monospace">10A</text>
+        {/* Power Waves */}
+        <rect x="14" y="32" width="92" height="24" rx="2" fill="#0a0a0a" />
+        <path d="M25 44 C 35 34, 45 54, 55 44 C 65 34, 75 54, 85 44 L 95 44" fill="none" stroke="rgba(245,158,11,0.5)" strokeWidth="2" />
+        {/* Indicators */}
+        <circle cx="45" cy="72" r="5" fill="#f59e0b" />
+        <circle cx="75" cy="72" r="5" fill="#10b981" />
+      </svg>
       <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#fbbf24' : 'text.secondary' }}>{data.label}</Typography>
     </Box>
   );
@@ -521,38 +286,22 @@ export function SwitchNode({ data, selected }: { data: any; selected?: boolean }
   return (
     <Box sx={nodeContainerSx(160)}>
       <NodeHandles selected={selected} />
-      <Box
-        sx={{
-          height: 100,
-          width: 145,
-          bgcolor: '#262626',
-          border: 2,
-          borderColor: selected ? 'primary.main' : 'rgba(59,130,246,0.5)',
-          borderRadius: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          p: 1,
-          gap: 0.5,
-          transition: 'all 200ms',
-          boxShadow: selected ? '0 0 20px rgba(99,102,241,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
-        }}
-      >
-        <Typography sx={{ fontSize: 9, fontWeight: 700, color: '#60a5fa', fontFamily: '"JetBrains Mono", monospace', textAlign: 'center', letterSpacing: '0.05em' }}>
-          ETH SWITCH
-        </Typography>
-        <Box sx={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.5 }}>
-          {[...Array(8)].map((_, i) => (
-            <Box key={i} sx={{ bgcolor: '#171717', borderRadius: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', pb: 0.25 }}>
-              <Box sx={{ width: 8, height: 6, borderRadius: '2px', bgcolor: i < 4 ? 'rgba(16,185,129,0.7)' : '#525252' }} />
-            </Box>
-          ))}
-        </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 0.5 }}>
-          {[...Array(4)].map((_, i) => (
-            <Box key={i} sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: i < 2 ? '#10b981' : '#f59e0b' }} />
-          ))}
-        </Box>
-      </Box>
+      <svg width="145" height="100" viewBox="0 0 145 100" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))' }}>
+        <rect x="2" y="2" width="141" height="96" rx="4" fill="#1e1e1e" stroke={selected ? '#818cf8' : '#3b82f6'} strokeWidth="2.5" />
+        <text x="72" y="16" textAnchor="middle" fill="#60a5fa" fontSize="8" fontWeight="bold" fontFamily="monospace" letterSpacing="1">ETH SWITCH</text>
+        {/* RJ45 Ports */}
+        {Array.from({ length: 8 }).map((_, i) => {
+          const x = 12 + (i % 4) * 32;
+          const y = i < 4 ? 26 : 56;
+          const isActive = i < 5;
+          return (
+            <g key={i}>
+              <rect x={x} y={y} width="24" height="22" rx="2" fill="#0a0a0a" stroke="#404040" strokeWidth="1" />
+              <rect x={x + 6} y={y + 14} width="12" height="8" fill={isActive ? '#10b981' : '#525252'} />
+            </g>
+          );
+        })}
+      </svg>
       <Typography sx={{ ...nodeLabelSx(selected), color: selected ? '#60a5fa' : 'text.secondary' }}>{data.label}</Typography>
     </Box>
   );

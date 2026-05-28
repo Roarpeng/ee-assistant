@@ -187,10 +187,10 @@ def _pick_handles(
     strict connection rules and causes silent connection failures.
     """
     if category == "power":
-        return ("pwr-bottom", "pwr-top")
+        return ("pwr-src", "pwr-tgt")
     if category in ("feedback", "safety", "hardwired"):
-        return ("wired-right", "wired-left")
-    return ("net-right", "net-left")
+        return ("wired-src", "wired-tgt")
+    return ("net-src", "net-tgt")
 
 
 def _normalize_edge(raw: dict, fallback_idx: int) -> dict | None:

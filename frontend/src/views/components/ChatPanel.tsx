@@ -200,14 +200,14 @@ export function ChatPanel() {
           const tNode = nodes.find((n) => n.id === target);
           if (sNode && tNode) {
             if (category === 'power') {
-              sourceHandle = 'pwr-bottom';
-              targetHandle = 'pwr-top';
+              sourceHandle = 'pwr-src';
+              targetHandle = 'pwr-tgt';
             } else if (category === 'network') {
-              sourceHandle = 'net-right';
-              targetHandle = 'net-left';
+              sourceHandle = 'net-src';
+              targetHandle = 'net-tgt';
             } else {
-              sourceHandle = 'wired-right';
-              targetHandle = 'wired-left';
+              sourceHandle = 'wired-src';
+              targetHandle = 'wired-tgt';
             }
           }
         }

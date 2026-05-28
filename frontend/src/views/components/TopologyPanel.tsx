@@ -659,14 +659,14 @@ export function TopologyPanel() {
         let targetHandle: string | undefined;
 
         if (category === 'power') {
-          sourceHandle = 'pwr-bottom';
-          targetHandle = 'pwr-top';
+          sourceHandle = 'pwr-src';
+          targetHandle = 'pwr-tgt';
         } else if (category === 'network') {
-          sourceHandle = 'net-right';
-          targetHandle = 'net-left';
+          sourceHandle = 'net-src';
+          targetHandle = 'net-tgt';
         } else {
-          sourceHandle = 'wired-right';
-          targetHandle = 'wired-left';
+          sourceHandle = 'wired-src';
+          targetHandle = 'wired-tgt';
         }
 
         updatedEdges.push({ id: edge.id, sourceHandle, targetHandle });

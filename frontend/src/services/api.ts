@@ -152,9 +152,9 @@ export const api = {
   },
 
   // Topology to Code sync
-  updateCodeFromTopology: (projectId: string, topology: { nodes: any[]; edges: any[] }) => {
+  updateCodeFromTopology: async (projectId: string, topology: { nodes: any[]; edges: any[] }) => {
     const settings = getSettings();
-    return request<{ sclCode: string }>(`/projects/${projectId}/codegen`, {
+    const projectData = await request<any>(`/projects/${projectId}/codegen`, {
       method: 'POST',
       body: JSON.stringify({
         project_id: projectId,
@@ -169,6 +169,14 @@ export const api = {
         },
       }),
     });
+
+    let sclCode = '';
+    if (projectData && Array.isArray(projectData.code_modules)) {
+      sclCode = projectData.code_modules
+        .map((m: any) => `// ${m.name} (${m.module_type})\n${m.code}`)
+        .join('\n\n');
+    }
+    return { sclCode };
   },
 
   // Knowledge
