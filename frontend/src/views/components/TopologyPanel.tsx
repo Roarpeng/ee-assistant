@@ -424,7 +424,7 @@ export function TopologyPanel() {
         data: { label, status: 'ok' },
       })
     );
-    setTimeout(handleSyncToCode, 500);
+    setTimeout(handleSaveTopologyDraft, 500);
   };
 
   const handleNodesChange = useCallback(
@@ -478,14 +478,14 @@ export function TopologyPanel() {
         .map((c: any) => c.id);
       if (removedIds.length > 0) {
         removeUserNodes(removedIds);
-        setTimeout(handleSyncToCode, 500);
+        setTimeout(handleSaveTopologyDraft, 500);
       }
 
       if (changes.some((c: any) => c.type === 'add')) {
-        setTimeout(handleSyncToCode, 500);
+        setTimeout(handleSaveTopologyDraft, 500);
       }
     },
-    [onNodesChange, handleSyncToCode, project]
+    [onNodesChange, handleSaveTopologyDraft, project]
   );
 
   const handleEdgesChange = useCallback(
@@ -500,10 +500,10 @@ export function TopologyPanel() {
       }
 
       if (changes.some((c: any) => c.type === 'remove' || c.type === 'add')) {
-        setTimeout(handleSyncToCode, 500);
+        setTimeout(handleSaveTopologyDraft, 500);
       }
     },
-    [onEdgesChange, handleSyncToCode]
+    [onEdgesChange, handleSaveTopologyDraft]
   );
 
   const onConnect = useCallback(
@@ -554,9 +554,9 @@ export function TopologyPanel() {
       });
 
       setEdges((eds) => addEdge(newEdge, eds));
-      setTimeout(handleSyncToCode, 500);
+      setTimeout(handleSaveTopologyDraft, 500);
     },
-    [setEdges, handleSyncToCode]
+    [setEdges, handleSaveTopologyDraft]
   );
 
   const handleExportSvg = useCallback(async () => {
@@ -673,11 +673,11 @@ export function TopologyPanel() {
       });
 
       updateTopologyLayout(updatedNodes, updatedEdges);
-      setTimeout(handleSyncToCode, 500);
+      setTimeout(handleSaveTopologyDraft, 500);
     } catch (err) {
       console.error('Failed to align auto-gravity layout:', err);
     }
-  }, [handleSyncToCode]);
+  }, [handleSaveTopologyDraft]);
 
   handleAutoGravityLayoutRef.current = handleAutoGravityLayout;
 
@@ -708,9 +708,9 @@ export function TopologyPanel() {
           };
         })
       );
-      setTimeout(handleSyncToCode, 500);
+      setTimeout(handleSaveTopologyDraft, 500);
     },
-    [setEdges, handleSyncToCode]
+    [setEdges, handleSaveTopologyDraft]
   );
 
   const onNodeContextMenu = useCallback(
