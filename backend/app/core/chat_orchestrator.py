@@ -139,6 +139,8 @@ class ChatOrchestrator:
             "project_id": project_id,
         }
         if topology_data:
+            from app.core.graph.agents import normalize_topology
+            topology_data = normalize_topology(topology_data)
             payload["topology"] = topology_data
             yield {"step": f"已识别 {len(topology_data.get('nodes', []))} 个拓扑节点。", "node": "topology_sync"}
 

@@ -147,6 +147,21 @@ START → RequirementsAgent (自然语言→结构化需求)
 - SelectionSupervisor 执行双路检索: Qdrant 语义搜索 + 图邻居 BFS 遍历
 - 新旧端点共存: `/analyze` (v1 串行) 和 `/analyze-v2` (LangGraph DAG)
 
+## 拓扑图生成管线 (Topology Generation Pipeline)
+
+LLM 驱动的 5 层工业拓扑图自动生成, 支持自动连线 + 回退兜底:
+
+```
+BOM + 需求 → LLM generate_topology_json() → _normalize_topology() → 自动连线器 → lint 校验
+                          ↓ (失败时)
+                    _build_fallback_topology() (规则兜底)
+```
+
+**5 层工业层级:** L0 Power → L1 Protection → L2 Control → L3 Execution → L4 Feedback
+**双类型体系:** KG 体系 (plc_cpu/io_module) vs 拓扑体系 (plc/io) — `component_normalizer.py` 提供双通道归一化
+**自动连线规则:** 按类型匹配连接 (estop→safety_relay, safety_door→safety_plc, plc→signal_light 等)
+**前端渲染:** ReactFlow + Yjs CRDT 协同编辑, 21 种自定义节点组件, 5 层自动重力对齐
+
 ## 元件知识图谱 (Component Knowledge Graph)
 
 在 PostgreSQL 中建模电气元件及其关系:
@@ -257,6 +272,28 @@ FK 级联: `component_nodes.source_doc_id` / `component_edges.source_doc_id` →
 | GET/POST | `/api/projects` | 列表/创建项目 |
 | GET/DELETE | `/api/projects/{id}` | 详情/删除项目 |
 | POST | `/api/projects/{id}/analyze` | v1 需求分析 (串行) |
+| POST | `/api/projects/{id}/analyze-v2` | ★ v2 LangGraph 全流程 |
+| POST | `/api/projects/{id}/schematic` | 原理图生成 |
+| POST | `/api/projects/{id}/codegen` | ST 代码生成 |
+| GET/POST | `/api/knowledge/docs` | 知识库列表/上传 (PDF/TXT/MD/HTML/DOCX,异步+阶段推送) |
+| POST | `/api/knowledge/urls` | **★ 单页 URL 抓取入库** `{url, manufacturer?, ...}` |
+| DELETE | `/api/knowledge/docs` | **批量删除** `{ids: [...]}` |
+| DELETE | `/api/knowledge/docs/{id}` | 删除单个文档 |
+| POST | `/api/knowledge/docs/{id}/retry` | **重试失败文档** |
+| POST | `/api/knowledge/search` | 知识库搜索 |
+| GET | `/api/tasks` | 后台任务状态 (运行中/最近完成/失败) |
+| WS | `/ws/projects/{id}` | 项目分析实时进度 |
+| WS | `/ws/knowledge/docs/{id}` | **知识库文档处理进度** |
+
+## graphify
+
+This project has a graphify knowledge graph at graphify-out/.
+
+Rules:
+- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
+- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
+- For cross-module "how does X relate to Y" questions, prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse the graph's EXTRACTED + INFERRED edges instead of scanning files
+- After modifying code files in this session, run `graphify update .` to keep the graph current (AST-only, no API cost)
 | POST | `/api/projects/{id}/analyze-v2` | ★ v2 LangGraph 全流程 |
 | POST | `/api/projects/{id}/schematic` | 原理图生成 |
 | POST | `/api/projects/{id}/codegen` | ST 代码生成 |

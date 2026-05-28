@@ -98,6 +98,19 @@ def _normalize_node(raw: dict, fallback_idx: int) -> dict | None:
     )
     label = _LABEL_SANITIZE.sub(" ", str(label))[:60]
 
+    # 二次特征过滤：结合 label 特征强力纠正 LLM 对关键安全/信号器件类型的误判
+    label_lower = label.lower()
+    if any(k in label_lower for k in ("急停", "e-stop", "estop", "stop", "emergency")):
+        node_type = "estop"
+    elif any(k in label_lower for k in ("安全门", "门开关", "门锁", "door")):
+        node_type = "safety_door"
+    elif any(k in label_lower for k in ("安全继电器", "safety relay", "安全继")):
+        node_type = "safety_relay"
+    elif any(k in label_lower for k in ("三色灯", "信号灯", "塔灯", "指示灯", "light", "beacon", "lamp")):
+        node_type = "signal_light"
+    elif any(k in label_lower for k in ("安全plc", "safety plc")):
+        node_type = "safety_plc"
+
     # coordinates may live at top level OR inside `position`
     pos = raw.get("position") if isinstance(raw.get("position"), dict) else {}
     try:
@@ -167,27 +180,19 @@ def _pick_handles(
     src_pos: tuple[float, float],
     tgt_pos: tuple[float, float],
 ) -> tuple[str, str]:
-    sx, sy = src_pos
-    tx, ty = tgt_pos
+    """Select the correct physical handles based on connection category.
+
+    Key rule: The source node's handle MUST be type='source', and the target node's
+    handle MUST be type='target'. Swapping them based on coordinates violates ReactFlow's
+    strict connection rules and causes silent connection failures.
+    """
     if category == "power":
-        # main flow is top→bottom; if the LLM emits bottom→top, flip but stay
-        # on the orange power channel
-        if sy <= ty:
-            return ("pwr-bottom", "pwr-top")
-        return ("pwr-top", "pwr-bottom")
+        return ("pwr-bottom", "pwr-top")
     if category == "feedback":
-        # feedback returns bottom→top (sensor under controller climbs back up)
-        if sy >= ty:
-            return ("fb-top", "fb-bottom")
-        return ("fb-bottom", "fb-top")
+        return ("fb-top", "fb-bottom")
     if category == "safety":
-        if sx <= tx:
-            return ("safe-right", "safe-left")
-        return ("safe-left", "safe-right")
-    # network — left→right signal chain
-    if sx <= tx:
-        return ("net-right", "net-left")
-    return ("net-left", "net-right")
+        return ("safe-right", "safe-left")
+    return ("net-right", "net-left")
 
 
 def _normalize_edge(raw: dict, fallback_idx: int) -> dict | None:
@@ -219,7 +224,7 @@ def _normalize_edge(raw: dict, fallback_idx: int) -> dict | None:
     }
 
 
-def _normalize_topology(topology: dict | None) -> dict:
+def normalize_topology(topology: dict | None) -> dict:
     """Apply node + edge normalization, prune dangling edges, attach handles."""
     if not isinstance(topology, dict):
         return {"nodes": [], "edges": []}
@@ -1017,7 +1022,7 @@ async def schematic_generator(state: AnalysisState) -> dict:
         log.warning("[schematic_generator] topology call failed, using fallback: %r", topology_result)
         topology = _build_fallback_topology(bom_list)
     else:
-        topology = _normalize_topology(topology_result)
+        topology = normalize_topology(topology_result)
         if not topology["nodes"]:
             topology = _build_fallback_topology(bom_list)
 
