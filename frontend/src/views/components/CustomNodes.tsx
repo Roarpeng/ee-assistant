@@ -1,7 +1,6 @@
-// @ts-nocheck
 import type { CSSProperties } from 'react';
 import { Box, Typography } from '@mui/material';
-import { Handle, Position } from 'reactflow';
+import { Handle, Position, type NodeProps } from 'reactflow';
 
 import plcSvg from '../../assets/symbols/plc.svg';
 import hmiSvg from '../../assets/symbols/hmi.svg';
@@ -134,7 +133,7 @@ function nodeLabelSx(selected?: boolean) {
   };
 }
 
-export function GenericSymbolNode({ data, selected, typeKey }: { data: any; selected?: boolean; typeKey: string }) {
+export function GenericSymbolNode({ data, selected, typeKey }: { data: { label?: string }; selected?: boolean; typeKey: string }) {
   const imgSrc = SYMBOL_MAP[typeKey] || defaultSvg;
   return (
     <Box sx={nodeContainerSx(100)}>
@@ -163,24 +162,24 @@ export function GenericSymbolNode({ data, selected, typeKey }: { data: any; sele
 }
 
 // 通用代理组件，取代之前的繁杂绘图代码
-export const PLCNode = (props: any) => <GenericSymbolNode {...props} typeKey="plc" />;
-export const HMINode = (props: any) => <GenericSymbolNode {...props} typeKey="hmi" />;
-export const IONode = (props: any) => <GenericSymbolNode {...props} typeKey="io" />;
-export const VFDNode = (props: any) => <GenericSymbolNode {...props} typeKey="vfd" />;
-export const ServoNode = (props: any) => <GenericSymbolNode {...props} typeKey="servo" />;
-export const PowerNode = (props: any) => <GenericSymbolNode {...props} typeKey="power" />;
-export const SwitchNode = (props: any) => <GenericSymbolNode {...props} typeKey="switch" />;
-export const SafetyRelayNode = (props: any) => <GenericSymbolNode {...props} typeKey="safety_relay" />;
-export const SensorNode = (props: any) => <GenericSymbolNode {...props} typeKey="sensor" />;
-export const IPCNode = (props: any) => <GenericSymbolNode {...props} typeKey="ipc" />;
-export const SafetyPLCNode = (props: any) => <GenericSymbolNode {...props} typeKey="safety_plc" />;
-export const CircuitBreakerNode = (props: any) => <GenericSymbolNode {...props} typeKey="circuit_breaker" />;
-export const ContactorNode = (props: any) => <GenericSymbolNode {...props} typeKey="contactor" />;
-export const RelayNode = (props: any) => <GenericSymbolNode {...props} typeKey="relay" />;
-export const EStopNode = (props: any) => <GenericSymbolNode {...props} typeKey="estop" />;
-export const TransformerNode = (props: any) => <GenericSymbolNode {...props} typeKey="transformer" />;
-export const FuseNode = (props: any) => <GenericSymbolNode {...props} typeKey="fuse" />;
-export const SignalLightNode = (props: any) => <GenericSymbolNode {...props} typeKey="signal_light" />;
-export const IndicatorLightNode = (props: any) => <GenericSymbolNode {...props} typeKey="indicator_light" />;
-export const DisconnectNode = (props: any) => <GenericSymbolNode {...props} typeKey="disconnect" />;
-export const SafetyDoorNode = (props: any) => <GenericSymbolNode {...props} typeKey="switch" />;
+export const PLCNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="plc" />;
+export const HMINode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="hmi" />;
+export const IONode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="io" />;
+export const VFDNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="vfd" />;
+export const ServoNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="servo" />;
+export const PowerNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="power" />;
+export const SwitchNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="switch" />;
+export const SafetyRelayNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="safety_relay" />;
+export const SensorNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="sensor" />;
+export const IPCNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="ipc" />;
+export const SafetyPLCNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="safety_plc" />;
+export const CircuitBreakerNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="circuit_breaker" />;
+export const ContactorNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="contactor" />;
+export const RelayNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="relay" />;
+export const EStopNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="estop" />;
+export const TransformerNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="transformer" />;
+export const FuseNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="fuse" />;
+export const SignalLightNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="signal_light" />;
+export const IndicatorLightNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="indicator_light" />;
+export const DisconnectNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="disconnect" />;
+export const SafetyDoorNode = (props: NodeProps) => <GenericSymbolNode {...props} typeKey="switch" />;

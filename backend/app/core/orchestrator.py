@@ -20,7 +20,7 @@ _NODE_MESSAGES: dict[str, str] = {
     "selection_supervisor": "组件选型（RAG检索）完成。",
     "rule_validator": "设计规则验证完成。",
     "schematic_generator": "系统拓扑结构生成完成。",
-    "code_generator": "PLC ST 代码生成完成。",
+    "code_generator": "EPlan XML 生成完成。",
     "final_review_agent": "最终审查完成。",
     "commissioning_generator": "调试步骤生成完成。",
     "wiring_generator": "I/O 接线表生成完成。",

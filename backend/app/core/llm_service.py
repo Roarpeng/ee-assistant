@@ -401,7 +401,7 @@ Provide standard EPlan XML format:
 Output ONLY the valid XML file, no markdown fences, no explanations. Write precise terminal numbers based on standard industrial electrical design."""
 
         user = f"Requirements: {json.dumps(requirement, ensure_ascii=False)}\nBOM: {json.dumps(bom, ensure_ascii=False)}\nTopology: {json.dumps(topology, ensure_ascii=False)}"
-        text = await self.chat(system, user, max_tokens=4096)
+        text = await self.chat(system, user, max_tokens=8192)
         return text.strip().removeprefix("```xml").removesuffix("```").strip()
 
     async def generate_title_and_tags(self, user_input: str) -> dict:
@@ -420,13 +420,27 @@ Output valid JSON only, no markdown wrapping: {"title": "...", "topic_tags": [".
             log.warning("generate_title_and_tags failed: %s", e)
             return {"title": None, "topic_tags": None}
 
-    async def recommend_components(self, categories: list[str], machine_type: str = "") -> list[dict]:
-        """LLM-based component recommendation when RAG knowledge base has no matches."""
+    async def recommend_components(
+        self,
+        categories: list[str],
+        machine_type: str = "",
+        episodic_context: str | None = None,
+    ) -> list[dict]:
+        """LLM-based component recommendation when RAG knowledge base has no matches.
+
+        When `episodic_context` is provided (M3 memory flywheel), the org's
+        recent project experience is injected so recommendations align
+        with historically-confirmed selections.
+        """
         import json
+        memory_block = (
+            f"\nThe organization's recent project experience (prefer manufacturers/models consistent with it when reasonable):\n{episodic_context}\n"
+            if episodic_context else ""
+        )
         system = f"""You are an industrial automation component selection expert.
 The knowledge base has NO matching components for these categories: {json.dumps(categories)}.
 Machine type context: {machine_type or 'general industrial automation'}.
-
+{memory_block}
 Recommend suitable real-world components for each category. For each component provide:
 - category: the category name
 - manufacturer: real manufacturer (Siemens, ABB, Schneider, Mitsubishi, Omron, etc.)

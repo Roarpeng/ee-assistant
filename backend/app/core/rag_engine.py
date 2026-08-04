@@ -5,7 +5,7 @@ import asyncio
 import uuid
 import httpx
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchAny, MatchValue
+from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchAny, MatchValue, MatchText, TextIndexParams
 from openai import AsyncOpenAI
 
 from app.config import settings
@@ -105,8 +105,29 @@ class RAGEngine:
                     collection_name=self.collection,
                     vectors_config=VectorParams(size=self._embed_dim, distance=Distance.COSINE),
                 )
+            # Best-effort full-text index on `content` — enables the lexical
+            # channel (exact MLFB / order-number hits) for unified search.
+            # Failure only degrades lexical search; vector path is unaffected.
+            await self._ensure_fulltext_index()
         except Exception as e:
             log.warning("Failed to connect to Qdrant or initialize collection: %s. RAG engine vector path will be disabled.", e)
+
+    async def _ensure_fulltext_index(self):
+        """Create a word-tokenized full-text index on `content` (idempotent)."""
+        try:
+            await self.qdrant.create_payload_index(
+                collection_name=self.collection,
+                field_name="content",
+                field_schema=TextIndexParams(
+                    type="text",
+                    tokenizer="word",
+                    min_token_len=2,
+                    max_token_len=30,
+                    lowercase=True,
+                ),
+            )
+        except Exception as e:
+            log.warning("Full-text payload index unavailable (lexical search disabled): %s", e)
 
 
     async def embed(self, texts: list[str], batch_size: int = 20) -> list[list[float]]:
@@ -335,6 +356,52 @@ class RAGEngine:
             collection_name=self.collection,
             points_selector=Filter(must=[FieldCondition(key="doc_id", match=MatchValue(value=doc_id))]),
         )
+
+    async def lexical_search(
+        self,
+        query: str,
+        top_k: int = 5,
+        category_filter: list[str] | None = None,
+        manufacturer_filter: str | None = None,
+    ) -> list[dict]:
+        """Lexical (full-text) channel — exact token hits over chunk text.
+
+        Complements vector search for structured identifiers (MLFBs like
+        ``6ES7215-1AG40-0XB0``, order numbers) where embedding recall is
+        weak. Best-effort: any failure (e.g. full-text index missing on an
+        older collection) degrades to an empty list, never raises.
+        Positional decay scores keep results displayable; RRF consumers
+        should rely on list order only.
+        """
+        if not (query and query.strip()):
+            return []
+        must_conditions = [FieldCondition(key="content", match=MatchText(text=query))]
+        if category_filter:
+            must_conditions.append(FieldCondition(key="category_tags", match=MatchAny(any=category_filter)))
+        if manufacturer_filter:
+            must_conditions.append(FieldCondition(key="manufacturer", match=MatchAny(any=[manufacturer_filter])))
+        try:
+            points, _ = await self.qdrant.scroll(
+                collection_name=self.collection,
+                scroll_filter=Filter(must=must_conditions),
+                limit=max(1, min(top_k, 50)),
+                with_payload=True,
+                with_vectors=False,
+            )
+            return [
+                {
+                    "id": p.id,
+                    "content": (p.payload or {}).get("content", ""),
+                    "score": round(1.0 / (i + 1), 4),
+                    "metadata": p.payload or {},
+                    "source": "lexical",
+                    "lexical": True,
+                }
+                for i, p in enumerate(points)
+            ]
+        except Exception as e:
+            log.debug("lexical_search unavailable (degraded to empty): %s", e)
+            return []
 
     async def hybrid_search(
         self,

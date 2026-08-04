@@ -28,6 +28,7 @@ Valid relation types:
 - ALTERNATIVE_TO: one model can replace another
 - MOUNTS_ON: component mounts on rail/panel (specify: DIN35, panel, etc.)
 - CONTROLS: output module controls an actuator (specify: contactor coil, valve, etc.)
+- REQUIRES_ACCESSORY: component requires an accessory to function (specify accessory: power cable, encoder cable, mounting bracket, terminal block, etc.)
 
 For each relationship, return:
 - source: exact component name (must match one from the list below)

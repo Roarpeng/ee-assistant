@@ -17,6 +17,7 @@ import { AccountTree as AccountTreeIcon } from '@mui/icons-material';
 import { useStore } from '../../models/store';
 import type { NodeData, EdgeData } from '../../models/store';
 import { t } from '../../services/i18n';
+import { computeGravityPositions } from '../../utils/gravityLayout';
 import {
   PLCNode,
   HMINode,
@@ -580,63 +581,13 @@ export function TopologyPanel() {
       const snap = getTopologySnapshot();
       if (snap.nodes.length === 0) return;
 
-      const nodeLayers: { node: NodeData; layer: number }[] = snap.nodes.map((n) => {
-        const type = String(n.type ?? '').toLowerCase();
-        let layer = 3; // 默认 Layer 3 Execution
-
-        if (type === 'power' || type === 'transformer') {
-          layer = 0;
-        } else if (
-          type === 'circuit_breaker' || type === 'fuse' || type === 'disconnect' ||
-          type === 'estop' || type === 'safety_relay' || type === 'safety_door'
-        ) {
-          layer = 1;
-        } else if (
-          type === 'plc' || type === 'safety_plc' || type === 'ipc' ||
-          type === 'switch' || type === 'hmi'
-        ) {
-          layer = 2;
-        } else if (
-          type === 'vfd' || type === 'servo' || type === 'contactor' ||
-          type === 'relay' || type === 'io' || type === 'signal_light' ||
-          type === 'indicator_light'
-        ) {
-          layer = 3;
-        } else if (type === 'sensor') {
-          layer = 4;
-        }
-        return { node: n, layer };
-      });
-
-      const layerYMap = [60, 160, 300, 460, 600];
-      const nodesByLayer: NodeData[][] = [[], [], [], [], []];
-      
-      nodeLayers.forEach((item) => {
-        nodesByLayer[item.layer].push(item.node);
-      });
-      
-      nodesByLayer.forEach((arr) => {
-        arr.sort((a, b) => a.x - b.x);
-      });
-
-      const updatedNodes: { id: string; x: number; y: number }[] = [];
-      const updatedPositions = new Map<string, { x: number; y: number }>();
-
-      const minSpacing = 240;
-
-      nodesByLayer.forEach((arr, layerIdx) => {
-        const N = arr.length;
-        if (N === 0) return;
-        const y = layerYMap[layerIdx];
-        const layerWidth = (N - 1) * minSpacing;
-        const startX = 600 - layerWidth / 2;
-
-        arr.forEach((node, idx) => {
-          const x = N === 1 ? 600 : startX + idx * minSpacing;
-          updatedNodes.push({ id: node.id, x, y });
-          updatedPositions.set(node.id, { x, y });
-        });
-      });
+      // Delegate to the unified 5-level gravity layout (single source
+      // of truth shared with yjsStore and ChatPanel normalization).
+      const positions = computeGravityPositions(snap.nodes);
+      const updatedNodes: { id: string; x: number; y: number }[] = positions;
+      const updatedPositions = new Map<string, { x: number; y: number }>(
+        positions.map((p) => [p.id, { x: p.x, y: p.y }]),
+      );
 
       const updatedEdges: { id: string; sourceHandle?: string; targetHandle?: string }[] = [];
 

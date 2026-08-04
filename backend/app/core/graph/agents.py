@@ -693,6 +693,32 @@ async def fanout_selection_supervisor(state: AnalysisState) -> dict:
                     "alternatives": [],
                 })
 
+    # M3 Track B: pull the top-3 most-recent episodes for this org and
+    # render them into a Chinese summary block. Retrieved BEFORE the LLM
+    # fallback so the context can be injected into the recommendation
+    # prompt (memory flywheel: retrieval → decision). Best-effort:
+    # never block selection on a retrieval hiccup.
+    episodic_context: str | None = None
+    org_id = state.get("org_id")
+    if org_id:
+        try:
+            from app.core.episode_retrieval import (
+                format_for_prompt,
+                top_episodes,
+            )
+            machine_type = (state.get("requirement") or {}).get("machine_type")
+            async with async_session() as session:
+                eps = await top_episodes(
+                    session,
+                    org_id=org_id,
+                    machine_type=machine_type,
+                    limit=3,
+                )
+            block = format_for_prompt(eps)
+            episodic_context = block or None
+        except Exception:
+            episodic_context = None
+
     # LLM fallback for categories with no RAG results at all (neither graph nor vector).
     # These are clearly marked as non-authoritative — the zero-hallucination rule
     # applies to graph misses (NOT_FOUND), not to empty knowledge bases.
@@ -701,6 +727,7 @@ async def fanout_selection_supervisor(state: AnalysisState) -> dict:
             llm_bom = await llm_service.recommend_components(
                 categories=llm_fallback_categories,
                 machine_type=state.get("requirement", {}).get("machine_type", ""),
+                episodic_context=episodic_context,
             )
             for item in llm_bom:
                 item["confidence"] = "llm"
@@ -730,34 +757,6 @@ async def fanout_selection_supervisor(state: AnalysisState) -> dict:
     # historically-preferred manufacturer/model pairs surface first. Runs
     # last so it sees the final list, including LLM-fallback rows.
     all_bom = await _apply_org_bias(all_bom, state.get("org_id"))
-
-    # M3 Track B: pull the top-3 most-recent episodes for this org and
-    # render them into a Chinese summary block. The supervisor here
-    # doesn't currently assemble a free-text LLM prompt (its LLM call
-    # is the structured `llm_service.recommend_components(...)` above),
-    # so we surface the context via `state["episodic_context"]` for the
-    # frontend memory panel + any future prompt assembly. Best-effort:
-    # never block selection on a retrieval hiccup.
-    episodic_context: str | None = None
-    org_id = state.get("org_id")
-    if org_id:
-        try:
-            from app.core.episode_retrieval import (
-                format_for_prompt,
-                top_episodes,
-            )
-            machine_type = (state.get("requirement") or {}).get("machine_type")
-            async with async_session() as session:
-                eps = await top_episodes(
-                    session,
-                    org_id=org_id,
-                    machine_type=machine_type,
-                    limit=3,
-                )
-            block = format_for_prompt(eps)
-            episodic_context = block or None
-        except Exception:
-            episodic_context = None
 
     return {
         "bom_items": all_bom,
@@ -1029,7 +1028,11 @@ async def schematic_generator(state: AnalysisState) -> dict:
 
 async def code_generator(state: AnalysisState) -> dict:
     """Generate EPlan XML wiring schematic from BOM and topology.
-    On LLM failure, emit a fallback XML placeholder to ensure workflow continues.
+
+    Deterministic-first: serialize BOM + wiring table locally, then let
+    the LLM enhance it; the LLM output only replaces the deterministic
+    version when it passes structural validation. Both paths failing
+    emits a fallback placeholder so the workflow always continues.
     """
     existing = state.get("st_modules")
     if existing and len(existing) > 0:
@@ -1037,35 +1040,45 @@ async def code_generator(state: AnalysisState) -> dict:
     bom = state.get("bom_items", [])
     req = state.get("requirement", {})
     topology = state.get("topology", {})
+
+    from app.core.eplan_xml import build_eplan_xml_deterministic, validate_eplan_xml
+    from app.core.wiring_generator import generate_wiring
+
+    io_list = req.get("io_list", []) if isinstance(req, dict) else []
+    wiring_rows = generate_wiring(bom, io_list)
+    deterministic_xml = build_eplan_xml_deterministic(bom, wiring_rows, req)
+
+    xml_content = deterministic_xml
     try:
-        xml_content = await llm_service.generate_eplan_xml(req, bom, topology)
-        st_modules = [
-            {
-                "name": "EPlan_Wiring.xml",
-                "module_type": "XML",
-                "code": xml_content,
-                "sort_order": 0,
-            }
-        ]
+        llm_xml = await llm_service.generate_eplan_xml(req, bom, topology)
+        ok, reason = validate_eplan_xml(llm_xml)
+        if ok:
+            xml_content = llm_xml
+        else:
+            log.warning("[code_generator] LLM EPlan XML failed validation (%s), using deterministic output", reason)
     except Exception as e:
-        log.warning("[code_generator] EPlan XML code LLM call failed, emitting fallback: %r", e)
-        fallback_xml = (
+        log.warning("[code_generator] EPlan XML LLM call failed, using deterministic output: %r", e)
+
+    if not validate_eplan_xml(xml_content)[0]:  # defensive: deterministic output is always valid
+        log.error("[code_generator] deterministic EPlan XML unexpectedly invalid, emitting placeholder")
+        xml_content = (
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
             "<EplanToXmlSchema>\n"
             "  <Project Name=\"EE_Assistant_Project\">\n"
-            "    <!-- EPlan XML generation failed due to a transient LLM/network error. -->\n"
+            "    <!-- EPlan XML generation failed due to a transient error. -->\n"
             "    <!-- Please click Retry or check backend logs. -->\n"
             "  </Project>\n"
             "</EplanToXmlSchema>\n"
         )
-        st_modules = [
-            {
-                "name": "EPlan_Wiring.xml",
-                "module_type": "XML",
-                "code": fallback_xml,
-                "sort_order": 0,
-            }
-        ]
+
+    st_modules = [
+        {
+            "name": "EPlan_Wiring.xml",
+            "module_type": "XML",
+            "code": xml_content,
+            "sort_order": 0,
+        }
+    ]
     return {"st_modules": st_modules}
 
 

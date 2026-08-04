@@ -8,6 +8,12 @@ from app.db.models import Project, Requirement, STModule
 from app.core.schemas import CodegenInput, ProjectOut, ProgressEvent
 from app.core.llm_service import llm_service
 from app.core.orchestrator import orchestrator
+from app.core.eplan_xml import build_eplan_xml_deterministic, validate_eplan_xml
+from app.core.wiring_generator import generate_wiring
+
+import logging
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/projects", tags=["codegen"])
 
@@ -30,7 +36,7 @@ async def generate_code(project_id: str, body: CodegenInput, session: AsyncSessi
     project.status = "generating_code"
     await session.commit()
 
-    await orchestrator.push(project_id, ProgressEvent(stage="generating_code", message="Generating ST code..."))
+    await orchestrator.push(project_id, ProgressEvent(stage="generating_code", message="Generating EPlan XML..."))
 
     req_data = {
         "machine_type": project.requirement.machine_type,
@@ -39,14 +45,31 @@ async def generate_code(project_id: str, body: CodegenInput, session: AsyncSessi
         "io_list": [{"tag": io.tag, "type": io.io_type, "description": io.description} for io in project.requirement.io_items],
         "control_logic": [lr.description for lr in project.requirement.logic_rules],
     }
-    bom_list = [{"category": i.category, "manufacturer": i.manufacturer, "model": i.model} for i in project.bom_items]
+    bom_list = [{
+        "category": i.category,
+        "manufacturer": i.manufacturer,
+        "model": i.model,
+        "order_number": (i.specifications or {}).get("order_number", ""),
+    } for i in project.bom_items]
 
     # Get latest topology for detailed wiring mapping
     from app.api.topology import _get_latest_topology
     latest_topo = await _get_latest_topology(project_id, session)
     topology = latest_topo.snapshot if latest_topo else {}
 
-    xml_content = await llm_service.generate_eplan_xml(req_data, bom_list, topology)
+    # Deterministic-first: local serialization always produces valid XML;
+    # the LLM output only replaces it when it passes validation.
+    wiring_rows = generate_wiring(bom_list, req_data["io_list"])
+    xml_content = build_eplan_xml_deterministic(bom_list, wiring_rows, req_data)
+    try:
+        llm_xml = await llm_service.generate_eplan_xml(req_data, bom_list, topology)
+        ok, reason = validate_eplan_xml(llm_xml)
+        if ok:
+            xml_content = llm_xml
+        else:
+            log.warning("[codegen] LLM EPlan XML failed validation (%s), using deterministic output", reason)
+    except Exception as e:
+        log.warning("[codegen] EPlan XML LLM call failed, using deterministic output: %r", e)
 
     for old in project.code_modules:
         await session.delete(old)

@@ -30,7 +30,7 @@ export type EdgeData = {
   source: string;
   target: string;
   protocol: string;
-  // Optional handle IDs from CustomNodes.tsx (8 named handles per node).
+  // Optional handle IDs from CustomNodes.tsx (3 physical positions × src/tgt = 6 handles per node).
   // When absent, TopologyPanel falls back to a protocol→side classifier.
   sourceHandle?: string;
   targetHandle?: string;

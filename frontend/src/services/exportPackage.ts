@@ -40,6 +40,11 @@ export async function downloadProjectZip(payload: ProjectExportPayload): Promise
   }
   if (payload.sclCode.trim()) {
     zip.file('program.scl', payload.sclCode);
+    // The code artifact is now EPlan XML; when the payload carries an
+    // EplanToXmlSchema document, also ship it under its real filename.
+    if (payload.sclCode.includes('<EplanToXmlSchema')) {
+      zip.file('EPlan_Wiring.xml', payload.sclCode);
+    }
   }
   if (payload.mermaidCode.trim()) {
     zip.file('schematic.mmd', payload.mermaidCode);
@@ -86,7 +91,8 @@ export async function downloadProjectZip(payload: ProjectExportPayload): Promise
       'Contents:',
       '- bom.xlsx          Bill of materials',
       '- wiring.xlsx       Terminal / I/O wiring list',
-      '- program.scl       PLC structured text (when generated)',
+      '- program.scl       Code artifact text (kept for compatibility)',
+      '- EPlan_Wiring.xml  EPlan XML parts + wiring (when generated)',
       '- schematic.mmd     Mermaid schematic source',
       '- topology.json     Confirmed topology snapshot',
       '- commissioning.md  Commissioning runbook',

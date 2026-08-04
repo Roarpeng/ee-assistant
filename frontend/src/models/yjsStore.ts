@@ -1,6 +1,7 @@
 import * as Y from 'yjs';
 import { WebrtcProvider } from 'y-webrtc';
 import type { NodeData, EdgeData } from './store';
+import { computeGravityPositions } from '../utils/gravityLayout';
 
 // Singleton Yjs document — single source of truth for topology
 const ydoc = new Y.Doc();
@@ -242,54 +243,12 @@ export function applyGravityLayoutToYjs(): void {
   const nodes = yNodes.toArray().map(yMapToNode);
   if (nodes.length === 0) return;
 
-  const nodeLayers = nodes.map((n) => {
-    const type = String(n.type ?? '').toLowerCase();
-    const label = String(n.label ?? '').toLowerCase();
-    let layer = 3;
-
-    if (
-      type.includes('plc') || type.includes('ipc') ||
-      label.includes('plc') || label.includes('控制器') || label.includes('s7-') || label.includes('1200')
-    ) {
-      layer = 0;
-    } else if (
-      type.includes('power') || type.includes('switch') ||
-      label.includes('电源') || label.includes('开关') || label.includes('交换机') || label.includes('qf')
-    ) {
-      layer = 1;
-    } else if (
-      type.includes('vfd') || type.includes('servo') || type.includes('contactor') || type.includes('relay') || type.includes('breaker') ||
-      label.includes('继电器') || label.includes('接触器') || label.includes('断路器') || label.includes('驱动器') || label.includes('变频器') || label.includes('km')
-    ) {
-      layer = 2;
-    }
-    return { node: n, layer };
-  });
-
-  const layerYMap = [60, 240, 420, 600];
-  const nodesByLayer: NodeData[][] = [[], [], [], []];
-  nodeLayers.forEach((item) => {
-    nodesByLayer[item.layer].push(item.node);
-  });
-  nodesByLayer.forEach((arr) => {
-    arr.sort((a, b) => a.x - b.x);
-  });
-
-  const minSpacing = 240;
+  // Delegate classification + positioning to the unified 5-level
+  // gravity layout shared with TopologyPanel and ChatPanel.
   const updatedNodes = new Map<string, { x: number; y: number }>();
-
-  nodesByLayer.forEach((arr, layerIdx) => {
-    const N = arr.length;
-    if (N === 0) return;
-    const y = layerYMap[layerIdx];
-    const layerWidth = (N - 1) * minSpacing;
-    const startX = 600 - layerWidth / 2;
-
-    arr.forEach((node, idx) => {
-      const x = N === 1 ? 600 : startX + idx * minSpacing;
-      updatedNodes.set(node.id, { x, y });
-    });
-  });
+  for (const pos of computeGravityPositions(nodes)) {
+    updatedNodes.set(pos.id, { x: pos.x, y: pos.y });
+  }
 
   // Write computed uniform grid positions back to yNodes
   const nodesArr = yNodes.toArray();

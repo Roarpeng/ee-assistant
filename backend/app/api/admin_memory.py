@@ -9,6 +9,10 @@ Two routes:
   ``require_org`` is the only gate.
 * ``GET /api/orgs/me/memory-reports`` — lists the most-recent reports
   for the calling org, newest first.
+* ``POST /api/admin/memory/reports/{report_id}/apply`` — human-approved
+  write-back: re-matches the report's ``new_rules`` against the
+  component graph and creates inferred ``ALTERNATIVE_TO`` edges.
+  Never runs automatically; the caller must review the report first.
 
 Both endpoints depend on ``EpisodicMemory`` / ``WeeklyMemoryReport``
 being present in ``models.py`` (M3 Track A) and on the ``ReportOut``
@@ -17,12 +21,12 @@ into ``consolidation_service.consolidate``.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.consolidation_service import consolidate
+from app.core.consolidation_service import apply_approved_rules, consolidate
 from app.core.schemas import ReportOut
 from app.db.models import Organization, WeeklyMemoryReport
 from app.db.repository import get_session
@@ -91,3 +95,54 @@ async def list_reports(
         )
     ).scalars().all()
     return list(rows)
+
+
+class ApplyReportOut(BaseModel):
+    """Result of ``POST /api/admin/memory/reports/{report_id}/apply``."""
+
+    report_id: str
+    edges_created: int
+    applied: list[dict] = Field(default_factory=list)
+    skipped: list[dict] = Field(default_factory=list)
+
+
+@router.post(
+    "/api/admin/memory/reports/{report_id}/apply",
+    response_model=ApplyReportOut,
+)
+async def apply_report(
+    report_id: str,
+    org: Organization = Depends(require_org),
+    session: AsyncSession = Depends(get_session),
+) -> ApplyReportOut:
+    """Write an approved report's consolidated rules back to the graph.
+
+    Human-triggered only (memory flywheel: consolidation → sediment).
+    Idempotent: re-applying the same report upserts edges instead of
+    duplicating them.
+    """
+    report = (
+        await session.execute(
+            select(WeeklyMemoryReport).where(
+                WeeklyMemoryReport.id == report_id,
+                WeeklyMemoryReport.org_id == org.id,
+            )
+        )
+    ).scalar()
+    if report is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"memory report {report_id} not found for this org",
+        )
+
+    try:
+        result = await apply_approved_rules(session, report_id)
+    except LookupError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    return ApplyReportOut(
+        report_id=report_id,
+        edges_created=result["edges_created"],
+        applied=result["applied"],
+        skipped=result["skipped"],
+    )

@@ -5,6 +5,7 @@ import type { NodeData, EdgeData } from '../../models/store';
 import { useChatHistory } from '../../hooks/useChatHistory';
 import { api } from '../../services/api';
 import { t } from '../../services/i18n';
+import { computeGravityPositions } from '../../utils/gravityLayout';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -97,39 +98,25 @@ export function ChatPanel() {
   const normalizeTopologyPayload = (raw: any): { nodes: NodeData[]; edges: EdgeData[] } => {
     const nodesIn: any[] = Array.isArray(raw?.nodes) ? raw.nodes : [];
     const nodes: NodeData[] = [];
-    
-    // 1. 预分配所有节点的层级以完成工业重力排序
-    const nodeLayers = new Map<string, { layer: number; index: number }>();
-    const layerCounts = [0, 0, 0, 0]; // 4 个层级的节点计数
 
-    nodesIn.forEach((n, i) => {
-      if (!n || typeof n !== 'object') return;
-      const id = String(n.id ?? `node_${i}`).trim();
-      const type = String(n.type ?? '').toLowerCase();
-      const data = n.data && typeof n.data === 'object' ? n.data : {};
-      const labelRaw = String(n.label ?? data.label ?? '').toLowerCase();
-
-      let layer = 3; // 默认第四层 (现场设备层)
-      if (
-        type.includes('plc') || type.includes('ipc') ||
-        labelRaw.includes('plc') || labelRaw.includes('控制器') || labelRaw.includes('s7-') || labelRaw.includes('1200')
-      ) {
-        layer = 0; // 第一层：控制决策层
-      } else if (
-        type.includes('power') || type.includes('switch') ||
-        labelRaw.includes('电源') || labelRaw.includes('开关') || labelRaw.includes('交换机') || labelRaw.includes('qf')
-      ) {
-        layer = 1; // 第二层：配电与辅助层
-      } else if (
-        type.includes('vfd') || type.includes('servo') || type.includes('contactor') || type.includes('relay') || type.includes('breaker') ||
-        labelRaw.includes('继电器') || labelRaw.includes('接触器') || labelRaw.includes('断路器') || labelRaw.includes('驱动器') || labelRaw.includes('变频器') || labelRaw.includes('km')
-      ) {
-        layer = 2; // 第三层：配电与执行驱动层
-      }
-
-      nodeLayers.set(id, { layer, index: layerCounts[layer] });
-      layerCounts[layer]++;
-    });
+    // 1. Compute unified 5-level gravity fallback positions (shared with
+    //    TopologyPanel and yjsStore) for nodes lacking explicit coordinates.
+    const gravityInputs = nodesIn
+      .map((n, i) => {
+        if (!n || typeof n !== 'object') return null;
+        const data = n.data && typeof n.data === 'object' ? n.data : {};
+        const pos = n.position && typeof n.position === 'object' ? n.position : {};
+        return {
+          id: String(n.id ?? `node_${i}`).trim(),
+          type: String(n.type ?? ''),
+          label: String(n.label ?? data.label ?? ''),
+          x: Number.isFinite(+n.x) ? +n.x : Number.isFinite(+pos.x) ? +pos.x : 0,
+        };
+      })
+      .filter((g): g is NonNullable<typeof g> => !!g && !!g.id);
+    const gravityById = new Map(
+      computeGravityPositions(gravityInputs).map((p) => [p.id, p] as const),
+    );
 
     nodesIn.forEach((n, i) => {
       if (!n || typeof n !== 'object') return;
@@ -143,12 +130,11 @@ export function ChatPanel() {
         [data.manufacturer, data.model].filter(Boolean).join(' ').trim() ??
         '';
       const label = String(labelRaw || (n.type ?? 'NODE')).slice(0, 60);
-      
-      const layout = nodeLayers.get(id) || { layer: 3, index: i };
-      const layerYMap = [60, 220, 380, 540]; // 4 个层级在 Y 轴的像素高度
 
-      const x = Number.isFinite(+n.x) ? +n.x : Number.isFinite(+pos.x) ? +pos.x : 200 + (layout.index * 240);
-      const y = Number.isFinite(+n.y) ? +n.y : Number.isFinite(+pos.y) ? +pos.y : layerYMap[layout.layer];
+      const gravity = gravityById.get(id) ?? { x: 600, y: 460 };
+
+      const x = Number.isFinite(+n.x) ? +n.x : Number.isFinite(+pos.x) ? +pos.x : gravity.x;
+      const y = Number.isFinite(+n.y) ? +n.y : Number.isFinite(+pos.y) ? +pos.y : gravity.y;
 
       nodes.push({
         id,

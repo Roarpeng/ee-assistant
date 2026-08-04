@@ -30,6 +30,7 @@ from app.api.feedback import router as feedback_router
 from app.api.memory_sources import router as memory_sources_router
 from app.api.episodes import router as episodes_router
 from app.api.admin_memory import router as admin_memory_router
+from app.api.search import router as search_router
 from app.middleware.org_auth import org_auth_middleware
 
 
@@ -73,6 +74,7 @@ app.include_router(feedback_router)
 app.include_router(memory_sources_router)
 app.include_router(episodes_router)
 app.include_router(admin_memory_router)
+app.include_router(search_router)
 
 
 @app.get("/api/health")

@@ -19,20 +19,37 @@ _lock = asyncio.Lock()
 
 
 def _pg_conn_str() -> str:
-    """Build a psycopg conninfo from POSTGRES_* env vars.
+    """Build a psycopg conninfo for the LangGraph checkpointer.
 
-    The SQLAlchemy URL is async (postgresql+asyncpg://...); psycopg
-    wants a sync-style conninfo. We re-derive from env so the two
-    paths stay in sync without parsing the SQLAlchemy URL.
-
-    NOTE: The backend container does NOT currently export
-    POSTGRES_USER/PASSWORD/HOST/PORT/DB env vars (only DATABASE_URL),
-    so the defaults here MUST match the actual deployment
-    (ele:ele@postgres:5432/ele) rather than generic placeholders.
+    Resolution order:
+    1. `LANGGRAPH_DATABASE_URL` — explicit override if provided.
+    2. Parse `DATABASE_URL` (the SQLAlchemy async URL, e.g.
+       postgresql+asyncpg://user:pwd@host:5432/db) into a sync-style
+       conninfo, so both paths stay in sync automatically.
+    3. Fall back to POSTGRES_* env vars (generic placeholders only).
     """
-    user = os.getenv("POSTGRES_USER", "ele")
-    pwd = os.getenv("POSTGRES_PASSWORD", "ele")
-    host = os.getenv("POSTGRES_HOST", "postgres")
+    explicit = os.getenv("LANGGRAPH_DATABASE_URL")
+    if explicit:
+        return explicit
+
+    database_url = os.getenv("DATABASE_URL", "")
+    if database_url:
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(database_url)
+            if parsed.hostname:
+                user = parsed.username or ""
+                pwd = parsed.password or ""
+                creds = f"{user}:{pwd}@" if user else ""
+                port = parsed.port or 5432
+                db = (parsed.path or "/").lstrip("/")
+                return f"postgresql://{creds}{parsed.hostname}:{port}/{db}"
+        except (ValueError, AttributeError):
+            pass
+
+    user = os.getenv("POSTGRES_USER", "postgres")
+    pwd = os.getenv("POSTGRES_PASSWORD", "postgres")
+    host = os.getenv("POSTGRES_HOST", "localhost")
     port = os.getenv("POSTGRES_PORT", "5432")
     db = os.getenv("POSTGRES_DB", "ele")
     return f"postgresql://{user}:{pwd}@{host}:{port}/{db}"

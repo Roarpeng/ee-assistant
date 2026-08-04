@@ -17,6 +17,8 @@ Volta uses LangGraph to orchestrate a 12-node DAG (Directed Acyclic Graph) that 
         ▼       ▼       ▼
 category_mapper  safety_assessor  constraint_extractor
         └───────┼───────┘
+                │   (+ title_generator as 4th fan-out,
+                │      also feeding selection_supervisor)
                 ▼
         selection_supervisor
         (Hybrid RAG + Memory Injection)
@@ -201,10 +203,13 @@ Extract all design constraints from requirements.
    - Apply selection_weights bias
    - Rank candidates by combined score
 
-**Scoring Formula:**
-```
-score = 0.4 * vector_similarity + 0.3 * graph_relevance + 0.2 * weight_bias + 0.1 * memory_match
-```
+**Scoring / ranking (actual implementation):**
+
+The two retrieval paths are **hard/soft separated**, not score-fused:
+
+- **Graph path (authoritative):** matched nodes are returned with a constant `score=1.0` and ranked first. Only graph matches may decide order numbers (MLFB). If a node has no order number the state machine returns `NOT_FOUND` + `human_intervention_required=True` (zero-hallucination gate, triggers `interrupt()`).
+- **Vector path (advisory):** Qdrant cosine similarity with `min_score=0.35` cutoff; results are always marked `authoritative=False` and never influence order-number selection.
+- **Org bias (ordering, not scoring):** `_apply_org_bias` stable-sorts candidates by accumulated `selection_weights` (`key=(-weight, original_index)`).
 
 **Example Output:**
 ```json
@@ -440,7 +445,7 @@ END_ORGANIZATION_BLOCK
    - Verify throughput
    - Check accuracy
 
-### 11. final_review
+### 11. final_review_agent
 
 **Purpose:** Generate final summary and recommendations.
 

@@ -7,12 +7,23 @@ asserts the resulting ``WeeklyMemoryReport`` shape.
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.core.consolidation_service import MIN_RULE_OCCURRENCES, consolidate
+from app.core.consolidation_service import (
+    MIN_RULE_OCCURRENCES,
+    apply_approved_rules,
+    consolidate,
+)
 from app.core.decisions_service import record_decision
-from app.db.models import Organization, Project, WeeklyMemoryReport
+from app.db.models import (
+    ComponentEdge,
+    ComponentNode,
+    Organization,
+    Project,
+    WeeklyMemoryReport,
+)
 from app.db.repository import async_session
 from sqlalchemy import select
 
@@ -163,3 +174,124 @@ async def test_consolidate_with_no_decisions_returns_empty_report():
             )
         ).scalars().all()
         assert len(rows) == 1
+
+
+# 4. apply_approved_rules creates inferred edges, idempotently ────────
+async def _seed_component_node(
+    *, name: str, component_type: str, properties: dict | None = None
+) -> str:
+    node_id = str(uuid.uuid4())
+    async with async_session() as session:
+        session.add(
+            ComponentNode(
+                id=node_id,
+                name=name,
+                component_type=component_type,
+                properties=properties or {},
+            )
+        )
+        await session.commit()
+    return node_id
+
+
+async def _make_report_with_rules(org_id: str, rules: list[dict]) -> str:
+    report_id = str(uuid.uuid4())
+    async with async_session() as session:
+        session.add(
+            WeeklyMemoryReport(
+                id=report_id,
+                org_id=org_id,
+                period_start=datetime.now(timezone.utc) - timedelta(days=7),
+                period_end=datetime.now(timezone.utc),
+                new_rules=rules,
+                revisions=[],
+                gaps=[],
+                metrics={"candidate_rules": len(rules)},
+            )
+        )
+        await session.commit()
+    return report_id
+
+
+async def test_apply_approved_rules_creates_inferred_edges_idempotently():
+    org_id = await _make_org("ApplyOrg")
+    # Two graph nodes for the SAME component (extracted from different
+    # docs) plus one non-matching node of the same category.
+    n1 = await _seed_component_node(
+        name="S7-1215C", component_type="PLC_CPU",
+        properties={"manufacturer": "Siemens"},
+    )
+    n2 = await _seed_component_node(
+        name="S7-1215C", component_type="PLC_CPU",
+        properties={"manufacturer": "siemens"},  # case-insensitive match
+    )
+    await _seed_component_node(
+        name="S7-1212C", component_type="PLC_CPU",
+        properties={"manufacturer": "Siemens"},
+    )
+
+    report_id = await _make_report_with_rules(org_id, [
+        {"cat": "PLC_CPU", "manufacturer": "Siemens", "model": "S7-1215C", "occurrences": 4},
+        # No graph node for this tuple → must be skipped + logged
+        {"cat": "VFD", "manufacturer": "ACME", "model": "VFD-9001", "occurrences": 3},
+    ])
+
+    async with async_session() as session:
+        result = await apply_approved_rules(session, report_id)
+
+    assert result["edges_created"] == 1
+    assert len(result["applied"]) == 1
+    assert len(result["skipped"]) == 1
+    assert result["skipped"][0]["model"] == "VFD-9001"
+
+    async with async_session() as session:
+        edges = (
+            await session.execute(
+                select(ComponentEdge).where(ComponentEdge.relation == "ALTERNATIVE_TO")
+            )
+        ).scalars().all()
+        matching = [
+            e for e in edges
+            if {e.source_id, e.target_id} == {n1, n2}
+        ]
+        assert len(matching) == 1
+        edge = matching[0]
+        assert edge.confidence == "inferred"
+        # weight normalized by max occurrences (4/4)
+        assert edge.properties["weight"] == 1.0
+        assert edge.properties["origin"] == "consolidation"
+
+        # skipped rule logged into the report's revisions
+        report = (
+            await session.execute(
+                select(WeeklyMemoryReport).where(WeeklyMemoryReport.id == report_id)
+            )
+        ).scalar()
+        targets = [r.get("target", "") for r in (report.revisions or [])]
+        assert any("VFD/ACME/VFD-9001" in t for t in targets)
+
+    # Second apply → upsert, no duplicate edges
+    async with async_session() as session:
+        result2 = await apply_approved_rules(session, report_id)
+    assert result2["edges_created"] == 1
+
+    async with async_session() as session:
+        edges = (
+            await session.execute(
+                select(ComponentEdge).where(
+                    ComponentEdge.relation == "ALTERNATIVE_TO",
+                    ComponentEdge.source_id.in_([n1, n2]),
+                )
+            )
+        ).scalars().all()
+        matching = [
+            e for e in edges
+            if {e.source_id, e.target_id} == {n1, n2}
+        ]
+        assert len(matching) == 1  # still exactly one edge
+
+
+async def test_apply_approved_rules_unknown_report_raises_lookup_error():
+    async with async_session() as session:
+        with pytest.raises(LookupError):
+            await apply_approved_rules(session, "nonexistent-report-id")

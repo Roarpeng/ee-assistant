@@ -160,3 +160,35 @@ async def test_top_episodes_machine_type_filter_with_fallback():
         )
     fb_summaries = [r.summary for r in fb_rows]
     assert fb_summaries == ["slider-B", "slider-A"]
+
+
+# 4. Fallback selection prompt carries episodic context (flywheel) ─────
+async def test_recommend_components_fallback_prompt_includes_episodic_context(monkeypatch):
+    """The LLM-fallback recommendation path must inject the retrieved
+    episodic context into the system prompt (retrieval → decision)."""
+    from app.core.llm_service import llm_service
+
+    captured: dict[str, str] = {}
+
+    async def fake_chat(system: str, user: str, **kwargs):
+        captured["system"] = system
+        captured["user"] = user
+        return '[]'
+
+    monkeypatch.setattr(llm_service, "chat", fake_chat)
+
+    episode_block = (
+        "[历史相似项目经验]\n1. 上季度输送线项目使用 Siemens S7-1215C\n请参考以上经验做选型。"
+    )
+    await llm_service.recommend_components(
+        categories=["PLC_CPU"],
+        machine_type="conveyor",
+        episodic_context=episode_block,
+    )
+    assert "organization's recent project experience" in captured["system"]
+    assert "Siemens S7-1215C" in captured["system"]
+
+    # Without episodic context the memory block must be absent.
+    captured.clear()
+    await llm_service.recommend_components(categories=["PLC_CPU"])
+    assert "organization's recent project experience" not in captured["system"]
