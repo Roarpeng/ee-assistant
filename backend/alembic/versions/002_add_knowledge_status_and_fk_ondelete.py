@@ -4,6 +4,10 @@ Revision ID: 002
 Revises: a4d5b3e39d74
 Create Date: 2026-05-04 12:00:00.000000
 
+Dialect note: the FK constraint rewrite is PostgreSQL-only (dynamic
+constraint-name lookup via pg_constraint). On other dialects (SQLite
+dev/test) the DO block is skipped — SQLite cannot ALTER constraints and
+its FKs are only enforced behind PRAGMA foreign_keys anyway.
 """
 from typing import Sequence, Union
 
@@ -17,6 +21,10 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+def _is_postgresql() -> bool:
+    return op.get_bind().dialect.name == "postgresql"
+
+
 def upgrade() -> None:
     # Add status column with default "ready" for existing documents
     op.add_column(
@@ -26,6 +34,8 @@ def upgrade() -> None:
 
     # Drop existing FK constraints and re-create with ON DELETE SET NULL
     # Use dynamic constraint name lookup (PostgreSQL)
+    if not _is_postgresql():
+        return
     op.execute("""
         DO $$
         DECLARE
@@ -63,7 +73,8 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # Drop and re-create FK constraints without ON DELETE
-    op.execute("""
+    if _is_postgresql():
+        op.execute("""
         DO $$
         DECLARE
             cn_name text;

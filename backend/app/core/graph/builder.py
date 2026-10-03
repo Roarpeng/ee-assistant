@@ -102,6 +102,8 @@ async def build_graph():
             final_review_agent,
             commissioning_generator,
             wiring_generator,
+            schematic_ir_builder,
+            schematic_reviewer,
         )
 
         workflow.add_node("requirements_agent", requirements_agent)
@@ -116,6 +118,8 @@ async def build_graph():
         workflow.add_node("final_review_agent", final_review_agent)
         workflow.add_node("commissioning_generator", commissioning_generator)
         workflow.add_node("wiring_generator", wiring_generator)
+        workflow.add_node("schematic_ir_builder", schematic_ir_builder)
+        workflow.add_node("schematic_reviewer", schematic_reviewer)
 
         workflow.set_entry_point("requirements_agent")
         workflow.add_edge("requirements_agent", "category_mapper")
@@ -132,11 +136,16 @@ async def build_graph():
         workflow.add_edge("rule_validator", "final_review_agent")
         workflow.add_edge("rule_validator", "commissioning_generator")
         workflow.add_edge("rule_validator", "wiring_generator")
-        workflow.add_edge("schematic_generator", END)
+        # Circuit-level IR depends on the topology schematic_generator just
+        # emitted, so it chains after it instead of joining the fanout;
+        # the LLM reviewer then gates on the deterministic IR.
+        workflow.add_edge("schematic_generator", "schematic_ir_builder")
+        workflow.add_edge("schematic_ir_builder", "schematic_reviewer")
         workflow.add_edge("code_generator", END)
         workflow.add_edge("final_review_agent", END)
         workflow.add_edge("commissioning_generator", END)
         workflow.add_edge("wiring_generator", END)
+        workflow.add_edge("schematic_reviewer", END)
 
         _compiled_graph = workflow.compile(checkpointer=_checkpointer)
         return _compiled_graph

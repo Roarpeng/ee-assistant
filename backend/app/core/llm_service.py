@@ -404,6 +404,52 @@ Output ONLY the valid XML file, no markdown fences, no explanations. Write preci
         text = await self.chat(system, user, max_tokens=8192)
         return text.strip().removeprefix("```xml").removesuffix("```").strip()
 
+    async def review_schematic_ir(self, pages_summary: list, logic_rules: list) -> dict:
+        """LLM review of deterministic schematic pages (schematic_reviewer node).
+
+        The LLM never decides connectivity. It returns notes and — only
+        when logic rules are supplied — ladder rung drafts that must pass
+        the IR validator upstream before adoption. Returns a safe empty
+        review on any failure so the deterministic pages always survive.
+        """
+        import json
+        system = """You are a senior electrical engineer reviewing control-circuit schematics
+(IEC 60617 / GB/T 4728 ladder diagrams) generated for an industrial cabinet.
+
+You receive a compact summary: pages (kind + device tags) and optional control-logic rules.
+Respond with STRICT JSON only:
+{
+  "notes": ["≤5 short review notes in Chinese, e.g. 缺少电机过载保护指示、线圈回路无熔断器"],
+  "missing_interlocks": ["short descriptions of missing interlocks"],
+  "rungs": [
+    {"series": [{"ref_hint": "KM1", "type": "NO", "label": "运行反馈"}, ...],
+     "coil": {"ref_hint": "KA1"}}
+  ]
+}
+Rung rules (only when logic rules are given; map ONE rung per rule):
+- series: 1-5 contacts; type must be "NO" or "NC"
+- ref_hint: an existing device tag (KM1/KF1/SB1...) or a NEW aux relay "KA1"
+- handle 启保停/联锁/指示 patterns only
+- NEVER touch the safety chain (e-stop / safety relay is fixed by the deterministic generator)
+Output valid JSON only, no markdown wrapping."""
+        user = (
+            f"Pages: {json.dumps(pages_summary, ensure_ascii=False)}\n"
+            f"Logic rules: {json.dumps(logic_rules, ensure_ascii=False)}"
+        )
+        for attempt in range(2):
+            try:
+                text = await self.chat(
+                    system,
+                    user + ("\n\nOutput ONLY valid JSON." if attempt > 0 else ""),
+                    max_tokens=2048,
+                )
+                result = self._parse_json(text)
+                if isinstance(result, dict):
+                    return result
+            except Exception as e:
+                log.warning("review_schematic_ir attempt %d failed: %s", attempt + 1, e)
+        return {"notes": [], "missing_interlocks": [], "rungs": []}
+
     async def generate_title_and_tags(self, user_input: str) -> dict:
         """根据用户自然语言输入生成 2-6 字中文标题和 2-4 个话题标签。"""
         system = """你是工业自动化领域的项目命名专家。

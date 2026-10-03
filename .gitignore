@@ -35,3 +35,6 @@ graphflow.config.json
 
 # Local scratch space
 tmp/
+minio.license
+.zcodeignore
+graphflow-out/

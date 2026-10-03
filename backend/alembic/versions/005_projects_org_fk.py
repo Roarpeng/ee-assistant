@@ -14,16 +14,20 @@ depends_on = None
 
 def upgrade() -> None:
     op.add_column("projects", sa.Column("org_id", sa.String(36), nullable=True, index=True))
-    op.create_foreign_key(
-        "fk_projects_org",
-        "projects",
-        "organizations",
-        ["org_id"],
-        ["id"],
-        ondelete="SET NULL",
-    )
+    # SQLite cannot ALTER a table to add a constraint; dev/test DBs get the
+    # FK from create_all instead (PRAGMA foreign_keys governs enforcement).
+    if op.get_bind().dialect.name == "postgresql":
+        op.create_foreign_key(
+            "fk_projects_org",
+            "projects",
+            "organizations",
+            ["org_id"],
+            ["id"],
+            ondelete="SET NULL",
+        )
 
 
 def downgrade() -> None:
-    op.drop_constraint("fk_projects_org", "projects", type_="foreignkey")
+    if op.get_bind().dialect.name == "postgresql":
+        op.drop_constraint("fk_projects_org", "projects", type_="foreignkey")
     op.drop_column("projects", "org_id")

@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 import json as json_module
 
 from app.db.repository import get_session
-from app.db.models import Project, Requirement, IOItem, LogicRule, BOMItem, Schematic, STModule
+from app.db.models import Project, Requirement, IOItem, LogicRule, BOMItem, Schematic, STModule, SchematicPageRow
 from app.core.schemas import ChatInput, RequirementInput, ProjectOut, ResumeRequest
 from app.core.chat_orchestrator import chat_orchestrator
 from app.core.orchestrator import orchestrator
@@ -141,6 +141,32 @@ async def save_to_db(
                 sort_order=i,
             )
         )
+
+    # ── circuit-level schematic pages (deterministic + LLM-reviewed) ──
+    # Pages arrive as plain dicts (graph state); render each to SVG here so
+    # the stored rows are immediately consumable by the panel/exporter.
+    pages_payload = payload.get("schematic_pages") or []
+    if pages_payload:
+        from app.core.schematic.ir import SchematicDocument, SchematicPage as SchematicPageIR
+        from app.core.schematic.svg_render import render_page
+
+        await session.execute(
+            delete(SchematicPageRow).where(SchematicPageRow.project_id == project_id)
+        )
+        try:
+            ir_pages = [SchematicPageIR.model_validate(p) for p in pages_payload if isinstance(p, dict)]
+            doc = SchematicDocument(project_id=project_id, pages=ir_pages)
+            for page in ir_pages:
+                session.add(SchematicPageRow(
+                    project_id=project_id,
+                    page_no=page.page_no,
+                    kind=page.kind,
+                    title_zh=page.title_zh,
+                    ir=page.model_dump(mode="json"),
+                    svg=render_page(page, doc),
+                ))
+        except Exception as e:  # noqa: BLE001 — schematic persistence is best-effort
+            log.warning("schematic_pages persistence failed (non-fatal): %r", e)
 
     await session.execute(
         update(Project).where(Project.id == project_id).values(

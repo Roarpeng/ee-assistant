@@ -43,14 +43,11 @@ cd ee-assistant
 cp .env.example .env
 # Edit .env with your configuration
 
-# Deploy
+# Deploy (backend runs `alembic upgrade head` automatically on startup)
 docker compose up -d --build
 
-# Run migrations
-docker exec ele-backend-1 alembic upgrade head
-
-# Verify
-curl http://localhost:8090/api/health
+# Verify (compose maps backend :8000 → host :8001; frontend :80 → host :8090)
+curl http://localhost:8001/api/health
 ```
 
 ### Production Configuration
@@ -99,10 +96,13 @@ services:
       - qdrant_data:/qdrant/storage
 
   minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
+    # 2026-10: 社区版 minio/minio 已从 Docker Hub 下架且 quay 匿名拉取被关闭；
+    # 官方现行镜像为 quay.io/minio/aistor/minio（匿名可拉，运行需 license）
+    image: quay.io/minio/aistor/minio:latest
+    command: server /data --console-address ":9001" --license /minio.license
     volumes:
       - minio_data:/data
+      - ./minio.license:/minio.license:ro
 
   redis:
     image: redis:7-alpine

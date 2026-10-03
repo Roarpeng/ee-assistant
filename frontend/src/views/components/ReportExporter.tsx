@@ -30,6 +30,7 @@ export function ReportExporter({ open, onClose }: ReportExporterProps) {
   const safetyLevel = useStore((s) => s.safetyLevel);
   const bomCost = useStore((s) => s.bomCost);
   const topology = useStore((s) => s.topology);
+  const schematicPages = useStore((s) => s.schematicPages);
 
   // 触发原生高保真 Print Layout PDF 保存
   function handlePrint() {
@@ -298,6 +299,25 @@ export function ReportExporter({ open, onClose }: ReportExporterProps) {
                 </tbody>
               </table>
             </Box>
+
+            {/* 电路级原理图 PAGES (derived, server-rendered A3 SVG) */}
+            {schematicPages.filter((pg) => pg.svg).map((pg) => (
+              <Box key={pg.page_no} className="report-page-break" sx={{ pt: 4 }}>
+                <Typography sx={{ fontSize: '14pt', fontWeight: 800, borderBottom: '1.5px solid #000', pb: 0.5, mb: 2 }}>
+                  附图 {pg.page_no} · {pg.title_zh}
+                </Typography>
+                {(pg.notes ?? []).slice(0, 4).map((n, i) => (
+                  <Typography key={i} sx={{ fontSize: '8pt', color: '#8a6d3b' }}>※ {n}</Typography>
+                ))}
+                <Box
+                  className="print-no-break"
+                  sx={{
+                    '& svg': { width: '100%', height: 'auto', bgcolor: '#fff', border: '1px solid #ddd' },
+                  }}
+                  dangerouslySetInnerHTML={{ __html: pg.svg! }}
+                />
+              </Box>
+            ))}
 
             {/* PLC ST 代码 PAGE 5 */}
             <Box className="report-page-break" sx={{ pt: 4 }}>

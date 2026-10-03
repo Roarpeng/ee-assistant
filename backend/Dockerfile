@@ -27,4 +27,8 @@ ENV HTTP_PROXY="" HTTPS_PROXY="" NO_PROXY="" \
     PYTHONUNBUFFERED=1
 
 COPY . .
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run migrations idempotently before serving so a fresh `docker compose up`
+# needs no manual `alembic upgrade head` step. `create_all` in lifespan stays
+# as a safety net, but the alembic chain (including 010_project_topologies)
+# is now the authoritative path.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]

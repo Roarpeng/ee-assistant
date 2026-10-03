@@ -44,7 +44,7 @@
 
 ### 2.2 LangGraph 多 Agent 编排
 
-- **现状**：`backend/app/core/graph/builder.py` 编译 11 节点 StateGraph（4 路 fan-out + 5 路 fan-out 至 END），checkpointer 是 `AsyncPostgresSaver`（行 12, 50-115）。`backend/app/core/orchestrator.py:_stream_events()`（行 202-304）作为单入口，处理 `__interrupt__` / 节点完成 / 异常三类事件，并调用 `start_run` / `finish_run` 写 `run_history` 表。
+- **现状**：`backend/app/core/graph/builder.py` 编译 12 节点 StateGraph（4 路 fan-out + 5 路 fan-out 至 END），checkpointer 是 `AsyncPostgresSaver`（sqlite 环境自动退回 MemorySaver）。`backend/app/core/orchestrator.py:_stream_events()` 作为单入口，处理 `__interrupt__` / 节点完成 / 异常三类事件，并调用 `start_run` / `finish_run` 写 `run_history` 表。
 - **风险**：节点函数大量裸 `print(...)`（如 `agents.py:818, 824, 854`），无结构化日志；节点超时无统一兜底，一个 LLM 节点慢即拖累所有 fan-out 兄弟节点的并发预期；`MemorySaver` 已升级为 PostgresSaver 是好事，但 `thread_id == project_id` 意味着同一项目并发 `analyze-v2` 会互相覆盖检查点。
 - **影响**：现场柜断电/宕机后可以靠 PostgresSaver 恢复（正面），但运维难以精准定位"哪一节点 / 哪一厂商 / 哪一次重试失败"，故障排查只能靠 docker logs grep。
 

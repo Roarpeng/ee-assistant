@@ -12,7 +12,14 @@ services:
       https_proxy: ""
       no_proxy: "*"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   backend:
     build:
@@ -36,9 +43,18 @@ services:
       https_proxy: ""
       no_proxy: "*"
     depends_on:
-      - postgres
-      - qdrant
-      - minio
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/health', timeout=3).status==200 else 1)\""]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   postgres:
     image: pgvector/pgvector:pg16
@@ -50,6 +66,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ele -d ele"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   qdrant:
     image: qdrant/qdrant:latest
@@ -57,10 +79,20 @@ services:
       - "16333:6333"
     volumes:
       - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/localhost/6333' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
+  # MinIO AIStor — official image. The community `minio/minio` repos are
+  # gated (quay, needs login) or removed (Docker Hub); `aistor` pulls
+  # anonymously from quay but requires a license file to run (free tier:
+  # https://min.io/pricing). Keep minio.license gitignored.
   minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
+    image: quay.io/minio/aistor/minio:latest
+    command: server /data --console-address ":9001" --license /minio.license
     ports:
       - "9002:9000"
       - "9003:9001"
@@ -69,6 +101,13 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
     volumes:
       - minio_data:/data
+      - ./minio.license:/minio.license:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   postgres_data:

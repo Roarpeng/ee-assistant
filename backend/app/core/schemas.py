@@ -22,6 +22,8 @@ class ModuleType(str, Enum):
     FC = "FC"
     FB = "FB"
     DB = "DB"
+    # EPlan XML deliverable written by v2 code_generator / codegen endpoint.
+    XML = "XML"
 
 
 class ProjectStatus(str, Enum):

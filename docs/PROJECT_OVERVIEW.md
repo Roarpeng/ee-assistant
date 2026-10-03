@@ -1,6 +1,6 @@
-# EE Assistant / Volta — 项目总览（2026-05-15）
+# EE Assistant / Volta — 项目总览（2026-05-26）
 
-> 本文档是当前 `feat/blueprint-ui-refresh` 分支的工程总结，覆盖：产品定位、整体架构、目录布局、数据模型、LangGraph 多 Agent 拓扑、记忆飞轮 M0–M3、API 全表、测试矩阵、部署与多 PC 开发交接。它替代了 2026-05-06 那版"产品方向小结 + 测试优化"摘要，作为后续迭代和换机开发的单一参考点。
+> 本文档是当前 `master` 分支的工程总结，覆盖：产品定位、整体架构、目录布局、数据模型、LangGraph 多 Agent 拓扑、记忆飞轮 M0–M3、API 全表、测试矩阵、部署与多 PC 开发交接。它替代了 2026-05-06 那版"产品方向小结 + 测试优化"摘要，作为后续迭代和换机开发的单一参考点。
 
 ---
 
@@ -43,7 +43,7 @@ nginx (frontend 容器)
    │     ├── 知识库 (PDF/TXT/MD/HTML/DOCX/URL, 异步状态机)
    │     ├── 澄清问答 / 反馈 / 组织偏好 / 记忆来源
    │     ├── 记忆飞轮 (episodes / weekly_reports / admin_memory)
-   │     └── LangGraph 11-Agent DAG (PostgresSaver 持久化 checkpoint)
+   │     └── LangGraph 12-Node DAG (AsyncPostgresSaver 持久化 checkpoint)
    └── /ws/*  → backend:8000 (WebSocket, 分析进度 + 知识库进度)
 
 数据层
@@ -78,15 +78,15 @@ nginx (frontend 容器)
 ee-assistant/
 ├── backend/
 │   ├── alembic/
-│   │   └── versions/        # 10 个迁移：001 初始 → 007 记忆飞轮 M3
+│   │   └── versions/        # 12 个迁移文件：001 初始 → 010 拓扑表（单头链）
 │   ├── app/
 │   │   ├── main.py          # FastAPI 入口、lifespan、CORS、org_auth_middleware、WS 端点
 │   │   ├── config.py        # Pydantic Settings (Chat/Embedding 双组配置)
 │   │   ├── middleware/
 │   │   │   └── org_auth.py  # 组织 Token → org_id 注入到 request.state
-│   │   ├── api/             # 14 个 router（见 §6 API 全表）
+│   │   ├── api/             # 15 个 router（见 §6 API 全表）
 │   │   ├── core/
-│   │   │   ├── graph/       # LangGraph StateGraph + 11 Agent
+│   │   │   ├── graph/       # LangGraph StateGraph + 12 Agent 节点
 │   │   │   ├── orchestrator.py            # WS 管理 + graph 启动 + 反馈/episode 捕获
 │   │   │   ├── chat_orchestrator.py       # 快速 /chat 路径（非 LangGraph）
 │   │   │   ├── llm_service.py             # OpenAI 兼容封装 + JSON 容错 + 重试
@@ -117,9 +117,9 @@ ee-assistant/
 │   │   │   ├── consolidation_service.py   # M3: 周报 / 偏好整固
 │   │   │   └── schemas.py                 # Pydantic 数据模型（统一入口）
 │   │   └── db/
-│   │       ├── models.py    # 17 张 ORM 表（见 §5）
+│   │       ├── models.py    # 19 张 ORM 表（见 §5）
 │   │       └── repository.py
-│   └── tests/               # 34 个测试文件，按 unit/api/integration 分层
+│   └── tests/               # 39 个测试文件（含 test_alembic_schema_sync 迁移一致性守卫）
 ├── frontend/
 │   ├── nginx.conf
 │   └── src/
@@ -144,10 +144,8 @@ ee-assistant/
 │       │   ├── memory.ts           #   episodes / 周报
 │       │   └── templates/
 │       └── views/components/
-│           ├── AppLayout.tsx            # 主布局（左侧 sidebar + 中间 canvas + 右侧 chat）
+│           ├── AppLayout.tsx            # 主布局（左侧 sidebar + 中间 canvas + 右侧 chat，主题切换内联）
 │           ├── HeroLanding.tsx          # 首屏
-│           ├── Header.tsx
-│           ├── ThemeToggle.tsx
 │           ├── ChatPanel.tsx            # 对话框 (SSE + JSON 双模式)
 │           ├── ConversationSidebar.tsx  # 对话历史侧栏
 │           ├── ClarifyCard.tsx          # 澄清问答卡片
@@ -185,7 +183,7 @@ ee-assistant/
 
 ---
 
-## 5. 数据模型（PostgreSQL，17 张表）
+## 5. 数据模型（PostgreSQL，19 张表）
 
 业务核心：
 
@@ -197,7 +195,7 @@ ee-assistant/
 | `logic_rules` | requirement_id, description | 控制逻辑文本 |
 | `bom_items` | project_id, category, manufacturer, model, qty, specifications, confidence(rag/llm/mixed), source_chunk_id, alternatives | 选型 BOM |
 | `schematics` | project_id (1:1), mermaid_code, svg_data | 原理图 |
-| `st_modules` | project_id, name, module_type(OB/FC/FB/DB), code, sort_order | ST 代码模块 |
+| `st_modules` | project_id, name, module_type(XML=EPLAN 交付 | OB/FC/FB/DB=v1 ST 遗留), code, sort_order | 代码模块 |
 | `project_topologies` | project_id, version, status(draft/confirmed), source(user/ai/imported/memory), snapshot(JSON), created_at, confirmed_at | **拓扑快照（source of truth）** |
 | `chat_messages` | project_id, role, content, options, sequence, created_at | 对话历史 |
 
@@ -230,8 +228,10 @@ LangGraph 内部：`langgraph_checkpoints` 由 `AsyncPostgresSaver.setup()` 自�
 
 外键策略：`component_nodes.source_doc_id` / `component_edges.source_doc_id` 设 `ON DELETE SET NULL`，删文档时知识图保留。`org_preferences.org_id` `ON DELETE CASCADE`。
 
-迁移版本（按依赖序）：
-- `001_initial_tables` → `a4d5b3e39d74_add_component_graph_tables` → `002_add_knowledge_status_and_fk_ondelete` → `002_langgraph_checkpoint` → `003_add_knowledge_source_type_and_url` → `003_chat_messages` → `004_organizations` → `005_projects_org_fk` → `006_decisions_runhistory_weights` → `007_episodic_memories_and_reports`
+迁移版本（按依赖序，单头链）：
+- `001_initial_tables` → `a4d5b3e39d74_add_component_graph_tables` → `002_add_knowledge_status_and_fk_ondelete` → `003_add_knowledge_source_type_and_url` → `002_langgraph_checkpoint` → `003_chat_messages` → `004_organizations` → `005_projects_org_fk` → `006_decisions_runhistory_weights` → `007_episodic_memories_and_reports` → `008_add_project_title_and_topic_tags` → `009_search_trgm_index` → `010_project_topologies`
+
+方言兼容：002（PG DO 块）/005（ALTER 约束）/009（pg_trgm）在非 PostgreSQL 方言下自动跳过，迁移链在 SQLite（CI/本地测试）与 PostgreSQL（生产）均可跑通；`tests/test_alembic_schema_sync.py` 保证 `upgrade head` 后的 schema 覆盖全部模型。
 
 ---
 
@@ -243,8 +243,11 @@ LangGraph 内部：`langgraph_checkpoints` 由 `AsyncPostgresSaver.setup()` 自�
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/api/health` | 健康检查 |
+| GET | `/api/health` | 健康检查（含 DB 探测） |
+| GET | `/api/llm-providers` | LLM 厂商注册表（前端下拉/自动回填的单一真相源） |
 | POST | `/api/test-connectivity` | Chat + Embedding 双组连通性测试（前端设置面板） |
+| GET | `/api/tasks` | 后台任务状态（运行中/最近完成/失败） |
+| POST | `/api/debug/log` | 前端错误上报 |
 
 ### 项目 / 分析
 
@@ -252,12 +255,16 @@ LangGraph 内部：`langgraph_checkpoints` 由 `AsyncPostgresSaver.setup()` 自�
 |---|---|---|
 | GET, POST | `/api/projects` | 列表 / 创建 |
 | GET, DELETE | `/api/projects/{id}` | 详情 / 删除 |
+| POST | `/api/projects/search` · GET `/api/projects/search?q=` | 项目文本搜索（词法） |
+| GET | `/api/projects/cluster` | 主题标签聚类（侧栏分组） |
 | POST | `/api/projects/{id}/analyze` | v1 串行需求分析 |
-| POST | `/api/projects/{id}/analyze-v2` | **★ LangGraph 全流程**（11 Agent，PostgresSaver） |
-| POST | `/api/projects/{id}/chat` | 快速对话路径（不走 LangGraph，使用 history + canvas） |
+| POST | `/api/projects/{id}/analyze-v2` | **★ LangGraph 全流程**（12 节点，AsyncPostgresSaver，SSE） |
+| POST | `/api/projects/{id}/chat` | 快速对话路径（不走 LangGraph，使用 history + canvas，带答案质检） |
+| POST | `/api/projects/{id}/resume` | 断点续跑 |
+| POST | `/api/projects/{id}/select` | 选型（v2 已并入 graph，端点兼容保留） |
 | POST | `/api/projects/{id}/schematic` | 原理图生成 |
-| POST | `/api/projects/{id}/codegen` | ST 代码生成 |
-| POST | `/api/projects/{id}/clarify` | 提交澄清答复（写回需求 + 可选 org_pref） |
+| POST | `/api/projects/{id}/codegen` | **EPlan XML 生成**（确定性序列化兜底 + LLM 输出校验择优） |
+| POST | `/api/projects/{id}/clarify/answer` | 提交澄清答复（写回需求 + 可选 org_pref） |
 | GET, POST | `/api/projects/{id}/topology` | 读取最新草稿 / 保存新版本 |
 | POST | `/api/projects/{id}/topology/confirm` | 确认 topology → 触发派生 |
 
@@ -283,12 +290,15 @@ LangGraph 内部：`langgraph_checkpoints` 由 `AsyncPostgresSaver.setup()` 自�
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET, POST | `/api/orgs/me` | 当前组织详情 |
-| GET, PUT | `/api/orgs/me/preferences` | 组织级默认值（k/v 列表） |
-| POST | `/api/feedback/{type}` | M2: 反馈写入 `decisions` 表（manual_select / bom_edit / wiring_edit / topology_edit / thumbs_down / clarify） |
-| GET | `/api/memory-sources` | 选型项的来源溯源（RAG chunk / graph 邻居 / episode / 规则） |
-| GET | `/api/episodes` | M3: 当前 org 的最近 N 条 episodic memory |
-| GET, POST | `/api/admin/memory` | M3: 周报 / consolidate-now / 偏好整固 |
+| GET, POST | `/api/orgs` · GET `/api/orgs/me` | 创建 / 当前组织详情 |
+| GET, PUT, DELETE | `/api/orgs/me/preferences[/{key}]` | 组织级默认值（k/v 列表） |
+| POST | `/api/projects/{id}/feedback/select` · `/edit` · `/negative` | M2: 反馈写入 `decisions` 表（manual_select / bom_edit / wiring_edit / topology_edit / thumbs_down） |
+| GET | `/api/projects/{id}/memory-sources` | 选型项的来源溯源（RAG chunk / graph 邻居 / episode / 规则） |
+| GET | `/api/orgs/me/episodes` | M3: 当前 org 的最近 N 条 episodic memory |
+| GET | `/api/orgs/me/memory-reports` | M3: 记忆周报 |
+| POST | `/api/admin/consolidate-memory` | M3: consolidate-now（整固偏好） |
+| POST | `/api/admin/memory/reports/{id}/apply` | M3: 应用周报规则 |
+| POST | `/api/search` | **统一搜索**（向量+词法 RRF 融合：knowledge/components/projects） |
 
 ### WebSocket
 
@@ -299,35 +309,38 @@ LangGraph 内部：`langgraph_checkpoints` 由 `AsyncPostgresSaver.setup()` 自�
 
 ---
 
-## 7. LangGraph 多 Agent 拓扑（11 节点）
+## 7. LangGraph 多 Agent 拓扑（12 节点）
 
 ```
               START
                 │
                 ▼
         requirements_agent
-        ┌───────┼───────┐
-        ▼       ▼       ▼
-category_mapper  safety_assessor  constraint_extractor
-        └───────┼───────┘
-                ▼
-        selection_supervisor
-        （扇出执行子任务，并合并：
-         · Qdrant 语义检索
-         · 图谱 BFS 邻居遍历
-         · 历史 episodic memory 注入（M3）
-         · selection_weights 偏置（M2））
-                │
-                ▼
-          rule_validator
-        （5 条硬约束）
-   ┌────┬────┬────┬────┬────┐
-   ▼    ▼    ▼    ▼    ▼    ▼
-schematic_  code_  wiring_  commissioning_  final_review
-generator   gen    generator generator       _agent
-   └────┴────┴────┴────┴────┘
-                ▼
-               END
+        （自然语言 → 结构化需求 + org 偏好富化）
+    ┌───────┼───────┬──────────┐    4 路 fan-out
+    ▼       ▼       ▼          ▼
+category  safety  constraint  title
+_mapper  _assessor _extractor _generator
+    └───────┼───────┴──────────┘
+            ▼
+    selection_supervisor
+    （双路检索 + 历史偏置融合：
+     · Qdrant 语义检索
+     · 图谱 BFS 邻居遍历
+     · 历史 episodic memory 注入（M3）
+     · selection_weights 偏置（M2））
+            │
+            ▼
+      rule_validator
+      （5 条硬约束）
+┌──────┬──────┬──────┬──────────────┬───────┐  5 路 fan-out
+▼      ▼      ▼      ▼              ▼       ▼
+schematic_ code_  final_  commissioning_  wiring_
+generator gen   review  generator       generator
+(EPlan XML)
+└──────┴──────┴──────┴──────────────┴───────┘
+            ▼
+           END
 ```
 
 关键特性：
@@ -401,7 +414,7 @@ uploading → chunking → embedding → graph_extracting → ready
 
 ---
 
-## 10. 测试矩阵（截至当前分支 34 个测试文件）
+## 10. 测试矩阵（截至当前分支 39 个测试文件）
 
 | 类别 | 范围 | 代表文件 |
 |---|---|---|
@@ -411,13 +424,13 @@ uploading → chunking → embedding → graph_extracting → ready
 | **memory** | M2/M3 行为 | `test_consolidation_service.py` / `test_episode_extractor.py` / `test_episode_retrieval.py` / `test_run_history_capture.py` / `test_selection_weight_bias.py` / `test_memory_sources.py` / `test_clarify_writeback.py` |
 | **生成器** | 派生产物 | `test_commissioning_generator.py` / `test_wiring_generator.py` / `test_requirements_enrichment.py` |
 | **幂等性** | analyze 复跑 | `test_analyze_idempotent.py` / `test_conversation_enhancements.py` |
+| **迁移一致性** | model ↔ alembic 漂移守卫 | `test_alembic_schema_sync.py`（临时 SQLite 上跑 `upgrade head` 后与 `Base.metadata` 比对） |
 | **frontend (Vitest)** | UI + service | `BOMPanel.test.tsx` / `ChatPanel`（间接） / `ClarifyCard.test.tsx` / `HeroLanding.test.tsx` / `InfoPanel.test.tsx` / `GuidePanel.test.tsx` / `WiringPanel.test.tsx` / `MemoryTab.test.tsx` / `MemorySourcePopover.test.tsx` / `OrgSettingsPanel.test.tsx` / `budget.test.ts` / `cabinet.test.ts` / `procurement.test.ts` / `templates.test.ts` / `feedback.test.ts` / `memory.test.ts` / `orgClient.test.ts` |
 
 推荐运行：
 
 ```bash
-cd backend && python -m pytest tests -m "not integration" -q
-cd backend && python -m pytest tests -m integration -q   # 需起 Qdrant/Postgres/MinIO
+cd backend && PYTHONPATH=. python -m pytest tests -q   # 全部（SQLite 快测；无需 Qdrant/Postgres/MinIO 即可通过）
 cd frontend && npm ci && npm run test && npm run build
 ```
 
@@ -425,6 +438,7 @@ Docker 端到端：
 
 ```bash
 docker compose up -d --build postgres qdrant minio backend frontend
+# backend 容器启动时已自动执行 alembic upgrade head（幂等），以下命令仅作手动复核
 docker exec ele-backend-1 alembic upgrade head
 docker exec ele-backend-1 python -m pytest tests -q
 docker compose down -v
@@ -436,13 +450,12 @@ docker compose down -v
 
 **B/C 融合风格**：Linear/Notion 的干净感 + VS Code/GitHub 的工程工具气质。
 
-- **主题**：CSS 变量驱动，`data-theme="light|dark"`，localStorage 持久化
+- **主题**：MUI 6 Material Design 3 主题（`src/theme/md3.ts`），light / dark / engineering 三档，Zustand 持久化（`store.theme`）
 - **字体**：Inter（UI）+ JetBrains Mono（代码）
-- **令牌前缀**：`app-` → `bg-app-bg-primary`、`text-app-text-secondary`、`rounded-app-md`、`shadow-app-sm`
-- **分栏**：左侧 20%–50% 可拖拽，中间 1px 分隔线 hover 高亮
-- **拓扑画布**：ReactFlow + 自定义节点（电源 / PLC / 驱动器 / 安全设备 / 传感器 / 执行器），右键菜单提供常见操作
+- **分栏**：左侧会话栏 + 中间画布 + 右侧对话框三栏布局，侧栏可拖拽，键盘快捷键（? 键呼出帮助）
+- **拓扑画布**：ReactFlow + 自定义节点（电源 / PLC / 驱动器 / 安全设备 / 传感器 / 执行器），右键菜单提供常见操作，5 层重力对齐（`utils/gravityLayout.ts`）
 - **协作**：`yjsStore.ts` 接入 Yjs + y-webrtc，为多端实时编辑预留通道（默认未启用，由 store 切换）
-- **导出**：xlsx（BOM / 接线表）+ html-to-image（拓扑图 PNG）
+- **导出**：xlsx（BOM / 接线表）+ jszip（工程包 ZIP）+ html-to-image（拓扑图 PNG）
 
 ---
 
@@ -450,16 +463,17 @@ docker compose down -v
 
 ```bash
 docker compose up -d --build
-docker exec ele-backend-1 alembic upgrade head
-# 前端 → http://localhost:8090   (compose 中映射到 8090)
-# 后端 → http://localhost:8000   (API docs: /docs)
+# backend 启动时自动执行 alembic upgrade head（幂等）
+# 前端 → http://localhost:8090   (compose 映射 8090:80)
+# 后端 → http://localhost:8001   (compose 映射 8001:8000; API docs: /docs)
 ```
 
 注意点：
-- backend 容器同时配置了 `HTTP_PROXY=host.docker.internal:3128`（用于 LLM 出网）和 `NO_PROXY=postgres,qdrant,minio,...`（保证容器内服务直连）
+- 5 个服务全部带 healthcheck；backend 等 postgres/qdrant/minio 健康后才启动，frontend 等 backend 健康后才启动
+- compose 默认清空容器内代理（`HTTP_PROXY=""`、`NO_PROXY="*"`）保证容器间服务直连；需要经代理访问外部 LLM 时再在 `.env`/compose 中显式配置
 - `extra_hosts: host.docker.internal:host-gateway` 在 Linux 容器中必须显式声明
 - 数据卷：`postgres_data` / `qdrant_data` / `minio_data`，跨主机迁移走 §9 的 bundle
-- 反向代理：`frontend/nginx.conf` API 超时 300s、上传 100MB、WS 超时 3600s
+- 反向代理：`frontend/nginx.conf` 静态/SPA 上传 100MB、`/api/` 上传 800MB、API 超时 600s、SSE 禁缓冲、WS 超时 3600s
 
 ---
 
@@ -470,12 +484,12 @@ docker exec ele-backend-1 alembic upgrade head
 - **统一 LLM 入口**：`llm_service.chat(system, user)`，不直接调 SDK
 - **环境变量**：`.env` 管理 API key，不硬编码
 - **API 前缀**：REST `/api/`、WS `/ws/`
-- **Graphify**：代码修改后跑 `graphify update .` 刷新知识图谱（AST-only，无 API 成本）；架构问题先读 `graphify-out/GRAPH_REPORT.md` 而不是直接 grep
+- **Graphify**：代码修改后跑 `python -m graphify update .` 刷新知识图谱（AST-only，无 API 成本）；`graphify-out/` 为本地生成物（已 gitignore），本机需先 `pip install graphify`；架构问题先读 `graphify-out/GRAPH_REPORT.md` 而不是直接 grep
 - **Alembic**：所有 schema 变更走 Alembic 迁移，禁止依赖 `create_all` 上线
 
 ---
 
-## 14. 当前分支 `feat/blueprint-ui-refresh` 已交付要点
+## 14. `master` 分支已交付要点
 
 1. **UI 重构 (Blueprint refresh)**：HeroLanding、Header、AppLayout、新的 Hero / Guide / Info 三联面板，主题/字体令牌全面切换为 `app-` 前缀
 2. **拓扑作为单一真相源**：`ProjectTopology` 模型 + draft/confirm + 前端 TopologyPanel 与 ReactFlow 自定义节点
@@ -484,17 +498,19 @@ docker exec ele-backend-1 alembic upgrade head
 5. **组织 / 偏好**：org 表 + token 鉴权 + 偏好读写 + OrgSettingsPanel
 6. **记忆飞轮 M2 + M3 全栈落地**：见 §8
 7. **派生产物完整化**：`wiring_generator` 接线表 + `commissioning_generator` 调试手册 + `bom_prices` 价格估算 + `io_budget` 余量
-8. **LangGraph 升级**：从 `MemorySaver`（内存）→ `AsyncPostgresSaver`（Postgres 持久化），新增 `langgraph_checkpoints` 表与 002_langgraph_checkpoint 迁移
-9. **测试矩阵扩张**：从 ~10 个增长到 34 个测试文件，前端 Vitest 用例覆盖关键 UI
+8. **LangGraph 升级**：从 `MemorySaver`（内存）→ `AsyncPostgresSaver`（Postgres 持久化），新增 `langgraph_checkpoints` 表与 002_langgraph_checkpoint 迁移；sqlite 环境自动退回 MemorySaver
+9. **测试矩阵扩张**：从 ~10 个增长到 39 个测试文件（含迁移一致性守卫），前端 Vitest 用例覆盖关键 UI
+10. **工程化补强**：统一搜索（RRF 融合三通道）、EPlan XML 确定性生成 + 校验择优、`ModuleType.XML` 序列化、`project_topologies` 迁移补全（010）+ schema 漂移守卫、Docker 全服务 healthcheck + backend 启动自动迁移、前端 Dockerfile 改 `npm ci`
+11. **电路级原理图生成器（2026-10-03）**：`core/schematic/` 包（IR + IEC 60617 符号库 + 网表线号/交叉引用 + 主回路/控制回路/IO 页确定性生成器 + A3 SVG 渲染）、`schematic_pages` 表（011 迁移）、`/schematic/pages` API + topology confirm 派生钩子、LangGraph 14 节点（新增 `schematic_ir_builder` + `schematic_reviewer` LLM 评审门控）、前端 SchematicPanel + 导出 PDF 附图。设计稿：`docs/superpowers/specs/2026-10-03-schematic-generator-design.md`（P0–P3 已落地，EPlan P8 官方导出单独立项）
 
 ---
 
 ## 15. 后续路线（建议优先级）
 
-1. **M4 记忆扩展**：function_pattern / validation_lesson 抽取、Qdrant hybrid search（episode embedding）
-2. **导出包**：从 confirmed topology 一键生成 .zip（BOM xlsx + 接线表 xlsx + ST .scl + 原理图 svg + 调试手册 md + 项目元数据 json）
-3. **ABCD 模式种子**：气缸往复 / 伺服回原点 / 单变频输送 / 控制柜底盘，落到 `function_pattern` 表
-4. **CI 流水线**：固化 §10 的"快 CI"和"Docker 全量 CI"两套，加 PR gates
+1. **M4 记忆扩展**：function_pattern / validation_lesson 抽取、Qdrant hybrid search（episode embedding，`episodic_memories.embedding_id` 已预留）
+2. **ABCD 模式种子**：气缸往复 / 伺服回原点 / 单变频输送 / 控制柜底盘，落到 `function_pattern` 表
+3. **CI 流水线**：✅ 已落地（`.github/workflows/ci.yml`：backend pytest + frontend test/build）；可进一步加 Docker 全量 CI 与 PR gates
+4. **导出包**：✅ 已落地（`ReportExporter` 一键 ZIP：BOM xlsx + 接线表 + EPlan XML + 拓扑 JSON + 调试手册）
 5. **graphify update 自动化**：commit hook 或 nightly job 自动刷新 `graphify-out/`
 6. **拓扑校验深化**：`topology_lint.py` 接入 IO 余量 / 协议一致性 / 安全等级三项联动校验
 7. **多端协作打开**：Yjs/y-webrtc 通道默认开启，加 awareness 头像 + 选择高亮
@@ -508,7 +524,7 @@ docker exec ele-backend-1 alembic upgrade head
 ```bash
 git clone https://github.com/Roarpeng/ee-assistant.git
 cd ee-assistant
-git checkout feat/blueprint-ui-refresh
+git checkout master
 
 cp .env.example .env   # 如不存在，参照 .env 现有键填入（DeepSeek/SiliconFlow API key 等）
 
@@ -521,12 +537,11 @@ cd ../frontend && npm install && npm run dev
 ./scripts/restore_knowledge.sh path/to/knowledge-bundle-YYYYMMDD.tgz
 ```
 
-或者全 Docker：
+或者全 Docker（backend 自动迁移，无需手动 alembic）：
 
 ```bash
 docker compose up -d --build
-docker exec ele-backend-1 alembic upgrade head
 # → http://localhost:8090
 ```
 
-**架构问题先看**：`graphify-out/GRAPH_REPORT.md` → `docs/superpowers/specs/` 最新设计稿 → 本文档 → `CLAUDE.md`。
+**架构问题先看**：`graphify-out/GRAPH_REPORT.md`（本地生成，需 `pip install graphify`）→ `docs/superpowers/specs/` 最新设计稿 → 本文档 → `AGENTS.md`。

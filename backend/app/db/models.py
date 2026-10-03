@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, Integer, Float, JSON, ForeignKey, DateTime, Text, func
+from sqlalchemy import String, Integer, Float, JSON, ForeignKey, DateTime, Text, func, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.ext.asyncio import AsyncAttrs
 
@@ -33,6 +33,7 @@ class Project(Base):
     schematic: Mapped["Schematic | None"] = relationship(back_populates="project", uselist=False, cascade="all, delete-orphan")
     code_modules: Mapped[list["STModule"]] = relationship(back_populates="project", cascade="all, delete-orphan")
     topologies: Mapped[list["ProjectTopology"]] = relationship(back_populates="project", cascade="all, delete-orphan")
+    schematic_pages: Mapped[list["SchematicPageRow"]] = relationship(back_populates="project", cascade="all, delete-orphan")
 
 
 class Requirement(Base):
@@ -107,7 +108,7 @@ class STModule(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(128))
-    module_type: Mapped[str] = mapped_column(String(16))  # OB/FC/FB/DB
+    module_type: Mapped[str] = mapped_column(String(16))  # XML (EPlan) | OB/FC/FB/DB (legacy v1 ST)
     code: Mapped[str] = mapped_column(Text)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
@@ -127,6 +128,31 @@ class ProjectTopology(Base):
     confirmed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     project: Mapped["Project"] = relationship(back_populates="topologies")
+
+
+class SchematicPageRow(Base):
+    """Circuit-level schematic page (IR JSON + rendered SVG cache).
+
+    Derived artifact: rebuildable at any time from the confirmed
+    topology + BOM via `/api/projects/{id}/schematic/pages`. The
+    legacy `schematics` table (mermaid block diagram) stays untouched
+    for v1 compatibility.
+    """
+    __tablename__ = "schematic_pages"
+    __table_args__ = (
+        UniqueConstraint("project_id", "page_no", name="uq_schematic_pages_project_page"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), nullable=False, index=True)
+    page_no: Mapped[int] = mapped_column(Integer)
+    kind: Mapped[str] = mapped_column(String(16))      # power | control | io | title
+    title_zh: Mapped[str] = mapped_column(String(128), default="")
+    ir: Mapped[dict] = mapped_column(JSON, default=dict)
+    svg: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    project: Mapped["Project"] = relationship(back_populates="schematic_pages")
 
 
 class KnowledgeDoc(Base):

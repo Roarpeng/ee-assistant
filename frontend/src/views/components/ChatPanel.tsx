@@ -257,6 +257,10 @@ export function ChatPanel() {
     if (Array.isArray(state.io_items)) {
       useStore.getState().setIOItems(state.io_items);
     }
+    if (Array.isArray(state.schematic_pages) && state.schematic_pages.length > 0) {
+      // IR-only pages: SchematicPanel re-fetches rendered SVGs by project id.
+      useStore.getState().setSchematicPages(state.schematic_pages);
+    }
     if (state.clarification?.needed && Array.isArray(state.clarification.groups)) {
       const messages = useStore.getState().messages;
       const lastClarify = [...messages].reverse().find(
@@ -324,6 +328,8 @@ export function ChatPanel() {
         mermaid_code: projectData.schematic?.mermaid_code,
         st_modules: projectData.code_modules,
       });
+      const sid = projectData.id ?? useStore.getState().project?.id;
+      if (sid) await useStore.getState().loadSchematicPages(sid);
       return;
     }
 

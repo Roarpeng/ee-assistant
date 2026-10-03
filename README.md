@@ -7,7 +7,7 @@
 [![Docker](https://img.shields.io/badge/docker-supported-blue.svg)](https://www.docker.com/)
 [![CI](https://github.com/Roarpeng/ee-assistant/workflows/CI/badge.svg)](https://github.com/Roarpeng/ee-assistant/actions)
 
-**Topology-first electrical engineering AI** — from natural language to confirmed topology, BOM, schematics, and PLC ST code.
+**Topology-first electrical engineering AI** — from natural language to confirmed topology, BOM, circuit-level schematics, wiring and EPlan XML.
 
 Volta（伏特）是面向工业自动化的电气工程设计工作台：以**可编辑拓扑为单一真相源**，LangGraph 多智能体负责需求拆解、双路 RAG 选型、规则校验与派生产物生成。
 
@@ -22,17 +22,19 @@ Volta（伏特）是面向工业自动化的电气工程设计工作台：以**�
 | 能力 | 说明 |
 |------|------|
 | **拓扑真相源** | ReactFlow 画布可编辑；BOM / 接线 / ST / 导出均派生自已确认拓扑 |
-| **LangGraph 工程流水线** | 12 节点 DAG：需求 → 并行分析 → 选型监督 → 规则校验 → 原理图 / 代码 / 接线 / 调试 |
+| **LangGraph 工程流水线** | 14 节点 DAG：需求 → 并行分析 → 选型监督 → 规则校验 → 拓扑 / 代码 / 接线 / 调试 |
 | **双路知识检索** | Qdrant 语义搜索 + PostgreSQL 元件图谱 BFS |
 | **知识库可迁移** | `scripts/backup_knowledge.*` 打包向量库 + 图谱 + MinIO，一键还原 |
-| **工程交付** | 概览页导出 ZIP（BOM xlsx、接线表、SCL、Mermaid、拓扑 JSON） |
+| **电路级原理图** | 确认拓扑后确定性生成主回路 / 控制回路（梯形图+线号+交叉引用）/ IO 端子页，A3 SVG 分页浏览与导出（IEC 60617 符号） |
+| **工程交付** | 概览页导出（BOM xlsx、接线表、EPlan XML、原理图附图、拓扑 JSON、调试手册） |
 
 ### 5 分钟体验
 
 1. `docker compose up -d --build` → 打开 http://localhost  
 2. 右上角 **设置** → 配置 Chat + Embedding API → **测试连通性** → 保存  
 3. 对话区点击 **完整工程生成**（或输入输送线/电机控制需求）  
-4. 在 **拓扑图** 调整节点 → **概览** 导出工程包  
+4. 在 **拓扑图** 调整节点 → **确认拓扑** 自动派生 **原理图**（主回路 / 控制回路 / IO 三类页）  
+5. **导出方案书 (PDF)** 带每页原理图附图  
 
 详见 [docs/DEMO.md](docs/DEMO.md)。
 
@@ -41,9 +43,11 @@ Volta（伏特）是面向工业自动化的电气工程设计工作台：以**�
 ```bash
 # 全 Docker（推荐）
 cp .env.example .env   # 可选：后端默认 LLM 兜底
+# MinIO 需要 license：从 https://min.io/pricing 申请免费档后放到 ./minio.license
+# （社区版 minio/minio 镜像已全网下架，compose 使用官方 quay.io/minio/aistor/minio）
 docker compose up -d --build
-docker exec ele-backend-1 alembic upgrade head
-# → http://localhost  (compose 映射 8090 时见 docker-compose.yml)
+# backend 启动时自动执行 alembic upgrade head（幂等），无需手动迁移
+# → http://localhost:8090  (后端 http://localhost:8001, API docs /docs)
 ```
 
 ```bash
@@ -96,18 +100,23 @@ Volta is an open-source electrical design copilot for industrial automation. Unl
 
 ### Highlights
 
-- **12-node LangGraph DAG** with Postgres checkpointing  
+- **14-node LangGraph DAG** with Postgres checkpointing  
+- **Circuit-level schematics**: deterministic IEC 60617 power/control/IO pages with line numbers & cross-references, derived from the confirmed topology (LLM reviews, never invents connectivity)  
 - **Hybrid RAG**: vector search (Qdrant) + component graph BFS (PostgreSQL)  
 - **5 hard constraint rules** (breaker rating, SIL redundancy, protocol, voltage, motor starter)  
 - **Knowledge bundle** scripts to share expensive embedding/graph corpora across deployments  
-- **Export package**: ZIP with BOM, wiring, SCL, Mermaid, topology JSON  
+- **Export package**: BOM, wiring, EPlan XML, schematic sheets, topology JSON  
 
 ### Quick start
 
 ```bash
 cp .env.example .env
+# MinIO needs a license file: grab the free tier at https://min.io/pricing
+# and drop it at ./minio.license (community images are gone from all registries;
+# compose uses the official quay.io/minio/aistor/minio image)
 docker compose up -d --build
-docker exec ele-backend-1 alembic upgrade head
+# backend runs `alembic upgrade head` automatically on startup (idempotent)
+# → http://localhost:8090  (backend http://localhost:8001)
 ```
 
 Configure Chat + Embedding keys in the UI (Settings → connectivity test → Save), then click **Full engineering run** in the chat panel.

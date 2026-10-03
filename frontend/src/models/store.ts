@@ -6,6 +6,7 @@ import {
   resetYjsDoc,
 } from './yjsStore';
 import type { OrgInfo, OrgPreference } from '../services/orgClient';
+import type { SchematicPageInfo } from '../services/schematic';
 
 // ===== Topology Types =====
 export type NodeData = {
@@ -178,6 +179,7 @@ interface AppState {
   activeCanvasTab:
     | 'info'
     | 'topology'
+    | 'schematic'
     | 'wiring'
     | 'bom'
     | 'code'
@@ -185,6 +187,10 @@ interface AppState {
     | 'cabinet';
   theme: 'light' | 'dark' | 'engineering';
   ioItems: Array<{ tag: string; signal: string; from: string; to: string; wire: string }>;
+  // Circuit-level schematic pages (derived artifact; svg null when pages
+  // arrived via graph payload and haven't been fetched rendered yet).
+  schematicPages: SchematicPageInfo[];
+  schematicLoading: boolean;
   commissioningSteps: Array<{ title: string; body: string }>;
   // Optional snapshot of PLC capacity + signal-bearing items for the live
   // budget bar on the topology canvas. When empty, the bar hides itself.
@@ -218,6 +224,9 @@ interface AppState {
   setMermaidCode: (code: string) => void;
   setProjectMeta: (meta: { safetyLevel?: string; bomCost?: number }) => void;
   setIOItems: (items: AppState['ioItems']) => void;
+  setSchematicPages: (pages: SchematicPageInfo[]) => void;
+  loadSchematicPages: (projectId?: string) => Promise<void>;
+  regenerateSchematic: () => Promise<void>;
   setCommissioningSteps: (steps: AppState['commissioningSteps']) => void;
   setBudgetItems: (items: AppState['budgetItems']) => void;
   setProject: (p: { id: string; name: string }) => void;
@@ -227,6 +236,7 @@ interface AppState {
     tab:
       | 'info'
       | 'topology'
+      | 'schematic'
       | 'wiring'
       | 'bom'
       | 'code'
@@ -286,6 +296,8 @@ export const useStore = create<AppState>((set, get) => ({
   ioItems: [],
   commissioningSteps: [],
   budgetItems: [],
+  schematicPages: [],
+  schematicLoading: false,
   theme: (localStorage.getItem('theme') as 'light' | 'dark' | 'engineering') || 'engineering',
   language: getInitialLang(),
   settings: loadSettings(),
@@ -330,6 +342,37 @@ export const useStore = create<AppState>((set, get) => ({
       bomCost: bomCost !== undefined ? bomCost : s.bomCost,
     })),
   setIOItems: (ioItems) => set({ ioItems }),
+
+  setSchematicPages: (schematicPages) => set({ schematicPages }),
+
+  loadSchematicPages: async (projectId) => {
+    const s = useStore.getState();
+    const id = projectId ?? s.project?.id;
+    if (!id) return;
+    set({ schematicLoading: true });
+    try {
+      const { fetchSchematicPages } = await import('../services/schematic');
+      const res = await fetchSchematicPages(id);
+      set({ schematicPages: res ? res.pages : [] });
+    } catch {
+      set({ schematicPages: [] });
+    } finally {
+      set({ schematicLoading: false });
+    }
+  },
+
+  regenerateSchematic: async () => {
+    const s = useStore.getState();
+    if (!s.project?.id) return;
+    set({ schematicLoading: true });
+    try {
+      const { regenerateSchematicPages } = await import('../services/schematic');
+      const res = await regenerateSchematicPages(s.project.id);
+      set({ schematicPages: res.pages });
+    } finally {
+      set({ schematicLoading: false });
+    }
+  },
   setCommissioningSteps: (commissioningSteps) => set({ commissioningSteps }),
   setBudgetItems: (budgetItems) => set({ budgetItems }),
   setProject: (p) => {
@@ -415,6 +458,7 @@ export const useStore = create<AppState>((set, get) => ({
       bom: [],
       sclCode: '',
       mermaidCode: '',
+      schematicPages: [],
       messages: [],
       chatContext: null,
       previewNodeId: null,

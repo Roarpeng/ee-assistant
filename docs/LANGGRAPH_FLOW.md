@@ -13,69 +13,75 @@ Volta uses LangGraph to orchestrate a 12-node DAG (Directed Acyclic Graph) that 
                 │
                 ▼
         requirements_agent
-        ┌───────┼───────┐
-        ▼       ▼       ▼
-category_mapper  safety_assessor  constraint_extractor
-        └───────┼───────┘
-                │   (+ title_generator as 4th fan-out,
-                │      also feeding selection_supervisor)
-                ▼
-        selection_supervisor
-        (Hybrid RAG + Memory Injection)
-                │
-                ▼
-          rule_validator
-        (5 Hard Constraints)
-   ┌────┬────┬────┬────┬────┐
-   ▼    ▼    ▼    ▼    ▼    ▼
-schematic_  code_  wiring_  commissioning_  final_review
-generator   gen    generator generator       _agent
-   └────┴────┴────┴────┴────┘
-                ▼
-               END
+    ┌───────┼───────┬──────────┐   4-way fan-out
+    ▼       ▼       ▼          ▼
+category  safety  constraint  title
+_mapper  _assessor _extractor _generator
+    └───────┼───────┴──────────┘
+            ▼
+    selection_supervisor
+    (Hybrid RAG + Memory Injection)
+            │
+            ▼
+      rule_validator
+    (5 Hard Constraints)
+┌──────┬──────┬──────┬──────────────┬───────┐   5-way fan-out
+▼      ▼      ▼      ▼              ▼       ▼
+schematic_ code_ final_ commissioning_ wiring_
+generator gen  review  generator     generator
+          (EPlan XML)
+└──────┴──────┴──────┴──────────────┴───────┘
+            ▼
+           END
 ```
 
 ## State Definition
 
-The `AnalysisState` TypedDict flows through all nodes:
+The `AnalysisState` TypedDict flows through all nodes. The code below is the
+**canonical** state from `backend/app/core/graph/state.py` (fields used by the
+current 12-node implementation):
 
 ```python
 class AnalysisState(TypedDict):
-    # Conversation history
-    messages: Annotated[list, add_messages]
-    
-    # Requirements analysis
-    requirements: dict
-    title: str
-    topic_tags: list[str]
-    
-    # Parallel analysis outputs
-    categories: dict
-    safety_assessment: dict
-    constraints: dict
-    
-    # Component selection
-    bom_items: list[dict]
-    selection_sources: list[dict]
-    
-    # Validated BOM
-    validated_bom: list[dict]
-    validation_results: list[dict]
-    
-    # Deliverables
-    mermaid_code: str
-    st_code: str
-    wiring_rows: list[dict]
-    commissioning_steps: list[dict]
-    
-    # Final output
-    final_report: dict
-    
-    # Error tracking
-    errors: list[str]
+    project_id: str
+    user_input: str
+    requirement: dict | None
+    categories: list[str] | None
+    safety_level: str | None
+    constraints: dict | None
+    bom_items: list[dict] | None
+    violations: list[dict] | None
+    mermaid_code: str | None
+    st_modules: list[dict] | None      # v2 写 EPlan XML (module_type="XML")
+    topology: dict | None              # { nodes, edges } — source of truth
+    review_notes: list[str] | None
+    project_meta: dict | None          # InfoPanel {safety_level, bom_cost}
+    io_budget: list[dict] | None       # IOBudgetBar
+    commissioning_steps: list[dict] | None  # [{title, body}] GuidePanel
+    io_items: list[dict] | None        # WiringPanel 接线行
+    clarification: dict | None         # {needed, groups} ClarifyCard
+    graph_traces: Annotated[list[dict], operator.add]
+    errors: Annotated[list[str], operator.add]
+    messages: Annotated[list[dict], add_messages]
+    llm_fallback_categories: list[str] | None
+    title: str | None
+    topic_tags: list[str] | None
+    stage: str
+    llm_config: dict | None
+    embedding_config: dict | None
+    org_id: str | None                # M1: 组织偏好富化
+    run_history_id: str | None        # M2: 运行遥测
+    episodic_context: str | None      # M3: 历史 episode 注入 supervisor
+```
 ```
 
 ## Node Descriptions
+
+> Field names inside the per-node "Input/Output" lists below are
+> illustrative; the canonical fields are the ones in `AnalysisState`
+> above (backend/app/core/graph/state.py). The 12 node functions live
+> in `backend/app/core/graph/agents.py` and their exact wiring (fan-out
+> edges) in `backend/app/core/graph/builder.py`.
 
 ### 1. requirements_agent
 
@@ -341,40 +347,28 @@ graph TD
 **Purpose:** Generate PLC Structured Text code.
 
 **Input:**
-- `validated_bom`: Validated component list
-- `requirements`: System requirements
-- `constraints`: Design constraints
+- `bom_items`: Validated component list
+- `requirement`: System requirements
+- `topology`: Confirmed topology
 
 **Output:**
-- `st_code`: ST code with multiple modules
+- `st_modules`: One module with `module_type="XML"` — the **EPlan XML**
+  deliverable (`EPlan_Wiring.xml`). Generation is deterministic-first
+  (`core/eplan_xml.py`), with an LLM-generated XML only replacing the
+  deterministic output when it passes `validate_eplan_xml`.
 
-**Generated Modules:**
+> Historical note: v1 `/codegen` produced IEC 61131-3 ST modules
+> (OB/FC/FB/DB). The v2 pipeline now delivers EPlan XML; `SCLPanel`
+> renders it in Monaco. Legacy v1 modules are still serialized
+> (`ModuleType.OB/FC/FB/DB`).
 
-1. **MAIN_OB**: Main organization block
-2. **FC_MotorControl**: Motor control function
-3. **FC_Safety**: Safety monitoring function
-4. **FB_Drive**: Drive function block
-5. **DB_Parameters**: Parameter data block
-
-**Example Code:**
-```st
-ORGANIZATION_BLOCK MAIN
-VAR
-    Safety_OK : BOOL;
-    Start_Command : BOOL;
-    Motor1_Run : BOOL;
-END_VAR
-BEGIN
-    // Safety monitoring
-    Safety_OK := NOT E_Stop_1 AND NOT E_Stop_2;
-    
-    IF NOT Safety_OK THEN
-        Motor1_Run := FALSE;
-    END_IF;
-    
-    // Motor control
-    Motor1_Output := Motor1_Run AND Safety_OK;
-END_ORGANIZATION_BLOCK
+**Example deliverable (EPlan XML, deterministic path):**
+```xml
+<EPLAN>
+  <Wiring bom_item="Breaker" manufacturer="Siemens" order_number="...">
+    <Connection tag="Q1.1" from="L1" to="X1" />
+  </Wiring>
+</EPLAN>
 ```
 
 ### 9. wiring_generator

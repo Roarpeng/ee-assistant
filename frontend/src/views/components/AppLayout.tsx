@@ -17,6 +17,7 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { ChatPanel } from './ChatPanel';
 import { useKeyboardShortcuts, KeyboardShortcutsDialog } from './KeyboardShortcuts';
 import { TopologyPanel } from './TopologyPanel';
+import { SchematicPanel } from './SchematicPanel';
 import { BOMPanel } from './BOMPanel';
 import { SCLPanel } from './SCLPanel';
 import { SettingsModal } from './SettingsModal';
@@ -90,6 +91,7 @@ export function AppLayout({ initialTab }: { initialTab?: 'chat' | 'knowledge' })
   const canvasTabs: [string, string][] = [
     ['info', tr.header.info],
     ['topology', tr.header.topology],
+    ['schematic', tr.header.schematic],
     ['wiring', tr.header.wiring],
     ['bom', tr.header.bom],
     ['code', tr.header.code],
@@ -510,6 +512,9 @@ export function AppLayout({ initialTab }: { initialTab?: 'chat' | 'knowledge' })
           </Box>
           <Box sx={{ height: '100%', display: activeCanvasTab === 'topology' ? 'block' : 'none' }}>
             <TopologyPanel />
+          </Box>
+          <Box sx={{ height: '100%', display: activeCanvasTab === 'schematic' ? 'block' : 'none' }}>
+            <SchematicPanel />
           </Box>
           <Box sx={{ height: '100%', display: activeCanvasTab === 'wiring' ? 'block' : 'none' }}>
             <WiringPanelMount />

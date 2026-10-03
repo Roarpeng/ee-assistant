@@ -24,6 +24,8 @@ _NODE_MESSAGES: dict[str, str] = {
     "final_review_agent": "最终审查完成。",
     "commissioning_generator": "调试步骤生成完成。",
     "wiring_generator": "I/O 接线表生成完成。",
+    "schematic_ir_builder": "电路级原理图（主回路/控制回路/IO）生成完成。",
+    "schematic_reviewer": "原理图 LLM 评审完成。",
 }
 
 
@@ -184,6 +186,8 @@ class Orchestrator:
         "final_review_agent":   ("review_notes", "project_meta"),
         "commissioning_generator": ("commissioning_steps",),
         "wiring_generator":     ("io_items",),
+        "schematic_ir_builder": ("schematic_pages",),
+        "schematic_reviewer":   ("schematic_pages",),
     }
 
     @classmethod

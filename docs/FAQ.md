@@ -37,7 +37,7 @@ See [LLM Provider Recommendations](llm-providers-and-industrial-recommendations.
 git clone https://github.com/Roarpeng/ee-assistant.git
 cd ee-assistant
 docker compose up -d --build
-docker exec ele-backend-1 alembic upgrade head
+# 迁移自动执行（backend 启动时 alembic upgrade head，幂等）
 ```
 
 See [README](../README.md) for detailed instructions.
@@ -58,7 +58,7 @@ cd frontend && npm install && npm run dev
 ```bash
 git pull origin master
 docker compose up -d --build
-docker exec ele-backend-1 alembic upgrade head
+# backend 重启时会自动跑 alembic upgrade head，无需手动迁移
 ```
 
 ### Port conflicts?

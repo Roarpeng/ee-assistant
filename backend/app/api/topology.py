@@ -1,12 +1,17 @@
 from datetime import UTC, datetime
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.schemas import TopologySnapshotInput, TopologyOut
-from app.db.models import Project, ProjectTopology
+from app.db.models import Project, ProjectTopology, Requirement
 from app.db.repository import get_session
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/projects", tags=["topology"])
 
@@ -58,6 +63,30 @@ async def confirm_project_topology(
     project.status = "ready"
     await session.commit()
     await session.refresh(topology)
+
+    # ── derivation hook: rebuild circuit-level schematic pages ──
+    # Best-effort inline derivation (pure local compute, no LLM): a
+    # failure must never break confirmation — the user can always hit
+    # POST /schematic/pages to regenerate manually.
+    try:
+        from app.api.schematic_v2 import derive_and_store_schematic
+        full = (
+            await session.execute(
+                select(Project).where(Project.id == project.id)
+                .options(selectinload(Project.bom_items),
+                         selectinload(Project.requirement).selectinload(Requirement.io_items),
+                         selectinload(Project.requirement).selectinload(Requirement.logic_rules))
+            )
+        ).scalar()
+        await derive_and_store_schematic(session, full)
+    except HTTPException as e:
+        if e.status_code == 404:
+            log.info("[topology.confirm] schematic derivation skipped: %s", e.detail)
+        else:
+            log.warning("[topology.confirm] schematic derivation failed: %s", e.detail)
+    except Exception as e:  # noqa: BLE001 — deliberate guard rail
+        log.warning("[topology.confirm] schematic derivation failed (non-fatal): %r", e)
+
     return topology
 
 

@@ -33,11 +33,8 @@ This comprehensive guide will help you get started with Volta and master its fea
 git clone https://github.com/Roarpeng/ee-assistant.git
 cd ee-assistant
 
-# Start all services
+# Start all services (backend runs alembic migrations automatically)
 docker compose up -d --build
-
-# Run database migrations
-docker exec ele-backend-1 alembic upgrade head
 
 # Access the application
 open http://localhost:8090

@@ -35,6 +35,13 @@ const zh = {
     linkedContext: '已关联',
     components: '个元器件',
   },
+  schematic: {
+    emptyTitle: '尚无电路级原理图',
+    emptyHint: '确认拓扑图后将自动派生主回路 / 控制回路 / IO 回路原理图。',
+    loading: '正在生成原理图…',
+    regenerate: '从已确认拓扑重新派生',
+    pageNotRendered: '该页尚未渲染 SVG。',
+  },
   topology: {
     active: '实时拓扑',
     sync: '同步到 EPlan XML',
@@ -191,6 +198,13 @@ const en: TranslationDict = {
     clearChat: 'Clear Chat',
     linkedContext: 'Linked',
     components: 'components',
+  },
+  schematic: {
+    emptyTitle: 'No Circuit Schematic Yet',
+    emptyHint: 'Confirm the topology to derive power / control / IO circuit pages.',
+    loading: 'Generating schematics…',
+    regenerate: 'Re-derive from confirmed topology',
+    pageNotRendered: 'This page has no rendered SVG yet.',
   },
   topology: {
     active: 'Active Topology',

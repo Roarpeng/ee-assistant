@@ -12,9 +12,9 @@ ENV HTTP_PROXY=${HTTP_PROXY} \
     https_proxy=${HTTPS_PROXY} \
     no_proxy=${NO_PROXY}
 
-COPY package.json ./
+COPY package.json package-lock.json ./
 RUN npm config set registry https://registry.npmmirror.com && \
-    npm install
+    npm ci --no-audit --no-fund
 COPY . .
 RUN npm run build
 

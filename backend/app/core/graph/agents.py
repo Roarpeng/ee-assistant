@@ -1136,3 +1136,96 @@ async def wiring_generator(state: AnalysisState) -> dict:
         io_list=(state.get("requirement", {}) or {}).get("io_list", []),
     )
     return {"io_items": rows}
+
+
+async def schematic_ir_builder(state: AnalysisState) -> dict:
+    """Deterministic: circuit-level schematic pages (power/control/io)
+    derived from the topology `schematic_generator` just produced.
+
+    Pure local compute — no LLM call, no network — so it adds no
+    wall-clock risk to the fanout tail. Any build failure degrades to
+    an empty page list (the frontend falls back to the topology view).
+    """
+    existing = state.get("schematic_pages")
+    if existing:
+        return {}
+    topology = state.get("topology") or {}
+    if not (isinstance(topology, dict) and topology.get("nodes")):
+        return {"schematic_pages": []}
+    bom = state.get("bom_items") or []
+    req = state.get("requirement") or {}
+
+    from app.core.schematic import build_schematic
+    from app.core.wiring_generator import generate_wiring
+
+    wiring_rows = generate_wiring(bom, (req or {}).get("io_list") or [])
+    try:
+        doc = build_schematic(
+            topology, bom, req, wiring_rows,
+            project_id=state.get("project_id") or "",
+        )
+    except Exception as e:  # SchematicBuildError or malformed state — degrade, never fail the run
+        log.warning("[schematic_ir_builder] build failed: %r", e)
+        return {"schematic_pages": []}
+    return {"schematic_pages": [p.model_dump(mode="json") for p in doc.pages]}
+
+
+async def schematic_reviewer(state: AnalysisState) -> dict:
+    """LLM review of the deterministic schematic (code_generator pattern).
+
+    The deterministic pages are the baseline and always survive. The LLM
+    may only (a) append review notes, (b) translate requirement
+    control-logic rules into extra ladder rungs — and the rebuild with
+    those rungs must pass the IR validator before it replaces anything.
+    It can never rewrite safety-chain connectivity.
+    """
+    pages = state.get("schematic_pages") or []
+    if not pages:
+        return {}
+    req = state.get("requirement") or {}
+    logic_rules = [str(r) for r in (req.get("control_logic") or []) if r][:8]
+
+    summary = [
+        {
+            "page_no": p.get("page_no"),
+            "kind": p.get("kind"),
+            "title": p.get("title_zh"),
+            "refs": sorted({s.get("ref") for s in p.get("symbols") or [] if s.get("ref")}),
+        }
+        for p in pages if isinstance(p, dict)
+    ]
+    try:
+        review = await llm_service.review_schematic_ir(summary, logic_rules)
+    except Exception as e:
+        log.warning("[schematic_reviewer] review call failed, keeping deterministic pages: %r", e)
+        return {}
+
+    notes = [str(n).strip()[:160] for n in (review.get("notes") or []) if str(n).strip()][:5]
+    rungs = [r for r in (review.get("rungs") or []) if isinstance(r, dict)][:4]
+
+    rebuilt: list[dict] | None = None
+    if rungs and logic_rules:
+        topology = state.get("topology") or {}
+        bom = state.get("bom_items") or []
+        if isinstance(topology, dict) and topology.get("nodes"):
+            from app.core.schematic import SchematicBuildError, build_schematic
+            from app.core.wiring_generator import generate_wiring
+            wiring_rows = generate_wiring(bom, (req or {}).get("io_list") or [])
+            try:
+                doc = build_schematic(
+                    topology, bom, req, wiring_rows,
+                    project_id=state.get("project_id") or "",
+                    extra_rungs=rungs,
+                )
+                rebuilt = [p.model_dump(mode="json") for p in doc.pages]
+            except SchematicBuildError as e:
+                log.warning("[schematic_reviewer] LLM rungs failed validation, dropped: %s", e)
+
+    out = rebuilt if rebuilt is not None else [dict(p) for p in pages]
+    if notes and out:
+        first = dict(out[0])
+        first["notes"] = list(first.get("notes") or []) + notes
+        out[0] = first
+    if out == pages and not notes:
+        return {}
+    return {"schematic_pages": out}
